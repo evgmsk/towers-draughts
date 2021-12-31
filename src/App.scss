@@ -1,0 +1,45 @@
+@import './assets/scss/variables-mixins.scss';
+
+html {
+    height: 100%;
+    min-height: 100vh;
+    font-size: 14px;
+    font-family: $font-main;
+    @media (min-width: $tablet) {
+        font-size: 16px;
+    }
+    
+}
+body {
+    height: 100%;
+    #root {
+        height: 100%;
+        min-height: 100vh;
+    }
+}
+
+.page {
+    box-sizing: border-box;
+    // min-width: $page-minwidth;
+    min-height: 100vh - $header-height - $footer-height;
+    @media (orientation: landscape) {
+        height: 100vh - $header-height - $footer-height;
+    }
+    @media (orientation: portrait), (max-width: 500px), (max-height: 500px) {
+        height: auto;
+    }
+}
+
+footer {
+    height: $footer-height;
+    background-color: burlywood;
+    width: 100vw;
+    @media (orientation: landscape) {
+        position: absolute;
+    }
+    @media (orientation: portrait), (max-width: 500px), (max-height: 500px) {
+        position: relative;
+        width: 100%;
+    }
+    bottom: 0;
+}

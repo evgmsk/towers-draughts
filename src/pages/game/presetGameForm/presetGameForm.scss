@@ -1,0 +1,263 @@
+@import '../../../assets/scss/variables-mixins.scss';
+
+$font-size: 1.1rem;
+
+.preset-game {
+    display: grid;
+    grid-template-areas: "new"
+                        "ov"
+                        "gv"
+                        "timing"
+                        "custom"
+                        "color";
+    grid-gap: 10px;
+    margin: 0 auto;
+    font-family: $font-main;
+    &__title {
+        color: darken($color_game_menu, 5%);
+        font-size: 1.8rem;
+        line-height: 1.5;
+    }
+    @media (max-height: 500px) and (orientation: landscape) {
+        width: 90%;
+        grid-template-areas: "new timing"
+                        "ov timing"
+                        "gv timing"
+                        "custom timing"
+                        "color timing";
+    }
+}
+.opponent-variant {
+    grid-area: ov;
+    border-radius: $border_rad_menu;
+    border: $border_menu;
+    width: 100%;
+    height: $preset-game-height;
+    box-sizing: border-box;
+    &__b {
+        font-size: $font-size;
+        height: 100%;
+        width: 33.3355%;
+        box-sizing: border-box;
+        border: none;
+        background-color: transparent;
+        color: darken($color_game_menu, 15%);
+        transition: all .2s;
+        &:nth-of-type(2) {
+            border-left: 1px solid darken($color_game_menu, 15%);
+            border-right: 1px solid darken($color_game_menu, 15%);
+        }
+        &:hover, &.actual {
+            background-color: darken($color_game_menu, 15%);
+            color: #fff;
+        }
+    }
+}
+.game-type-wrapper {
+    grid-area: gv;
+    @include flex(space-between, center)
+}
+.game-variant, .rival-type {
+    width: 48%;
+    border-radius: $border_rad_menu;
+    border: $border_menu;
+    background-color: transparent;
+    height: $preset-game-height;
+    font-size: $font-size;
+    color: darken($color_game_menu, 15%);
+    outline: none;
+    position: relative;
+    padding: 0 20px;
+    cursor: pointer;
+    &:hover, &:focus{
+        box-shadow: inset 0 0 1px 1px darken($color_game_menu, 30%);
+    }
+}
+.timing-wrapper, .level-wrapper {
+    margin: 0 auto;
+    grid-area: timing;
+    $min-size: 80px !global;
+    $max-size: 15vw !global;
+    @media (orientation: landscape) {
+        $max-size: 15vh !global;
+    }
+    display: grid;
+    grid-template-columns: repeat(3, minmax($min-size, $max-size));
+    grid-template-rows: repeat(3, minmax($min-size, $max-size));
+    gap: 10px;
+    
+}
+.timing-menu-item, .level-menu-item {
+    position: relative;
+    border: $border_menu;
+    border-radius: $border_rad_menu;
+    @include flex(center, center);
+    font-size: 1.8rem;
+    color: darken($color_game_menu, 15%);
+    cursor: pointer;
+    @media (max-height: 500px) and (orientation: landscape) {
+        font-size: 1.6rem;
+    }
+    &:hover, &.actual {
+        box-shadow: 0 0 1px 1px inset darken($color_game_menu, 30%);
+        color: $main-bg-color;
+        background-color: darken($color_game_menu, 15%);
+        transition: all .3s;
+    }
+    &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 100;
+    }
+}
+.level-menu-item {
+    font-size: 2.6rem;
+}
+.new-game {
+    grid-area: new;
+    $new-game-color: #64b46d;
+    height: $preset-game-height;
+    color: $new-game-color;
+    font-family: $font-main;
+    font-size: 1.6rem;
+    font-weight: 500;
+    padding: 0 20px;
+    background-color: transparent;
+    transition: all .3s;
+    border-radius: $border_rad_menu;
+    border: 2px solid $new-game-color;
+    &:hover {
+        background-color: $new-game-color;
+        color: #fff;
+    }
+}
+
+.custom-timing {
+    grid-area: custom;
+    position: relative;
+    box-sizing: border-box;
+    overflow: hidden;
+    @include flex(space-around, center);
+    border-radius: $border_rad_menu;
+    border: $border_menu;
+    color: darken($color_game_menu, 15%);
+    font-size: $font-size;
+    width: 100%;
+    height: $preset-game-height;
+    transition: all .3s;
+    &:hover {
+        box-shadow: inset 0 0 1px 1px darken($color_game_menu, 15%);
+    }
+    &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 10;
+        cursor: pointer;
+    }
+    .custom-preset-label {
+        position: relative;
+        @include flex(center, center);
+        opacity: 1;
+        z-index: 5;
+        transition: all .3s;
+    }
+    .custom-timing__values {
+        text-align: center;
+        width: 4rem;
+        text-align: end;
+    }
+    .time-range {
+        display: none;
+    }
+    &.open  {
+        &::after {
+            display: none;
+        }
+        .custom-preset-label {
+            position: absolute;
+            top: -30px;
+            z-index: -100;
+            opacity: 0;
+        }
+        .custom-timing__menu {
+            position: relative;
+            @include flex(space-around, center);
+            z-index: 10;
+            opacity: 1;
+            top: 0px;
+            transition: all .3s;
+        }
+        .time-range {
+            display: block;
+        }
+        .custom-timing__values {
+            color: #fff;
+            background-color: darken($color_game_menu, 15%);
+            margin: 0 5px;
+            width: 4rem;
+            height: $preset-game-height;
+            line-height: $preset-game-height;
+            text-align: center;
+            cursor: pointer;
+        }
+    }
+}
+
+.empty {
+    @media (max-height: 500px) and (orientation: landscape) {
+        width: 40%;
+        height: 1px;
+        order: 2;
+    }
+}
+
+.select-color-wrapper {
+    grid-area: color;
+    width: 100%;
+    box-sizing: border-box;
+    @include flex(space-around, center);
+    $black-pieces-color: darken($color_game_menu, 15%);
+    $bord-rad: 30px;
+    .select-color {
+        border: 2px solid $black-pieces-color;
+        width: 40px;
+        height: $preset-game-height;
+        border-radius: $border_rad_menu;
+        border-radius: $bord-rad;
+        cursor: pointer;
+        transition: all .2s;
+        &[value='white'] {
+            background-color: cornsilk;
+        }
+        &.active {
+            transform: scale(1.2);
+        }
+        &[value='random'] {
+            position: relative;
+            background-color: cornsilk;
+            box-sizing: border-box;
+            &::after {
+                content: "";
+                position: absolute;
+                top: -2px;
+                left: -2px;
+                height: $preset-game-height;
+                width: 20px;
+                background-color: $black-pieces-color;
+                border-top-left-radius: $bord-rad;
+                border-bottom-left-radius: $bord-rad;
+            }
+        }
+        &[value='black'] {
+            background-color: $black-pieces-color;
+        }
+    }
+}

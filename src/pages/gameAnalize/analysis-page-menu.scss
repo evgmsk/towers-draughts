@@ -1,0 +1,99 @@
+@import '../../assets/scss/variables-mixins.scss';
+
+.game-analyze-menu {
+    align-self: flex-end;
+    @include menu-width();
+    height: 100%;
+    @include flex(space-between, center, column);
+    .game-analyze-menu_item {
+        margin: 5px;
+        @include flex(center, center);
+        @include item-size();
+        .material-icons {
+            font-size: 1.6rem;
+        }
+        button {
+            width: 100%;
+            height: 100%;
+            background-color: rgb(55, 71, 18);
+            color:white;
+            border: unset;
+            border-radius: 3px;
+            &:hover {
+                background-color: darken(rgb(142, 170, 78), 10%);
+            }
+        }     
+    }
+    .depth-range_container {
+        position: relative;
+        height: 110px;
+        @include flex(center, flex-start);
+        font-family: $font-main;
+        font-size: .9rem;
+        .depth-value {
+            position: absolute;
+            display: none;
+            top: 0;
+            right: -16px;
+        }
+        &:hover {
+            .depth-value {
+                display: block;
+            }
+        }
+    }
+    .depth-range {
+        position: absolute;
+        width: 80px;
+        left: -20px;
+        top: 50px;
+        transform: rotate(90deg);
+        -webkit-appearance: none;
+        background-color: #9a905d;
+        &::-webkit-slider-runnable-track {
+            background-color: lighten(rgb(55, 71, 18), 5%);
+            -webkit-appearance: none;
+        }
+        &::-webkit-slider-runnable-track {
+            // height: 10px;
+            -webkit-appearance: none;
+            color: red;
+        }
+        &:hover::-webkit-slider-runnable-track {
+            background-color: lighten(rgb(55, 71, 18), 15%);
+        }
+        &::-moz-range-progress {
+            background-color: lighten(rgb(55, 71, 18), 15%);
+        }
+        &::-moz-range-track {  
+            background-color: lighten(rgb(55, 71, 18), 5%);
+        }
+          /* IE*/
+        &::-ms-fill-lower {
+            background-color: lighten(rgb(55, 71, 18), 5%);
+        }
+        &::-ms-fill-upper {  
+            background-color: lighten(rgb(55, 71, 18), 15%);
+        } 
+    }
+    .gv {
+        position: relative;
+        box-sizing: border-box;
+        background-color: rgb(55, 71, 18);
+        overflow: hidden;
+        border: unset;
+        border-radius: 3px;
+        .gv_label {
+            position: absolute;
+        }
+        &:hover {
+            background-color: darken(rgb(142, 170, 78), 10%);
+        }
+        select {
+            color:white;
+            font-size: 1.6rem;
+            height: 100%;
+            width: 100%;
+        }
+    }
+}

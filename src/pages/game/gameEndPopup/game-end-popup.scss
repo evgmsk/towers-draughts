@@ -1,0 +1,71 @@
+@import '../../../assets//scss/variables-mixins.scss';
+
+.game-end-popup {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    min-width: 40vw;
+    min-height: 40vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1000;
+    background-color: wheat;
+    .popup-header {
+        height: 60px;
+        width: 100%;
+        span {
+            position: absolute;
+            right: 15px;
+            top: 20px;
+            color: wheat
+        }
+        .popup-title {
+            color: white;
+            font-size: 2rem;
+            width: 100%;
+            text-align: center;
+            height: 60px;
+            line-height: 60px;
+        }
+        &.lose-bg {
+            background-color: rgb(117, 48, 30);
+        }
+        &.win-bg {
+            background-color: $modal-win-bg;
+        }
+        
+    }
+    .popup-footer {
+        display: flex;
+        justify-content: space-around;
+        width: 100%;
+        
+        .popup-button {
+            width: 100px;
+            border: none;
+            padding: 10px;
+            font-size: 1.2rem;
+            color: wheat;
+            &:hover {
+                color: deeppink;
+            }
+        }
+        &.lose-bg {
+            background-color: rgb(117, 48, 30);
+            .popup-button {
+                background-color: darken(rgb(117, 48, 30), 10%);
+            }
+            
+        }
+        &.win-bg {
+            background-color: $modal-win-bg;
+            .popup-button {
+                background-color: darken($modal-win-bg, 10%);
+            }
+            
+        }
+    }
+}

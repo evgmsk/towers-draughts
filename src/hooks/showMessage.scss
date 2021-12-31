@@ -1,0 +1,52 @@
+
+@import '../assets/scss/variables-mixins.scss';
+
+.show-message-popup_container {
+    display: none;
+    position: absolute;
+    //z-index: 3000;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    min-width: 50vw;
+    &.display {
+        display: block;
+    }
+}
+.show-message-popup {
+    position: absolute;
+    z-index: 3000;
+    opacity: 1;
+    padding: 10px 20px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    max-width: 40vw;
+    line-height: 1.5;
+    max-width: 40vw;
+    right: 20px;
+    top: 350px;
+    transform: translateY(0);
+    background-color: $success-message-back-color;
+    color:honeydew;
+    &.error-sh-pop {
+        background-color: $error-message-back-color;
+    }
+    &.animate-sh-pop {
+        transform: translateY(-500px);
+        animation: 4s popUp ease-in;
+        // transition: transform ease-in-out 3s;
+    }   
+}
+
+
+@keyframes popUp {
+    0% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-50px);
+    }
+    100% {
+        transform: translateY(-500px);
+    }
+}

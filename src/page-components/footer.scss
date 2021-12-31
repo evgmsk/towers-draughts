@@ -1,0 +1,18 @@
+footer {
+    display: flex;
+   
+    
+    align-items: flex-start;
+    a {
+        height: 2vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        color: white;
+        font-size: .8rem;
+    }
+    img {
+        filter: invert(100%);
+    }
+}

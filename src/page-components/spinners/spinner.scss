@@ -1,0 +1,151 @@
+@keyframes rotation {
+  0% {
+      transform: rotate(0);
+      opacity: .8;
+  }
+  5% {
+      transform: rotate(-18deg);
+      opacity: .75;
+  }
+  10% {
+      transform: rotate(-36deg);
+      opacity: .7;
+  }
+  15% {
+      transform: rotate(-54deg);
+      opacity: .65;
+  }
+  20% {
+      transform: rotate(-72deg);
+      opacity: .6;
+  }
+  25% {
+      transform: rotate(-90deg);
+      opacity: .55;
+  }
+  30% {
+      transform: rotate(-108deg);
+      opacity: .5;
+  }
+  35% {
+      transform: rotate(-126deg);
+      opacity: .45;
+  }
+  40% {
+      transform: rotate(-144deg);
+      opacity: .4;
+  }
+  45% {
+      transform: rotate(-162deg);
+      opacity: .35;
+  }
+  50% {
+      transform: rotate(-180deg);
+      opacity: .3;
+  }
+  55% {
+      transform: rotate(-198deg);
+      opacity: .35;
+  }
+  60% {
+      transform: rotate(-216deg);
+      opacity: .4;
+  }
+  65% {
+      transform: rotate(-234deg);
+      opacity: .45;
+  }
+  70% {
+      transform: rotate(-252deg);
+      opacity: .5;
+  }
+  75% {
+      transform: rotate(-270deg);
+      opacity: .55;
+  }
+  80% {
+      transform: rotate(-288deg);
+      opacity: .6;
+  }
+  85% {
+      transform: rotate(-306deg);
+      opacity: .65;
+  }
+  90% {
+      transform: rotate(-324deg);
+      opacity: .7;
+  }
+  95% {
+      transform: rotate(-342deg);
+      opacity: .75;
+  }
+  100% {
+      transform: rotate(-360deg);
+      opacity: .8;
+  }
+}
+
+.waiting-rival-spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  z-index: 300;
+  &:hover {
+      .material-icons {
+          opacity: 1;
+          font-size: 2rem;
+      }
+  }
+  .material-icons {
+      opacity: 0;
+  }
+  .logo {
+      cursor: pointer;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 0;
+      &::before {
+          content: '';
+          position: absolute;
+          border-radius: 50%;
+          background-color: white;
+          z-index: 10;
+          @media (orientation: portrait) {
+              width: 20vw;
+              height: 20vw;
+              top: -16vw;
+              left: -10vw;
+          }
+          @media (orientation: landscape) {
+              width: 20vh;
+              height: 20vh;
+              top: -16vh;
+              left: -10vh;
+          }
+      }
+      &::after {
+          content: '';
+          position: absolute;
+          border-radius: 50%;
+          background-color: black;
+          z-index: 5;
+          @media (orientation: portrait) {
+              width: 20vw;
+              height: 20vw;
+              top: -4vw;
+              left: -10vw;
+          }
+          @media (orientation: landscape) {
+              width: 20vh;
+              height: 20vh;
+              top: -4vh;
+              left: -10vh;
+          }
+      }
+      animation: rotation 2s ease-out infinite;
+  }
+}

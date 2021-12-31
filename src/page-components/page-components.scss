@@ -1,0 +1,12 @@
+@import '../assets/scss/variables-mixins.scss';
+
+.side-bar {
+    &_left, &_right {
+        @include side-bar-size();
+        position: relative;
+        margin: 5px 10px;
+        @extend #side-bar-min-max-width;
+        box-sizing: border-box;
+        
+    }
+}

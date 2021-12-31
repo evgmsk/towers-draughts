@@ -1,0 +1,43 @@
+@import '../../assets/scss/variables-mixins.scss';
+
+
+.home-page {
+    background-color: rgb(240, 240, 230);
+    @include flex(space-between, flex-start);
+    .side-bar_left, .side-bar_right {
+        width: 30%;
+    }
+}
+.home-content {
+    @include flex(space-between, flex-start);
+    @media (orientation: landscape) {
+        width: 100vw;
+    }
+    @media (orientation: portrait) {
+        width: 90vw
+    };
+    figure {
+        margin-top: 30px;
+        // float:left;
+        // width: 100%;
+        // height: 100%;
+        img {
+            width: 100%
+        }
+    }
+    // float:right;
+    .home-invitation {
+        font-size: 2rem;
+        font-family: $font-main;
+        padding: 3rem;
+        line-height: 2;
+        @media (max-width: 900px) {
+            font-size: 1.1rem;
+        }
+        @media (max-width: 500px) {
+            font-size: 1rem;
+        }
+    }
+    
+    
+}

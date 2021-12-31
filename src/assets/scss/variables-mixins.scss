@@ -1,0 +1,246 @@
+$nav-bar-color: #fff;
+$color_game_menu: brown;
+$header-back-color: #5f4339;
+$dark-aquare-back: #1b0000;
+$light-aquare-back: #6a4f4b;
+$main-bg-color: lighten(rgb(73, 65, 39), 70%);
+$last-move-highlight: rgba(4, 71, 71, 0.5);
+$avaliable-moves-highlight: royalblue;
+$success-message-back-color: rgb(2, 83, 2);
+$error-message-back-color: rgb(85, 12, 3);
+$modal-win-bg: #1a3b1c;
+
+
+$device: 88vw;
+$quadro: 63vw;
+$ipad: 75vh;
+$desktop: 80vh;
+
+$tablet: 900px;
+
+$board-wrapper-min-width: 340px;
+$board-wrapper-max-width: 800px; 
+$board-max-width: 800px;
+$board-min-width: 340px;
+$tower-max-size: 60px;
+$tower-min-size: 30px;
+
+
+$header-height: 7vh;
+$footer-height: 2vh;
+$lang-flag-size: 24px;
+$page-minwidth: 360px;
+$label-value-indent: 3px;
+$max-board-size: 800px;
+$side-bar-device-height: 250px;
+
+
+
+$preset-game-height: 40px;
+$border_rad_menu: 5px; 
+
+$border_menu: 1px solid darken($color_game_menu, 15%);
+
+$font-main: 'Roboto', sans-serif;
+
+$langs: 'en' 'ru';
+$multy: 4px;
+$beforeTop: -8px;
+
+
+#side-bar-min-max-width {
+  max-width: 300px;
+  min-width: 200px;
+}
+
+@mixin flex($justify: space-between, $align: center, $row: row) {
+  display: flex;
+  justify-content: $justify;
+  align-items: $align;
+  flex-direction: $row;
+}
+
+@mixin before($zIndex: 1200) {
+  &::before {
+    content: '';
+    position: absolute;
+    z-index: $zIndex;
+    width: 100%;
+    height: 100%; 
+    left: 0;
+    right: 0;
+    cursor: pointer;
+  }
+}
+
+@mixin menu-width($size: 8, $h1: $device, $h2: $quadro, $h3: $desktop, $h4: $ipad) {
+  @media screen and  (min-aspect-ratio: 2/10) {
+    width: $h1 / $size;
+  }
+  @media screen and  (min-aspect-ratio: 1/1) {
+    width:  $h2 / $size;
+  }
+  @media screen and (min-aspect-ratio: 13/10) {
+    width: $h4 / $size;
+  }
+  @media screen and (min-aspect-ratio: 15/10) {
+    width: $h3 / $size;
+  }
+}
+
+@mixin cell-width($size: 8, $h1: $device, $h2: $quadro, $h3: $desktop, $h4: $ipad) {
+  @media screen and  (min-aspect-ratio: 2/10) {
+    width: $h1 / $size;
+    height:  $h1 / $size;
+  }
+  @media screen and  (min-aspect-ratio: 1/1) {
+    width:  $h2 / $size;
+    height: $h2 / $size;
+  }
+  @media screen and (min-aspect-ratio: 13/10) {
+    width: $h4 / $size;
+    height: $h4 / $size;
+  }
+  @media screen and (min-aspect-ratio: 15/10) {
+    width: $h3 / $size;
+    height: $h3 / $size;
+  }
+}
+
+
+@mixin item-size($size: 8, $h1: $device, $h2: $quadro, $h3: $desktop, $h4: $ipad) {
+  @media screen and  (min-aspect-ratio: 2/10) {
+    width: $h1 / $size / 2;
+    height:  $h1 / $size / 2;
+  }
+  @media screen and  (min-aspect-ratio: 1/1) {
+    width:  $h2 / $size / 2;
+    height: $h2 / $size / 2;
+  }
+  @media screen and (min-aspect-ratio: 13/10) {
+    width: $h4 / $size / 2;
+    height: $h4 / $size / 2;
+  }
+  @media screen and (min-aspect-ratio: 15/10) {
+    width: $h3 / $size / 2;
+    height: $h3 / $size / 2;
+  }
+}
+
+@mixin board-width($size: 8, $h1: $device, $h2: $quadro, $h3: $desktop, $h4: $ipad) {
+  @media screen and  (min-aspect-ratio: 2/10) {
+    width:  $h1 / $size;
+  }
+  @media screen and  (min-aspect-ratio: 1/1) {
+    width: $h2 / $size;
+  }
+  @media screen and (min-aspect-ratio: 13/10) {
+    width: $h4 / $size;
+  }
+  @media screen and  (min-aspect-ratio: 15/10) {
+    width: $h3 / $size;
+  }
+}
+
+@mixin board-size($h1: $device, $h2: $quadro, $h3: $desktop, $h4: $ipad) {
+  @media screen and  (min-aspect-ratio: 2/10) {
+    width: $h1;
+    height: $h1;
+  }
+  @media screen and  (min-aspect-ratio: 1/1) {
+    width: $h2;
+    height: $h2;
+  }
+  @media screen and (min-aspect-ratio: 13/10) {
+    width: $h4;
+    height: $h4;
+  }
+  @media screen and (min-aspect-ratio: 15/10) {
+    width: $h3;
+    height: $h3;
+  }
+}
+
+@mixin side-bar-size($h1: $device, $h2: $quadro, $h3: $desktop, $h4: $ipad) {
+  @media screen and  (min-aspect-ratio: 2/10) {
+    height: $side-bar-device-height;
+    width: $h1 / 2.2;
+    min-width: unset;
+  }
+  @media screen and  (min-aspect-ratio: 1/1) {
+    height: $h2 / 2.2;
+    width: 100%;
+    min-width: 200px;
+  }
+  @media screen and (min-aspect-ratio: 13/10) {
+    height: $h4;
+  }
+  @media screen and  (min-aspect-ratio: 15/10) {
+    height: 80vh;
+  }
+}
+
+@mixin container-height($h1: $device, $h2: $quadro, $h3: $desktop, $h4: $ipad) {
+  @media screen and  (min-aspect-ratio: 2/10) {
+    height: $h1;
+  }
+  @media screen and  (min-aspect-ratio: 1/1) {
+    height: $h2;
+  }
+  @media screen and (min-aspect-ratio: 13/10) {
+    height: $h4;
+  }
+  @media screen and (min-aspect-ratio: 15/10) {
+    height: $h3;
+  }
+}
+
+@mixin transformWithScale($scale: 1, $bs: 8, $m: .35) {
+  @media screen and  (min-aspect-ratio: 2/10) {
+    $size: -$device / $bs * $m;
+    transform: translate($size, $size) scaleY($scale)
+  }
+  @media screen and  (min-aspect-ratio: 1/1) {
+    $size: -$quadro / $bs * $m;
+    transform: translate($size, $size) scaleY($scale)
+  }
+  @media screen and (min-aspect-ratio: 13/10) {
+    $size: -$ipad / $bs * $m;
+    transform: translate($size, $size) scaleY($scale)
+  }
+  @media screen and  (min-aspect-ratio: 15/10) {
+    $size: -$desktop / $bs * $m;
+    transform: translate($size, $size) scaleY($scale)
+  }
+}
+
+@mixin checkerSize($bs: 8, $m: .7) {
+  @media screen and  (min-aspect-ratio: 2/10) {
+    $size: $device / $bs * $m;
+    width: $size;
+    height: $size;
+  }
+  @media screen and  (min-aspect-ratio: 1/1) {
+    $size: $quadro / $bs * $m;
+    width: $size;
+    height: $size;
+  }
+  @media screen and (min-aspect-ratio: 13/10) {
+    $size: $ipad / $bs * $m;
+    width: $size;
+    height: $size;
+  }
+  @media screen and  (min-aspect-ratio: 15/10) {
+    $size: $desktop / $bs * $m;
+    width: $size;
+    height: $size;
+  }
+}
+
+@mixin checker($bs: 8, $m: .67) {
+  position: absolute;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all .3s;
+  @include checkerSize($bs, $m); 
+}
