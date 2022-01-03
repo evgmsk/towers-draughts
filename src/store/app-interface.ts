@@ -210,7 +210,6 @@ export type GameType = 'ranked' | 'casual' | 'tournament'
 
 export interface IGameOptionState {
     timing: Timing
-    // boardOptions: IBoardOptions
     gameType: GameType
     playerColor: PieceColor | 'random'
     rivalType: RivalType

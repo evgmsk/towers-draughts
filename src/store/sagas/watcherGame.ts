@@ -1,4 +1,4 @@
-import { put, takeLatest, select, call, delay } from 'redux-saga/effects';
+import { put, takeLatest, select, delay } from 'redux-saga/effects';
 import {
     IGameResult,
     PieceColor,
@@ -7,12 +7,13 @@ import {
     IGameState,
     IMoveOrder,
     IPlayer,
-    INewGameProps
+    INewGameProps,
+    IClock
 } from '../app-interface';
 import {GameActions, GameActions as GM, GameActionTypes, GameActionTypes as GMA} from '../game/types'
 import {ClockActions} from '../clock/types'
 // import {sendMessage} from '../../web-sockets/ws'
-import { IRootState } from '../rootState&Reducer';
+// import { IRootState } from '../rootState&Reducer';
 import { oppositColor } from '../../game-engine/gameplay-helper-fuctions';
 // import { Axios, setAuthorizationHeader } from '../../common/axios';
 import { GameAnalysisActions } from '../gameAnalysis/types';
@@ -28,15 +29,31 @@ import tur from '../../game-engine/update-towers-functions'
 
 function* workerNewGameVSPlayer(action: GMA) {
     yield put({type: GOA.WAIT_RIVAL, payload: false})
-    const {user: {name}, boardOptions: {boardSize}, gameOptions: {gameVariant}} = yield select()
-    const payload = action.payload as INewGameProps
-    
-    yield put({type: BOA.REVERSE_BOARD, payload: payload.black.name === name})
-    const {whiteClock, blackClock, ...gameProps} = payload
+    const { 
+        game: {gameMode},
+        user: {name = 'Player1'},
+        boardOptions: {boardSize},
+        gameOptions: {gameVariant, timing, playerColor}
+    } = yield select()
+    let color: PieceColor = playerColor
+    if (playerColor === 'random') {
+        color = Math.random() < .5 ? PieceColor.w : PieceColor.b
+    }
+    const {timeToGame, adds, timeToFirstMove} = timing
+    const black = {name: 'Black'}
+    const white = {name: "White"}
+    const clock: IClock = {
+        timeToGame,
+        adds,
+        timeToFirstMove
+    }
+    yield put({type: BOA.REVERSE_BOARD, payload: color === PieceColor.b})
     const gamePayload: Partial<IGameState> = {
-        ...gameProps,
+        moveOrder: {pieceOrder: PieceColor.w, playerTurn: 'White'},
+        black,
+        white,
         gameStarted: true,
-        playerColor: payload.white.name === name ? PieceColor.w : PieceColor.b,
+        playerColor: color,
         history: [],
         gameConfirmed: false,
         gameMode: 'isPreparing',
@@ -47,7 +64,7 @@ function* workerNewGameVSPlayer(action: GMA) {
     mmr.setProps({GV: gameVariant, size: boardSize})
     yield put({type: BoardActions.CREATE_GAME_BOARD})
     yield put({type: GM.SET_GAME, payload: gamePayload})
-    yield put({type: ClockActions.SET_CLOCK, payload: {blackClock, whiteClock}})
+    yield put({type: ClockActions.SET_CLOCK, payload: {blackClock: clock, whiteClock: clock}})
     yield put({type: GOA.FINISH_GAME_SETUP, payload: true})
     delay(AnimationDuration*3)
     yield put({type: GM.SET_GAME_MODE, payload: 'isPlaying'})
@@ -115,13 +132,13 @@ function* pcGameCase (payload: IMoveProps, ineffectiveMoves: number) {
     }
 }
 
-function* workerDrawOffer(action: GMA) {
-    const {gameOptions: {rivalType}, game: {gameKey}} = yield select()
-    // if (rivalType !== 'PC') sendMessage({message: 'game draw offered', payload: {gameKey}})
-}
+// function* workerDrawOffer(action: GMA) {
+//     const {gameOptions: {rivalType}, game: {gameKey}} = yield select()
+//     // if (rivalType !== 'PC') sendMessage({message: 'game draw offered', payload: {gameKey}})
+// }
 
 function* workerDrawRespond(action: GMA) {
-    const {game: {gameKey}} = yield select()
+  
     yield put({type: GM.RIVAL_OFFER_DRAW, payload: false})
     // sendMessage({message: 'game draw rejected', payload: {gameKey}})
 }
@@ -189,64 +206,51 @@ function* workerGameEnd(action: GMA) {
     } else {
         winner = draw ? 'draw' : oppositColor(pieceOrder)
     }
-    // yield resolveEndGame(winner, action.payload as EndGameConditions)
+    yield resolveEndGame(winner, action.payload as EndGameConditions)
 }
 
-// function* workerSurrender(action: GMA) {
-//     const winner = oppositColor(action.payload as PieceColor)
-//     yield resolveEndGame(winner, 'surrender')
-// }
+function* workerSurrender(action: GMA) {
+    const winner = oppositColor(action.payload as PieceColor)
+    yield resolveEndGame(winner, 'surrender')
+}
 
-// function* resolveEndGame(winner: PieceColor | 'draw', reason: EndGameConditions) {
-//     const { 
-//         game: {gameKey, history, white, black, playerColor},
-//     } = yield select(state => state)
-//     const {
-//         gameOptions: {gameVariant, rivalType, timing: {timeToGame, adds}}, 
-//         boardOptions: {boardSize}
-//     } = yield select()
+function* resolveEndGame(winner: PieceColor | 'draw', reason: EndGameConditions) {
+    const { 
+        game: {history, white, black, playerColor},
+    } = yield select(state => state)
+    const {
+        gameOptions: {gameVariant, timing: {timeToGame, adds}}, 
+        boardOptions: {boardSize}
+    } = yield select()
     
-//     if (rivalType !== 'PC') { 
-//         const payload: Partial<IGameResult> = { gameKey, winner, reason }
-//         sendMessage({message: "game ended", payload})
-//     } else {
-//         // const token: string = yield select((state: IRootState) => state.user.token)
-//         const PC = playerColor === PieceColor.w ? black.name : white.name
-//         const gameResult: Partial<IGameResult> & {PC: string, playerColor: PieceColor} = {
-//             winner,
-//             reason,
-//             timing: `${timeToGame}/${adds}`,
-//             playerColor,
-//             PC,
-//             gameVariant,
-//             movesHistory: history,
-//             boardSize,
-//             date: new Date()
-//         }
-//         yield put({type: GameAnalysisActions.SAVE_GAME_RESULT, payload: gameResult})
-//         const analysisPayload = {
-//             movesMainLine: history,
-//             lastMove: {index: history.length - 1, move: history.slice(-1)[0]}
-//         }
-//         yield put({type: GameAnalysisActions.UPDATE_ANALYSIS_STATE, payload: analysisPayload})
-//         const game = {
-//             ...InitialGameState, gameMode: 'isOver',
-//         } as IGameState
-//         yield put({type: GM.SET_GAME, payload: game})
-//         // try {
-//         //     setAuthorizationHeader(token)
-//         //     yield call(Axios.post, '/api/game/save', JSON.stringify(gameResult))
-//         // } catch(e) {
-//         //     console.log(e)
-//         // }
-//     }
-// }
+   
+        // const token: string = yield select((state: IRootState) => state.user.token)
+        const PC = playerColor === PieceColor.w ? black.name : white.name
+        const gameResult: Partial<IGameResult> & {PC: string, playerColor: PieceColor} = {
+            winner,
+            reason,
+            timing: `${timeToGame}/${adds}`,
+            playerColor,
+            PC,
+            gameVariant,
+            movesHistory: history,
+            boardSize,
+            date: new Date()
+        }
+        yield put({type: GameAnalysisActions.SAVE_GAME_RESULT, payload: gameResult})
+        const analysisPayload = {
+            movesMainLine: history,
+            lastMove: {index: history.length - 1, move: history.slice(-1)[0]}
+        }
+        yield put({type: GameAnalysisActions.UPDATE_ANALYSIS_STATE, payload: analysisPayload})
+        const game = {
+            ...InitialGameState, gameMode: 'isOver',
+        } as IGameState
+        yield put({type: GM.SET_GAME, payload: game})    
+}
 
 function* cancelGameWorker(action: GameActionTypes) {
-    const {game: {gameKey}, gameOptions: {rivalType}, clock: {whiteClock, blackClock}} = yield select()
-    if (rivalType !== 'PC' && whiteClock.timeToFirstMove > 0 && blackClock.timeToFirstMove > 0) {
-        // sendMessage({message: "game canceled", payload: {gameKey}})
-    } 
+
     yield put({type: GM.SET_GAME_STARTED, payload: false})
     yield put({type: GM.SET_GAME_MODE, payload: 'isOver'})
 }
@@ -254,9 +258,9 @@ function* cancelGameWorker(action: GameActionTypes) {
 export default function* watcherGame() {
     yield takeLatest(GM.END_GAME, workerGameEnd)
     yield takeLatest(GM.DECLINE_DRAW, workerDrawRespond)
-    yield takeLatest(GM.OFFER_DRAW, workerDrawOffer)
+    // yield takeLatest(GM.OFFER_DRAW, workerDrawOffer)
     yield takeLatest(GM.MAKE_MOVE, workerMove)
-    // yield takeLatest(GM.SURRENDER, workerSurrender)
+    yield takeLatest(GM.SURRENDER, workerSurrender)
     yield takeLatest(GM.CANCEL_GAME, cancelGameWorker)
     yield takeLatest(GM.NEW_GAME_VS_PLAYER, workerNewGameVSPlayer)
     yield takeLatest(GM.NEW_GAME_VS_PC, workerNewGameVsPC)
