@@ -15,9 +15,8 @@ function* findRival(action: FindOpponentAction) {
     if (rivalType === 'PC') {
         yield put({type: GA.NEW_GAME_VS_PC})
     } else if (rivalType === 'player') {
-        console.log('look for rival') 
-        yield put({type: GOA.WAIT_RIVAL, payload: true})
-        yield call(lookForRival)
+        console.log('player')
+        yield put({type: GA.NEW_GAME_VS_PLAYER})
     }
 }
 

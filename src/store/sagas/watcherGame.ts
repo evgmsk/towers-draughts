@@ -31,19 +31,21 @@ function* workerNewGameVSPlayer(action: GMA) {
     yield put({type: GOA.WAIT_RIVAL, payload: false})
     const { 
         game: {gameMode},
-        user: {name = 'Player1'},
         boardOptions: {boardSize},
         gameOptions: {gameVariant, timing, playerColor}
     } = yield select()
+    if (gameMode === 'isPlaying') {
+        yield put({type: GameActions.SET_GAME, payload: InitialGameState})
+    }
     let color: PieceColor = playerColor
     if (playerColor === 'random') {
         color = Math.random() < .5 ? PieceColor.w : PieceColor.b
     }
-    const {timeToGame, adds, timeToFirstMove} = timing
+    const {timeToGame, adds, timeToFirstMove = 10} = timing
     const black = {name: 'Black'}
     const white = {name: "White"}
     const clock: IClock = {
-        timeToGame,
+        timeToGame: timeToGame * 60,
         adds,
         timeToFirstMove
     }
@@ -55,7 +57,7 @@ function* workerNewGameVSPlayer(action: GMA) {
         gameStarted: true,
         playerColor: color,
         history: [],
-        gameConfirmed: false,
+        gameConfirmed: true,
         gameMode: 'isPreparing',
         portrait: window.innerWidth / window.innerHeight < 1.3,
         ineffectiveMoves: 0,
@@ -71,7 +73,6 @@ function* workerNewGameVSPlayer(action: GMA) {
 }
 
 function* workerNewGameVsPC() {
-    console.log('game vs pc')
     const {
         gameOptions: {playerColor, rivalLevel = 1, gameVariant},
         boardOptions: {boardSize},
@@ -116,12 +117,9 @@ function* workerNewGameVsPC() {
     yield put({type: GM.SET_GAME_MODE, payload: 'isPlaying'})
 }
 
-function* pcGameCase (payload: IMoveProps, ineffectiveMoves: number) {
-    const {gameOptions: {gameVariant}, board: {currentPosition}} = yield select()
+function* checkDraw (payload: IMoveProps) {
+    const {gameOptions: {gameVariant}, board: {currentPosition}, game: {ineffectiveMoves}} = yield select()
     const numberOfKingsChanged = checkIfNumberOfKingsChanged(currentPosition, payload.moveToSave.position)
-    if (numberOfKingsChanged) {
-        console.error('kings', payload)
-    }
     if (payload.moveToSave.move.includes(':') || numberOfKingsChanged) {
         yield put({type: GM.INEFFECTIVE_MOVE, payload: 0})
     } else if ((gameVariant !== 'international' && ineffectiveMoves < 36) 
@@ -137,11 +135,11 @@ function* pcGameCase (payload: IMoveProps, ineffectiveMoves: number) {
 //     // if (rivalType !== 'PC') sendMessage({message: 'game draw offered', payload: {gameKey}})
 // }
 
-function* workerDrawRespond(action: GMA) {
+// function* workerDrawRespond(action: GMA) {
   
-    yield put({type: GM.RIVAL_OFFER_DRAW, payload: false})
-    // sendMessage({message: 'game draw rejected', payload: {gameKey}})
-}
+//     yield put({type: GM.RIVAL_OFFER_DRAW, payload: false})
+//     // sendMessage({message: 'game draw rejected', payload: {gameKey}})
+// }
 
 function* workerPlayerClockAfterMove(payload: IMoveProps) {
     const {
@@ -176,21 +174,12 @@ function* workerPlayerClockAfterMove(payload: IMoveProps) {
 
 function* workerMove(action: GMA) {
     const {
-        gameOptions: {rivalType},
-        game: {gameKey, gameStarted, ineffectiveMoves},
-        user: {name}
+        game: {gameStarted},
     } = yield select()
     const payload: IMoveProps = action.payload as IMoveProps
-    payload.gameKey = gameKey
     if (!gameStarted) return
-    const PlayerTurn = payload.moveOrder.playerTurn
-    if (rivalType === 'PC') {
-        yield pcGameCase(payload, ineffectiveMoves)
-    } else if (rivalType !== 'PC' &&  PlayerTurn!== name) {
-        // sendMessage({message: 'game move', payload})
-    } else if (rivalType !== 'PC') {
-        workerPlayerClockAfterMove(payload)
-    }
+    yield checkDraw(payload)
+    workerPlayerClockAfterMove(payload)
 }
 
 function* workerGameEnd(action: GMA) {
@@ -222,8 +211,6 @@ function* resolveEndGame(winner: PieceColor | 'draw', reason: EndGameConditions)
         gameOptions: {gameVariant, timing: {timeToGame, adds}}, 
         boardOptions: {boardSize}
     } = yield select()
-    
-   
         // const token: string = yield select((state: IRootState) => state.user.token)
         const PC = playerColor === PieceColor.w ? black.name : white.name
         const gameResult: Partial<IGameResult> & {PC: string, playerColor: PieceColor} = {
@@ -257,7 +244,7 @@ function* cancelGameWorker(action: GameActionTypes) {
 
 export default function* watcherGame() {
     yield takeLatest(GM.END_GAME, workerGameEnd)
-    yield takeLatest(GM.DECLINE_DRAW, workerDrawRespond)
+    // yield takeLatest(GM.DECLINE_DRAW, workerDrawRespond)
     // yield takeLatest(GM.OFFER_DRAW, workerDrawOffer)
     yield takeLatest(GM.MAKE_MOVE, workerMove)
     yield takeLatest(GM.SURRENDER, workerSurrender)

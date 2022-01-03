@@ -22,7 +22,7 @@ export const PlayerTimer = (props: {timeOf: string}) => {
         return null
     } 
     return (
-        <div className="clock-and-name">
+        <div className="game-clock">
             <div className={className}>{`${strTime.min}: ${strTime.sec}`}</div>
         </div>
     

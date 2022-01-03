@@ -24,7 +24,7 @@ import './game-page.scss'
 
 // player bar
 const PlayerGameBarMapState = (state: IRootState) => ({
-    name: state.user.name,
+    name: state.game.playerColor === PieceColor.b ? state.game.black.name : state.game.white.name
 })
 
 const PlayerGameBarMapDispatch = {endGame, declineDraw}
@@ -35,6 +35,7 @@ type PGBProps = ConnectedProps<typeof PlayerGameBarConnector>
 
 const PlayerGameBar: React.FC<PGBProps> = ({children, ...props}) => {
     return <div className="player-game-bar">
+                {children}
                 <h2>{props.name}</h2>
                 <GameMenu />
             </div>
@@ -44,7 +45,7 @@ export const PlayerGameBarComponent = PlayerGameBarConnector(PlayerGameBar)
 
 // opponent bar
 const barMapState = (state: IRootState) => ({
-    rival: state.game.playerColor !== PieceColor.b ? state.game.black.name : state.game.white.name
+    name: state.game.playerColor !== PieceColor.b ? state.game.black.name : state.game.white.name
 })
 
 const barMapDispatch = {}
@@ -54,7 +55,7 @@ const RivalBarConnector = connect(barMapState, barMapDispatch)
 type RivalBarProps = ConnectedProps<typeof RivalBarConnector>
 
 const RivalGameBar: React.FC<RivalBarProps> = ({children, ...props}) => {
-    const [name] = useState(props.rival)
+    const [name] = useState(props.name)
     return <div className="opponent-game-bar">
                 {children}
                 <h2>{name}</h2>

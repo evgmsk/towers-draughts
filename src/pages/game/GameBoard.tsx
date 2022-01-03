@@ -74,15 +74,14 @@ export class GameClass extends React.Component<GameProps, IGameBoard> {
 
     componentDidUpdate(prevProps: GameProps) {
         const {
-            game: {history, moveOrder: {playerTurn}, gameMode},
-            name,
+            game: {history, gameMode},
             app,
             board,
             boardOptions
         } = this.props
         const histLength = history.length
-        if (prevProps.game.history.length !== histLength && playerTurn === name) {
-            console.log('updated', this.props.board, this.props.game)
+        if (prevProps.game.history.length !== histLength) {
+            // console.log('updated', this.props.board, this.props.game)
             this.makePremoveAction(history[history.length - 1])  
         }
         if (prevProps.game.gameMode !== 'isPlaying' && gameMode === 'isPlaying') {
@@ -203,12 +202,14 @@ export class GameClass extends React.Component<GameProps, IGameBoard> {
     handleMouseDown = (event: any) => {
         const {game: {moveOrder: {pieceOrder}}, board, updateBoardState} = this.props
         const {mandatoryMoves, cellsMap, towers, currentPosition} = board
-        if (this.modeRestrictions()) return
+        
         const {target, clientX, clientY} = event.type === 'touchstart' ? event.changedTouches['0'] : event
         const classList = (target as HTMLDivElement).classList
         if (!(classList.contains('checker-tower') && classList.contains(pieceOrder))) return
+        
         const towerKey = (target as HTMLDivElement).getAttribute('data-indexes') as string
         const tower = towers.get(towerKey)!
+        console.log(tower)
         if (!tower) {
             console.error(towerKey, board)
             return
