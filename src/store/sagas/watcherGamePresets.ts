@@ -4,7 +4,7 @@ import {FindOpponentAction, SetGameVariantAction, GameOptionActions as GOA} from
 // import { BoardOptionActions as BOA } from '../boardOptions/types';
 import {GameActions as GA} from '../game/types'
 import { createEmptyBoard} from '../../game-engine/prestart-help-function-constants';
-import { sendMessage } from '../../web-sockets/ws';
+// import { sendMessage } from '../../web-sockets/ws';
 import { GameAnalysisActions } from '../gameAnalysis/types';
 import { BoardOptionActions } from '../boardOptions/types';
 
@@ -37,7 +37,7 @@ function* lookForRival() {
     const message = "rival"
     try {
         console.log('send')
-        sendMessage({message, payload})
+        // sendMessage({message, payload})
     } catch(e) {
         console.log(e)
         yield put({type: GOA.FINISH_GAME_SETUP, payload: false})
@@ -50,7 +50,7 @@ function* cancelRival() {
     const {gameOptions: {gameVariant, timing}} = yield select()
     yield put({type: GOA.WAIT_RIVAL, payload: false})
     const payload = {waitingListKey: `${gameVariant}${timing.timeToGame}/${timing.adds}`}
-    sendMessage({message: 'cancel rival', payload})
+    // sendMessage({message: 'cancel rival', payload})
 }
 
 function* workerGameVariant(action: SetGameVariantAction) {

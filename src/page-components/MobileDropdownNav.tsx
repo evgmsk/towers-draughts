@@ -42,11 +42,12 @@ export const MobileMenu = () => {
         if (!dropdown) {
             return window.removeEventListener('click', handleClickOutside)
         }
+        // return window.removeEventListener('click', handleClickOutside)
     })
     
     return (
-        <>
-            <button onClick={handleDropdown} className="mobile-nav-dropdown-btn" >
+        <div onClick={handleDropdown}>
+            <button  className="mobile-nav-dropdown-btn" >
                 <i className="material-icons">menu</i>
             </button>
             <ul className={mobileMenuClass} ref={ref}>
@@ -56,35 +57,22 @@ export const MobileMenu = () => {
                     </NavLink>
                 </li>
                 <li>
-                    <NavLink className="navlink mobile" to={RoutesPath.rules}>
-                        <i className="large material-icons">{RoutesTitle.rules}</i>
+                    <NavLink className="navlink mobile" to={RoutesPath.game}>
+                        <i className="large material-icons">{RoutesTitle.game}</i>
                     </NavLink>
                 </li>
-                {isAuth && 
-                    <>
-                        <li>
-                            <NavLink className="navlink mobile" to={RoutesPath.game}>
-                                <i className="large material-icons">{RoutesTitle.game}</i>
-                            </NavLink>
-                        </li>
-                        <li title="game analize">
-                            <NavLink className="navlink" to={RoutesPath.analysis}>
-                                <i className="large material-icons">{RoutesTitle.analyze}</i>
-                            </NavLink>
-                        </li>
-                        <li><NavLink className="navlink mobile" to={RoutesPath.stats}>
-                            <i className="large material-icons">{RoutesTitle.stats}</i>
-                            </NavLink>
-                        </li>
-                    </>
-                }
-                <li>
-                    <NavLink className="navlink mobile" to={RoutesPath.settings}>
+                <li title="game analize">
+                    <NavLink className="navlink" to={RoutesPath.analysis}>
+                        <i className="large material-icons">{RoutesTitle.analyze}</i>
+                    </NavLink>
+                </li>
+                <li title="settings">
+                    <NavLink className="navlink" to={RoutesPath.settings}>
                         <i className="large material-icons">{RoutesTitle.settings}</i>
                     </NavLink>
                 </li>
             </ul>
-        </>
+        </div>
        
     )
 }

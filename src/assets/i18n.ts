@@ -14,7 +14,7 @@ export const I18n: {[key:string]: any} = {
         labelPassword: 'Password',
         labelNickname: 'Nickname or email',
         submitButton: 'Submit',
-        about: 'We are glad to welcome you to the site where, in addition to the classic Russian and international checkers, for the first time, the opportunity to play column checkers has been implemented - one of the most interesting variants of the checkers game.'
+        about: 'Welcom to Tower-Draughts where, in addition to the classic Russian and international draughts, for the first time, the opportunity to play tower draughts has been implemented - one of the most interesting variants of the checkers game.'
     },
     ru: {
         shortMainTitle: 'Шашки',
@@ -31,6 +31,6 @@ export const I18n: {[key:string]: any} = {
         labelPassword: 'Пароль',
         labelNickname: 'Игровой ник или email',
         submitButton: 'Отправить',
-        about: 'Мы рады приветствовать вас на сайте, где помимо классических: русских и международных шашек, впервые представлена возможность играть онлайн в столбовые шашки - одну из наиболее интересных варианций шашечной игры.'
+        about: 'Добро пожаловать на Tower Draughts, где помимо классических: русских и международных шашек, впервые представлена возможность играть онлайн в столбовые шашки - одну из наиболее интересных варианций шашечной игры.'
     }
 }

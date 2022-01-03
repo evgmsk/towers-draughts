@@ -15,7 +15,7 @@ import {
 } from '../../store/game/actions'
 import { oppositColor } from '../../game-engine/gameplay-helper-fuctions'
 import { PieceColor } from '../../store/app-interface'
-import { MovesHistory } from '../gameAnalize/MovesHistory'
+import { MovesHistory } from '../../game-components/moves-history/MovesHistory'
 import { GameMenu } from './PlayerGameMenu'
 import GameInfo from './GameInfo'
 

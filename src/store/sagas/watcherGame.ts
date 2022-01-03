@@ -11,7 +11,7 @@ import {
 } from '../app-interface';
 import {GameActions, GameActions as GM, GameActionTypes, GameActionTypes as GMA} from '../game/types'
 import {ClockActions} from '../clock/types'
-import {sendMessage} from '../../web-sockets/ws'
+// import {sendMessage} from '../../web-sockets/ws'
 import { IRootState } from '../rootState&Reducer';
 import { oppositColor } from '../../game-engine/gameplay-helper-fuctions';
 // import { Axios, setAuthorizationHeader } from '../../common/axios';
@@ -30,7 +30,7 @@ function* workerNewGameVSPlayer(action: GMA) {
     yield put({type: GOA.WAIT_RIVAL, payload: false})
     const {user: {name}, boardOptions: {boardSize}, gameOptions: {gameVariant}} = yield select()
     const payload = action.payload as INewGameProps
-    console.log('new game', payload)
+    
     yield put({type: BOA.REVERSE_BOARD, payload: payload.black.name === name})
     const {whiteClock, blackClock, ...gameProps} = payload
     const gamePayload: Partial<IGameState> = {
@@ -117,13 +117,13 @@ function* pcGameCase (payload: IMoveProps, ineffectiveMoves: number) {
 
 function* workerDrawOffer(action: GMA) {
     const {gameOptions: {rivalType}, game: {gameKey}} = yield select()
-    if (rivalType !== 'PC') sendMessage({message: 'game draw offered', payload: {gameKey}})
+    // if (rivalType !== 'PC') sendMessage({message: 'game draw offered', payload: {gameKey}})
 }
 
 function* workerDrawRespond(action: GMA) {
     const {game: {gameKey}} = yield select()
     yield put({type: GM.RIVAL_OFFER_DRAW, payload: false})
-    sendMessage({message: 'game draw rejected', payload: {gameKey}})
+    // sendMessage({message: 'game draw rejected', payload: {gameKey}})
 }
 
 function* workerPlayerClockAfterMove(payload: IMoveProps) {
@@ -170,7 +170,7 @@ function* workerMove(action: GMA) {
     if (rivalType === 'PC') {
         yield pcGameCase(payload, ineffectiveMoves)
     } else if (rivalType !== 'PC' &&  PlayerTurn!== name) {
-        sendMessage({message: 'game move', payload})
+        // sendMessage({message: 'game move', payload})
     } else if (rivalType !== 'PC') {
         workerPlayerClockAfterMove(payload)
     }
@@ -189,63 +189,63 @@ function* workerGameEnd(action: GMA) {
     } else {
         winner = draw ? 'draw' : oppositColor(pieceOrder)
     }
-    yield resolveEndGame(winner, action.payload as EndGameConditions)
+    // yield resolveEndGame(winner, action.payload as EndGameConditions)
 }
 
-function* workerSurrender(action: GMA) {
-    const winner = oppositColor(action.payload as PieceColor)
-    yield resolveEndGame(winner, 'surrender')
-}
+// function* workerSurrender(action: GMA) {
+//     const winner = oppositColor(action.payload as PieceColor)
+//     yield resolveEndGame(winner, 'surrender')
+// }
 
-function* resolveEndGame(winner: PieceColor | 'draw', reason: EndGameConditions) {
-    const { 
-        game: {gameKey, history, white, black, playerColor},
-    } = yield select(state => state)
-    const {
-        gameOptions: {gameVariant, rivalType, timing: {timeToGame, adds}}, 
-        boardOptions: {boardSize}
-    } = yield select()
+// function* resolveEndGame(winner: PieceColor | 'draw', reason: EndGameConditions) {
+//     const { 
+//         game: {gameKey, history, white, black, playerColor},
+//     } = yield select(state => state)
+//     const {
+//         gameOptions: {gameVariant, rivalType, timing: {timeToGame, adds}}, 
+//         boardOptions: {boardSize}
+//     } = yield select()
     
-    if (rivalType !== 'PC') { 
-        const payload: Partial<IGameResult> = { gameKey, winner, reason }
-        sendMessage({message: "game ended", payload})
-    } else {
-        const token: string = yield select((state: IRootState) => state.user.token)
-        const PC = playerColor === PieceColor.w ? black.name : white.name
-        const gameResult: Partial<IGameResult> & {PC: string, playerColor: PieceColor} = {
-            winner,
-            reason,
-            timing: `${timeToGame}/${adds}`,
-            playerColor,
-            PC,
-            gameVariant,
-            movesHistory: history,
-            boardSize,
-            date: new Date()
-        }
-        yield put({type: GameAnalysisActions.SAVE_GAME_RESULT, payload: gameResult})
-        const analysisPayload = {
-            movesMainLine: history,
-            lastMove: {index: history.length - 1, move: history.slice(-1)[0]}
-        }
-        yield put({type: GameAnalysisActions.UPDATE_ANALYSIS_STATE, payload: analysisPayload})
-        const game = {
-            ...InitialGameState, gameMode: 'isOver',
-        } as IGameState
-        yield put({type: GM.SET_GAME, payload: game})
-        // try {
-        //     setAuthorizationHeader(token)
-        //     yield call(Axios.post, '/api/game/save', JSON.stringify(gameResult))
-        // } catch(e) {
-        //     console.log(e)
-        // }
-    }
-}
+//     if (rivalType !== 'PC') { 
+//         const payload: Partial<IGameResult> = { gameKey, winner, reason }
+//         sendMessage({message: "game ended", payload})
+//     } else {
+//         // const token: string = yield select((state: IRootState) => state.user.token)
+//         const PC = playerColor === PieceColor.w ? black.name : white.name
+//         const gameResult: Partial<IGameResult> & {PC: string, playerColor: PieceColor} = {
+//             winner,
+//             reason,
+//             timing: `${timeToGame}/${adds}`,
+//             playerColor,
+//             PC,
+//             gameVariant,
+//             movesHistory: history,
+//             boardSize,
+//             date: new Date()
+//         }
+//         yield put({type: GameAnalysisActions.SAVE_GAME_RESULT, payload: gameResult})
+//         const analysisPayload = {
+//             movesMainLine: history,
+//             lastMove: {index: history.length - 1, move: history.slice(-1)[0]}
+//         }
+//         yield put({type: GameAnalysisActions.UPDATE_ANALYSIS_STATE, payload: analysisPayload})
+//         const game = {
+//             ...InitialGameState, gameMode: 'isOver',
+//         } as IGameState
+//         yield put({type: GM.SET_GAME, payload: game})
+//         // try {
+//         //     setAuthorizationHeader(token)
+//         //     yield call(Axios.post, '/api/game/save', JSON.stringify(gameResult))
+//         // } catch(e) {
+//         //     console.log(e)
+//         // }
+//     }
+// }
 
 function* cancelGameWorker(action: GameActionTypes) {
     const {game: {gameKey}, gameOptions: {rivalType}, clock: {whiteClock, blackClock}} = yield select()
     if (rivalType !== 'PC' && whiteClock.timeToFirstMove > 0 && blackClock.timeToFirstMove > 0) {
-        sendMessage({message: "game canceled", payload: {gameKey}})
+        // sendMessage({message: "game canceled", payload: {gameKey}})
     } 
     yield put({type: GM.SET_GAME_STARTED, payload: false})
     yield put({type: GM.SET_GAME_MODE, payload: 'isOver'})
@@ -256,7 +256,7 @@ export default function* watcherGame() {
     yield takeLatest(GM.DECLINE_DRAW, workerDrawRespond)
     yield takeLatest(GM.OFFER_DRAW, workerDrawOffer)
     yield takeLatest(GM.MAKE_MOVE, workerMove)
-    yield takeLatest(GM.SURRENDER, workerSurrender)
+    // yield takeLatest(GM.SURRENDER, workerSurrender)
     yield takeLatest(GM.CANCEL_GAME, cancelGameWorker)
     yield takeLatest(GM.NEW_GAME_VS_PLAYER, workerNewGameVSPlayer)
     yield takeLatest(GM.NEW_GAME_VS_PC, workerNewGameVsPC)

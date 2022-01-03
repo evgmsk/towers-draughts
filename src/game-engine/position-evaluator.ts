@@ -1,5 +1,5 @@
 import { IBoardCell, IBoardToGame, ICheckerTower, IMMRResult, PieceColor, TowerType } from "../store/app-interface"
-import { IBranch, ILastResult, ISeekerProps, IMove, IValidity } from "./engine-interfaces"
+import { IBranch, ILastResult, ISeekerProps, IMove } from "./engine-interfaces"
 import {oppositColor} from "./gameplay-helper-fuctions"
 import mmr from './mandatory-move-resolver'
 
@@ -276,7 +276,6 @@ export class BestMoveSeeker {
         }
         return availableMoves        
     }
-
     
     setActualMovesBranchAfterMove = (props: {history: string[], cP: IBoardToGame}) => {
         const {history, cP: currentPosition} = props
@@ -297,13 +296,14 @@ export class BestMoveSeeker {
         if (!availableMoves) {
             return this.bestMoveCB({move: '', position: {}})
         }
+        const baseValue = this.evaluator.evaluateCurrentPosition(currentPosition) as number
         if (!actualBranch) {
             actualBranch = {
                 moves: availableMoves,
                 board: currentPosition,
                 engineMoveLast: false,
-                value: this.evaluator.evaluateCurrentPosition(currentPosition) as number,
-                validity: {deep: 0, coverage: 0}
+                value: baseValue,
+                baseValue,
             }
             this.moveBranchesTree.set(positionKey, actualBranch)
             console.log('new branch at', positionKey, moveBranchesTree.get(positionKey))
@@ -362,12 +362,12 @@ export class BestMoveSeeker {
         const branchValue = engineMoveLast ? -100 : 100
         const nextPosition = {
             moves: availableMoves.map((move: IMMRResult) => (
-                {move: move.move, branchValue, position: move.position, validity: {deep: 0, coverage: 0}}
+                {move: move.move, branchValue, position: move.position}
             )),
             board: position,
             engineMoveLast: !engineMoveLast,
             value,
-            validity: {deep: 0, coverage: 0}
+            baseValue: value,
         } as IBranch
         if (!availableMoves.length) {
             // console.log('branch game ended', color, evaluatingPositon, key)
@@ -394,10 +394,10 @@ export class BestMoveSeeker {
     }
 
     lookForUnevaluatedForward = (key: string): string => {
-        if (!this.moveBranchesTree.get(key)) {
+        const branch = this.moveBranchesTree.get(key)
+        if (!branch) {
             return ''
         }
-        const branch = this.moveBranchesTree.get(key)
         const {moves, engineMoveLast} = branch!
         const unevaluatedMoves = moves.filter(m => Math.abs(m.branchValue) === 100)
         if (unevaluatedMoves.length && !engineMoveLast) {
@@ -440,10 +440,10 @@ export class BestMoveSeeker {
     }
 
     handlePlayerBranchEvaluationEnd = (key: string[]) => {  
-        if (!this.evaluationStarted || !this.moveBranchesTree.get(this.lastPlayerMove)) {
-            return
-        }     
         const actualBranch = this.moveBranchesTree.get(this.lastPlayerMove)!
+        if (!this.evaluationStarted || !actualBranch) {
+            return
+        } 
         const unevaluatedActualBranchMoves = actualBranch.moves.filter(m => Math.abs(m.branchValue) === 100) 
         if (!unevaluatedActualBranchMoves.length) {
             console.log('evaluation finished', actualBranch,)
@@ -456,10 +456,10 @@ export class BestMoveSeeker {
     stepBackForUnevaluatedBranchEngine = (key: string[]) => {
         const evaluatingBranchLength = key.length
         let positionKey = key.join('_')
-        if (!this.evaluationStarted || !this.moveBranchesTree.get(positionKey)) {
+        let position = this.moveBranchesTree.get(positionKey)!
+        if (!this.evaluationStarted || !position) {
             return
         }
-        let position = this.moveBranchesTree.get(positionKey)!
         const {moves} = position!
         const unevaluatedMoves = moves.filter(m => Math.abs(m.branchValue) === 100)
         if (evaluatingBranchLength === 1) {
@@ -483,13 +483,13 @@ export class BestMoveSeeker {
     }
 
     handleCaseValueChangedNotably = (key: string): boolean => {
-        if (!this.evaluationStarted || !this.moveBranchesTree.get(key)) {
+        const position = this.moveBranchesTree.get(key)!
+        if (!this.evaluationStarted || !position) {
             return false
         }
         if (key === this.lastPlayerMove) {
             return false
         }
-        const position = this.moveBranchesTree.get(key)!
         const keyArr = key.split('_')
         const parentPositionKey = keyArr.slice(0, -1).join('_')
         const parentPosition = this.moveBranchesTree.get(parentPositionKey)!
@@ -513,56 +513,37 @@ export class BestMoveSeeker {
     }
 
     stepBackward = (key: string) => {
-        if (!this.evaluationStarted) {
+        const keyArr = key.split('_')
+        const { lastResult: {value}, moveBranchesTree} = this
+        const parentBranch = moveBranchesTree.get(keyArr.slice(0, -1).join('_'))
+        const rootBranch = moveBranchesTree.get(this.lastPlayerMove)
+        if (!this.evaluationStarted || !parentBranch || !rootBranch) {
             return
         }
-        const valueChanged = this.handleCaseValueChangedNotably(key)
-        if (valueChanged) {
-            return
-        }
-        if (this.lastResult.value > 0) {
-            this.stepBackForUnevaluatedBranchPlayer(key.split('_').slice(0, -2))
+        if (rootBranch.baseValue! <= value) {
+            if (value > parentBranch.baseValue!) {
+                this.stepBackForUnevaluatedBranchPlayer(keyArr.slice(0, -2))
+            } else {
+                this.stepBackForUnevaluatedBranchEngine(keyArr.slice(0, -1))
+            }
         } else {
-            this.stepBackForUnevaluatedBranchEngine(key.split('_').slice(0, -1))
+            if (value <= parentBranch.baseValue!) {
+                this.stepBackForUnevaluatedBranchEngine(keyArr.slice(0, -1))
+            } else {
+                this.stepBackForUnevaluatedBranchEngine(keyArr.slice(0, -1))
+            }
         }
     }
 
-    updateMoves = (branch: IBranch, move: string, branchValue: number, val?: IValidity): IBranch => {
+    updateMoves = (branch: IBranch, move: string, branchValue: number): IBranch => {
 
         const moves = branch.moves.map((m: IMove) => {
             if (m.move === move) {
-                const validity = val || m.validity
-                return {...m, branchValue, validity}
+                return {...m, branchValue}
             }
             return {...m}
         })
-        const validity = val || branch.validity
-        return {...branch, moves, validity} as IBranch
-    }
-
-    calcParentValidity = (moves: IMove[]): IValidity => {
-        return moves.reduce((acc, m) => {
-            if (m.validity!.coverage > 0) {
-                acc.coverage += 1
-            }
-            acc.deep += m.validity!.deep
-            return acc
-        }, {} as IValidity)
-    }
-
-    calcValidity = (key: string, moves: IMove[]) => {
-        moves.reduceRight((acc: any, move: IMove, index: number) => {
-            const nextK = `${key}_${move.move}`
-            const nextBranch = this.moveBranchesTree.get(nextK)
-            const validity = nextBranch?.validity
-            if (!validity) return {deep: 0, covarege: 0}
-            if (index) {
-                acc.coverage += validity.coverage
-            } else {
-                acc.deep = validity.deep + 1
-            }
-            return acc
-        }, {} as IValidity)
+        return {...branch, moves} as IBranch
     }
 
     updateParentBranches = (key: string[], branchValue: number): void => {
@@ -595,17 +576,17 @@ export class BestMoveSeeker {
             const availableMoves = mmr.lookForAllMoves(this.engineColor, position)
             const nextBranchMoves = availableMoves.map((mr: IMMRResult) => {
                     const {move, position} = mr
-                    return {move, branchValue: 100, position, validity: {deep: 0, coverage: 0}}
+                    return {move, branchValue: 100, position}
                 })
             const nextBranch: IBranch = {
                 moves: nextBranchMoves,
                 board: position,
                 engineMoveLast: false,
+                baseValue: value,
                 value,
-                validity: {deep: 0, coverage: 0}
             }
             this.moveBranchesTree.set(nextPositionKey, nextBranch)
-            // const validity = 
+          
             return {...m, branchValue: value}
         })
         this.lastResult = {value: this.getBestForPlayer(moves).branchValue, movesBranch: branchKey}

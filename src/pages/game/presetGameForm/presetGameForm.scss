@@ -19,7 +19,7 @@ $font-size: 1.1rem;
         line-height: 1.5;
     }
     @media (max-height: 500px) and (orientation: landscape) {
-        width: 90%;
+        width: 80%;
         grid-template-areas: "new timing"
                         "ov timing"
                         "gv timing"

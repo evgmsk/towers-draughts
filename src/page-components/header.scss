@@ -7,7 +7,6 @@
     height: $header-height;
     z-index: 100;
     .change-lang-button {
-        width: 50px;
         border: none;
         display: flex;
         padding: 0;
@@ -15,11 +14,11 @@
         position: relative;
         height: $lang-flag-size;
         width:$lang-flag-size;
-        border-radius: 12px;
+        border-radius: $lang-flag-size;
         box-sizing: border-box;
         transition: all .2s;
         justify-self: end;
-        margin: 0 25px;
+        margin: 0 15px;
         span {
             width: $lang-flag-size;
             height: $lang-flag-size;
@@ -43,6 +42,7 @@
     padding: 0 1px 0 20px;
     height: $header-height;
     color: $nav-bar-color;
+    z-index: 1500;
     .materialize-icons {
         line-height: 1;
         display: block;
@@ -59,7 +59,6 @@
             background-color: rgba(0, 0, 0, 0.1);;
         }
         &.mobile {
-            // @include flex(flex-start, center);
             height: 3rem;
             .materialize-icons {
                 line-height: 3rem;
@@ -76,71 +75,10 @@
         display: block;
         box-sizing: border-box;
     }
-    .user-surname {
-        display: flex;
-        align-items: center;
-        a {
-            align-items: center;
-        }
-    }
-    .logout-wrapper {
-        width: 200px;
-        background-color: $nav-bar-color;
-        color: $header-back-color;
-        @include flex(space-around, stretch, column);
-        margin: 0 0 0 20px;
-        min-height: $header-height - .3;
-        transition: all .3s;
-        &.not-user {
-            flex-direction: row;
-            align-items: center;
-            width: auto;
-            min-width: 90px;
-            li {
-                height: 100%;
-                width: 100%;
-            }
-        }
-        li {
-            height: ($header-height - 2) / 2;
-            padding: 0 20px;
-            cursor: pointer;
-            &:active, &:focus, &:hover {
-                transition: all .3s;
-                background-color: $header-back-color;
-                i, a {
-                    color: $nav-bar-color;
-                }
-            }
-        }
-        i, a {
-            padding: 5px;
-            display: flex;
-            color: $header-back-color;
-        }
-        @media (max-width: $tablet) {
-            span {
-                display: none;
-            }
-            & {
-                width: auto;
-            }
-        }
-        @media (max-height: 600px) and (orientation: landscape) {
-            flex-direction: row;
-            align-content: center;
-            li {
-                display: block;
-                a {
-                    padding: 0;
-                }
-            }
-        }
-    }
     .mobile-nav {
         position: absolute;
-        transition: all .3s;
         flex-direction: column;
+        transition: all .3s;
         width: 90px;
         top: $header-height;
         right: 0;
@@ -150,13 +88,9 @@
             transform: translateY(-300px);
             z-index: -10;
             &.visible {
-                animation: drop-menu .3s;
-                transform: translateY(0);
-                z-index: 1;
-                // transition: all .3s;
+                transform: translateY(0);   
             }
             &.hidden {
-                // animation: drop-menu .3s;
                 transform: translateY(-300px);
             }
         }
@@ -168,9 +102,7 @@
             background: transparent;
             border: unset;
             padding: 0;
-            margin: 0;
-            align-items: center;
-            justify-self: end;
+            margin: 0 10px 0;
             color: $nav-bar-color;
             transition: all .3s;
             &:hover, &:focus {
@@ -209,32 +141,5 @@
         .desktop-nav {
             display: flex;
         }
-    }
-}
-
-@keyframes drop-menu {
-    0% {
-        transform: translateY(-300px);
-        z-index: -10;
-    }
-    99% {
-        transform: translateY(0);
-        z-index: -10;
-    }
-    100% {
-        z-index: 1;
-    }
-}
-
-@keyframes up-menu {
-    0% {
-        transform: translateY(0);
-        z-index: 1;
-    }
-    1% {
-        z-index: -1;
-    }
-    100% {
-        transform: translateY(-300px);
     }
 }

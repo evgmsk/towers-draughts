@@ -4,7 +4,7 @@ import { call, put, takeLatest, select} from 'redux-saga/effects';
 import {storageName} from '../../constants/gameConstants'
 import { IUser } from '../app-interface';
 import {UserActions, UserActionTypes} from '../user/types'
-import {sendMessage} from '../../web-sockets/ws'
+// import {sendMessage} from '../../web-sockets/ws'
 import { IRootState } from '../rootState&Reducer';
 
 function* workerStorage(action: UserActionTypes ) {
@@ -37,7 +37,7 @@ function* workerLogout() {
     if (!token) {
         token = JSON.parse(localStorage.getItem(storageName) as string).token
     }
-    sendMessage({message: 'user logout'})
+    // sendMessage({message: 'user logout'})
     localStorage.removeItem(storageName)
     // setAuthorizationHeader(token)
     // yield call(Axios, '/api/auth/logout')

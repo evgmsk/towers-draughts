@@ -71,8 +71,13 @@ export const Navbar: React.FC<Props> = (props) => {
                                 <i className="large material-icons">{RoutesTitle.analyze}</i>
                             </NavLink>
                         </li>
+                        <li title="settings">
+                            <NavLink className="navlink" to={RoutesPath.settings}>
+                                <i className="large material-icons">{RoutesTitle.settings}</i>
+                            </NavLink>
+                        </li>
                     </ul>
-                    <LoginBar />
+                    {/* <LoginBar /> */}
                 </div>
             </div>
         </nav>

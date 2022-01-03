@@ -12,7 +12,7 @@ export const InitialGameOptionsState: IGameOptionState = {
     gameVariant: 'towers',
     timing: {timeToGame: 5, adds: 0},
     playerColor: 'random',
-    rivalType: 'player',
+    rivalType: 'PC',
     rivalLevel: 1,
     gameSetupFinished: false,
     waitingRival: false,

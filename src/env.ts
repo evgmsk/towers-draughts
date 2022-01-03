@@ -20,3 +20,5 @@ export const Config: {[key: string]: any} = {
 }
 
 export const env = Config[mode]
+
+// H9M87-NR3PV-TQDHH-93RPR-BY49G

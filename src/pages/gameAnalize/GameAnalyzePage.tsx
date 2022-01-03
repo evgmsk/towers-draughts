@@ -5,7 +5,7 @@ import { SideBar } from '../../page-components/Sidebar'
 import Spinner from '../../page-components/spinners/Spinner'
 import { IRootState } from '../../store/rootState&Reducer'
 import AnalysisPageMenu from './AnalysisPageMenu'
-import { MovesHistory } from './MovesHistory'
+import { MovesHistory } from '../../game-components/moves-history/MovesHistory'
 import AnalysisBoard from './AnalysisBoard'
 
 import './analyze-page.scss'

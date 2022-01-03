@@ -1,9 +1,9 @@
 import { call, select, takeLatest } from 'redux-saga/effects';
 // import { setAuthorizationHeader, Axios } from '../../common/axios';
-import { sendMessage } from '../../web-sockets/ws';
+// import { sendMessage } from '../../web-sockets/ws';
 import { AppActionTypes, AppActions } from '../app/types';
 
-function* workerClose(action: AppActionTypes) {
+function* workerClose(action: AppActionTypes) { 
     const token = (action as {payload: string}).payload
     yield
     // setAuthorizationHeader(token)
