@@ -1,14 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import { useSelector } from 'react-redux'
 import { NavLink } from 'react-router-dom'
 
 import { RoutesPath, RoutesTitle } from '../constants/gameConstants'
 import { IRef } from '../store/app-interface'
-import { IRootState } from '../store/rootState&Reducer'
 
 
 export const MobileMenu = () => {
-    const isAuth = !!useSelector((state: IRootState) => state.user.name)
     const [dropdown, setDropdown] = useState(false)
     const [visible, setVisible] = useState(false)
     const mobileMenuClass = `mobile-nav${visible ? ' visible' : ' hidden'}${!dropdown ? ' display-none' : ' display'}`

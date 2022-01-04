@@ -35,7 +35,7 @@ const mapState = (state: IRootState) => ({
     game: state.game,
     name: state.user.name,
     positionsTree: state.board.positionsTree,
-    app: state.app,
+    windowSize: state.app.windowSize,
     board: state.board,
     boardOptions: state.boardOptions,
 })
@@ -47,20 +47,17 @@ type GameProps = ConnectedProps<typeof gameConnector>
 
 export class GameClass extends React.Component<GameProps, IGameBoard> {
     private boardRef: IRef<HTMLDivElement> = React.createRef();
-    mmr = mmr
-    tur = tur
-    
     componentDidMount() {
         if (!window) return
         const {game: {history}, board, boardOptions, updateBoardState} = this.props
         console.log('created with state:', this.props.board)
-        this.tur.setCalBack(updateBoardState)
+        tur.setCalBack(updateBoardState)
         if (history.length) {
-            const towers = this.tur.updateTowersToBoard(board.currentPosition) as TowersMap
+            const towers = tur.updateTowersToBoard(board.currentPosition) as TowersMap
             const _board = {...board, towers}
-            this.tur.updateCellsPosition(_board, boardOptions, this.boardRef.current!);
+            tur.updateCellsPosition(_board, boardOptions, this.boardRef.current!);
         } else {
-            this.tur.updateCellsPosition(board, boardOptions, this.boardRef.current!);
+            tur.updateCellsPosition(board, boardOptions, this.boardRef.current!);
         }
     }
     componentWillUnmount() {
@@ -74,22 +71,23 @@ export class GameClass extends React.Component<GameProps, IGameBoard> {
 
     componentDidUpdate(prevProps: GameProps) {
         const {
-            game: {history, gameMode},
-            app,
+            game: {history, gameMode, moveOrder: {pieceOrder}, playerColor},
             board,
-            boardOptions
+            windowSize,
+            boardOptions,
         } = this.props
-        const histLength = history.length
-        if (prevProps.game.history.length !== histLength) {
-            // console.log('updated', this.props.board, this.props.game)
+        const histLength = history.length 
+        // console.log(this.props)
+        if (prevProps.game.history.length !== histLength && pieceOrder === playerColor) {
+            console.log('updated', this.props.board, this.props.game)
             this.makePremoveAction(history[history.length - 1])  
         }
         if (prevProps.game.gameMode !== 'isPlaying' && gameMode === 'isPlaying') {
             console.log('new game started', this.props)
-            this.tur.updateCellsPosition(board, boardOptions, this.boardRef.current!)
+            tur.updateCellsPosition(board, boardOptions, this.boardRef.current!)
         }
-        if (JSON.stringify(app.windowSize) !== JSON.stringify(prevProps.app.windowSize)) {
-            this.tur.updateCellsPosition(board, boardOptions, this.boardRef.current!)
+        if (JSON.stringify(windowSize) !== JSON.stringify(prevProps.windowSize)) {
+            tur.updateCellsPosition(board, boardOptions, this.boardRef.current!)
         }
     }
 
@@ -100,8 +98,9 @@ export class GameClass extends React.Component<GameProps, IGameBoard> {
             updateBoardState,
             board: {currentPosition},
         } = this.props
-        const mandatoryMoves = this.mmr.lookForMandatoryMoves(pieceOrder, currentPosition)
-        if (!mandatoryMoves.length && !this.mmr.lookForAllPosibleMoves(pieceOrder, currentPosition).length) {
+        const mandatoryMoves = mmr.lookForMandatoryMoves(pieceOrder, currentPosition)
+        if (!mandatoryMoves.length && !mmr.lookForAllPosibleMoves(pieceOrder, currentPosition).length) {
+            console.log('no moves', this.props)
             return setTimeout(() => endGame('noMoves'), AnimationDuration)
         }
         updateBoardState({
@@ -118,10 +117,10 @@ export class GameClass extends React.Component<GameProps, IGameBoard> {
         const from = towerTouched!.key
         const fitMoves = mandatoryMoves!.filter((m: IMMRResult) => m.move.includes(`${from}:${to}`))
         if (fitMoves[0].move.split(':').length === 2 + (mandatoryMoveStep as number)) {
-            const moveProps = {moveToSave: fitMoves[0], moveOrder: this.mmr.getNewOrder(game)}
+            const moveProps = {moveToSave: fitMoves[0], moveOrder: mmr.getNewOrder(game)}
             const takenPieces = fitMoves[0].takenPieces!
             const tP = gameVariant === 'towers' ? [takenPieces![mandatoryMoveStep]] : takenPieces
-            let towers = this.tur.updateTowersOnMandatoryMoveStep(from, to, board, tP, true)
+            let towers = tur.updateTowersOnMandatoryMoveStep(from, to, board, tP, true)
             console.log('towers;', towers)
             updateBoardState({
                 mandatoryMoves: [] as unknown as IMMRResult[],
@@ -140,7 +139,7 @@ export class GameClass extends React.Component<GameProps, IGameBoard> {
                 mandatoryMoves: fitMoves,
                 mandatoryMoveStep: mandatoryMoveStep as number + 1,
                 towerTouched: null as unknown as TowerTouched,
-                towers: this.tur.updateTowersOnMandatoryMoveStep(from, to, board, [tP]),
+                towers: tur.updateTowersOnMandatoryMoveStep(from, to, board, [tP]),
                 lastMoveSquares: fitMoves[0].move.slice(mandatoryMoveStep as number + 1).split(':'),
                 mouseDown: false,
             })
@@ -164,15 +163,15 @@ export class GameClass extends React.Component<GameProps, IGameBoard> {
         const to = checkMoveTargetCell({x: clientX, y: clientY}, towerTouched.posibleMoves, cellSize, this.boardRef)
         const cancelProps = {...board, reversed}
         if (!to) {
-            this.tur.cancelTowerTransition(cancelProps)
+            tur.cancelTowerTransition(cancelProps)
         } else {
             const from = towerTouched.key
             if (mandatoryMoves?.length) {
                 this.makePlayerMandatoryMoveStep(to)
             } else {
-                this.tur.finalizeSimpleMove(from, to, board, reversed)
+                tur.finalizeSimpleMove(from, to, board, reversed)
                 const props =  {moveOrder, white, black, currentPosition}
-                const moveProps = this.mmr.getPropsToMakeFreeMove(from, to, props)
+                const moveProps = mmr.getPropsToMakeFreeMove(from, to, props)
                 turn(moveProps)
             }
         }
@@ -219,8 +218,8 @@ export class GameClass extends React.Component<GameProps, IGameBoard> {
            posibleMoves = possibleOutOfMandatory(this.props.board, towerKey)
         } else {
             posibleMoves = tower.currentType === TowerType.m 
-            ? this.mmr.manTowerFreeMoves(tower, currentPosition, cellsMap)
-            : this.mmr.kingTowerFreeMoves(towerKey, currentPosition, cellsMap)
+            ? mmr.manTowerFreeMoves(tower, currentPosition, cellsMap)
+            : mmr.kingTowerFreeMoves(towerKey, currentPosition, cellsMap)
         }
         if (!posibleMoves.size) {
             // sound

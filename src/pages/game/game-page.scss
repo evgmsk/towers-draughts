@@ -13,23 +13,22 @@
     }
     main {
         &.portrait {
-            order: -1;
+            order: 0;
             flex-wrap: wrap;
         }
     }
     .side-bar{
+        
         &_left {
             box-shadow: 0 0 1px 1px rgba(0, 0 ,0 ,.2);
-            @media (max-aspect-ratio: 13/10) {
-                order: 2;
-            }
+            order: -1;
             border-radius: 3px;
         }
         &_right {
             @include flex(space-around, flex-start, column);
-            @media (max-aspect-ratio: 13/10) {
-                order: 3;
-            }
+            
+            order: 1;
+            
         }
     }
    
@@ -40,12 +39,12 @@
             margin-top: 10px;
             flex-direction: row;
             align-self: flex-start;
-            width: $desktop;
+            // width: $desktop;
         }
         @media (orientation: landscape) {
             margin-left: 10px;
             flex-direction: column;
-            @include container-height();
+            // @include container-height();
         }
        
     }

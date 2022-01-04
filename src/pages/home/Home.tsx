@@ -1,6 +1,5 @@
 import React, { Suspense } from 'react'
 
-import { SideBar } from '../../page-components/Sidebar'
 import Spinner from '../../page-components/spinners/Spinner'
 import gameExample from '../../assets/game-example.gif'
 import { sampleLink } from '../../constants/gameConstants'
@@ -9,31 +8,36 @@ import {I18n} from '../../assets/i18n'
 import './home.scss'
 import { useSelector } from 'react-redux'
 import { IRootState } from '../../store/rootState&Reducer'
+import { useHistory } from 'react-router-dom'
 
 export const Home: React.FC = () => {
     const language = useSelector((store: IRootState) => store.user.language)
-    const internalization = (I18n as {[key: string]: any})[language.slice(0, 2)]
+    const history = useHistory()
+    const i18n = (I18n as {[key: string]: any})[language.slice(0, 2)]
     const href = sampleLink
+    const handleClick = () => {
+        history.push("game")
+    }
     return (
         <Suspense fallback={<Spinner />}>
             <div className="page home-page">
-                <SideBar side="left">
-                </SideBar>
-                <section className="home-content">
-                    <figure className="game-example-wrapper">
-                        <a href={href} target="_blank" rel="author noreferrer">
-                            <figcaption>Tower's draughts game example. Created by Sergey Ivanov 1958</figcaption>
-                            <img width="200px" src={gameExample} alt="Tower's Checkers game example"></img>
-                        </a>   
-                    </figure>
-                    <div className="home-invitation">{internalization.about}</div>
+                <div className=''></div>
+                <section className="home-page_content">
+                    <span>{i18n.about}</span>
+                        <figure className="game-example-wrapper">
+                            <a href={href} target="_blank" rel="author noreferrer">
+                                <figcaption><p>Tower's draughts game example.</p><p>Created by Sergey Ivanov.</p></figcaption>
+                                <img width="200px" src={gameExample} alt="Tower's Checkers game example"></img>
+                            </a>   
+                        </figure>
+                    <span>&nbsp;{i18n.about_continue}</span>
+                    <p className="home-page_to-game-button">
+                        <button className='new-game' onClick={handleClick} type="button">{i18n.play}</button>
+                    </p>
                 </section>
-                <SideBar side="right">
-                </SideBar>
             </div>
         </Suspense>
     )
-
 }
     
 export default Home

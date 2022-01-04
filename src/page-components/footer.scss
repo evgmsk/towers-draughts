@@ -1,7 +1,14 @@
+@import '../assets/scss/variables-mixins.scss';
+
 footer {
+    height: $footer-height;
+    background-color: burlywood;
+    width: 100%;
+    @media (orientation: landscape) {
+        position: fixed;
+    }
+    bottom: 0;
     display: flex;
-   
-    
     align-items: flex-start;
     a {
         height: 2vh;
@@ -16,3 +23,4 @@ footer {
         filter: invert(100%);
     }
 }
+

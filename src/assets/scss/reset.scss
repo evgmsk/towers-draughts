@@ -41,7 +41,8 @@ table {
     border-spacing: 0;
 }
 a {
-  text-decoration: none;
+    color: inherit;
+    text-decoration: none;
 }
 button, a {
     cursor: pointer;

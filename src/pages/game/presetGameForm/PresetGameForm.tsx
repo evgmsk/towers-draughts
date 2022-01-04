@@ -356,7 +356,6 @@ export class CustomTimingPreset extends React.Component<CTP, {limit: number, add
 
     render() {
         const {open, limit, adds} = this.state
-        console.log(this.state)
         return (
             <div className={`custom-timing ${open ? 'open' : 'close'}`} onClick={this.handleClick}>
                 <p className="custom-preset-label">

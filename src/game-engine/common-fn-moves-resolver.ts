@@ -39,7 +39,8 @@ export class BaseMoveResolver {
         const interval = this.getInterval(from, to, board)
         const key = interval.filter(c => c.tower)[0]
         if (key) return key.boardKey
-        throw new Error(`invalid move - tower to take did not find ${from}:${to} in ${JSON.stringify(board)}`);
+        console.error(`invalid move - tower to take did not find ${from}:${to}`, board);
+        return ''
     }
 
     getInterval(start: string, end: string, board: IBoardToGame): IBoardCell[] {

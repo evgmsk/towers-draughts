@@ -83,43 +83,48 @@ class GamePage extends React.Component<GPProps, {}> {
     }
     render() {
         const {portrait, playerColor, gameSetupFinished} = this.props
-        const GameBoardWithBars = portrait
-        ? <>
+        const GameBoardWithBars = <>
             <main className="portrait">
-                <RivalGameBarComponent>
-                    <PlayerTimer timeOf={oppositColor(playerColor as PieceColor)} />
-                </RivalGameBarComponent>
+                {   portrait 
+                    ? <RivalGameBarComponent>
+                        <PlayerTimer timeOf={oppositColor(playerColor as PieceColor)} />
+                    </RivalGameBarComponent>
+                    : null
+                }
                 <GameBoard />
-                <PlayerGameBarComponent>
-                    <PlayerTimer timeOf={playerColor} />
-                </PlayerGameBarComponent>
+                {   portrait 
+                    ? <PlayerGameBarComponent>
+                        <PlayerTimer timeOf={playerColor} />
+                    </PlayerGameBarComponent>
+                    : null
+                }
             </main>
-            <div className="bars-wrapper">
-                <SideBar side="left">
-                    <GameInfo />
-                </SideBar>
-                <SideBar side="right">
-                    <MovesHistory />
-                </SideBar>
-            </div>
+            {   portrait 
+                ? <div className="bars-wrapper">
+                    <SideBar side="left">
+                        <GameInfo />
+                    </SideBar>
+                    <SideBar side="right">
+                        <MovesHistory />
+                    </SideBar>
+                </div>
+                : <>
+                    <SideBar side="left">
+                        <GameInfo />
+                    </SideBar>
+                    <SideBar side="right">
+                        <RivalGameBarComponent>
+                            <PlayerTimer timeOf={oppositColor(playerColor as PieceColor)} />
+                        </RivalGameBarComponent>
+                        <MovesHistory />
+                        <PlayerGameBarComponent>
+                            <PlayerTimer timeOf={playerColor} />
+                        </PlayerGameBarComponent>
+                    </SideBar>
+                </> 
+            }
         </>
-        : <>
-            <SideBar side="left">
-                <GameInfo />
-            </SideBar>
-            <main className="landscape">
-                 <GameBoard />
-            </main>
-            <SideBar side="right">
-                <RivalGameBarComponent>
-                    <PlayerTimer timeOf={oppositColor(playerColor as PieceColor)} />
-                </RivalGameBarComponent>
-                <MovesHistory />
-                <PlayerGameBarComponent>
-                    <PlayerTimer timeOf={playerColor} />
-                </PlayerGameBarComponent>
-            </SideBar>
-        </> 
+        
           
         return (
             <Suspense fallback={<Spinner />}>

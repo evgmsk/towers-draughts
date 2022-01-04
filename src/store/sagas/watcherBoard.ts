@@ -14,7 +14,6 @@ import { GameActions } from '../game/types';
 import { IRootState } from '../rootState&Reducer';
 import { copyMap, splitMove } from '../../game-engine/gameplay-helper-fuctions';
 import { AnimationDuration } from '../../constants/gameConstants';
-import { BoardOptionActions, BoardOptionActionTypes, ReverseBoardAction } from '../boardOptions/types';
 
  
 function* workerGameBoard(action: BoardActionTypes) {

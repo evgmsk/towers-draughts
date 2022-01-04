@@ -19,27 +19,16 @@ body {
 }
 
 .page {
+    margin-top: $header-height;
     box-sizing: border-box;
     // min-width: $page-minwidth;
+    height: auto;
     min-height: 100vh - $header-height - $footer-height;
-    @media (orientation: landscape) {
-        height: 100vh - $header-height - $footer-height;
-    }
-    @media (orientation: portrait), (max-width: 500px), (max-height: 500px) {
-        height: auto;
-    }
-}
-
-footer {
-    height: $footer-height;
-    background-color: burlywood;
-    width: 100vw;
-    @media (orientation: landscape) {
-        position: absolute;
-    }
-    @media (orientation: portrait), (max-width: 500px), (max-height: 500px) {
-        position: relative;
-        width: 100%;
-    }
-    bottom: 0;
+    // @media (orientation: landscape) {
+       
+    //     min-height: 100vh - $header-height - $footer-height;
+    // }
+    // @media (orientation: portrait), (max-width: 500px), (max-height: 500px) {
+    //     height: auto;
+    // }
 }

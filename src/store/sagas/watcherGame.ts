@@ -7,7 +7,6 @@ import {
     IGameState,
     IMoveOrder,
     IPlayer,
-    INewGameProps,
     IClock
 } from '../app-interface';
 import {GameActions, GameActions as GM, GameActionTypes, GameActionTypes as GMA} from '../game/types'
@@ -183,7 +182,8 @@ function* workerMove(action: GMA) {
 }
 
 function* workerGameEnd(action: GMA) {
-    const {game: {moveOrder: {pieceOrder}}, clock: {blackClock}} = yield select()
+    const {game: {moveOrder: {pieceOrder}, gameMode}, clock: {blackClock}} = yield select()
+    if (gameMode === 'isOver') return
     const draw = action.payload === 'drawByAgreement' || action.payload === 'drawByRules'
     let winner: PieceColor | 'draw'
     if (action.payload === 'abandonedByWhite') {

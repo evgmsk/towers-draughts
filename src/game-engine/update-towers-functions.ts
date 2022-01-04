@@ -101,7 +101,6 @@ export class TowersUpdateResolver extends BaseMoveResolver {
 
     updateTowersOnMandatoryMoveStep(from: string, to: string, state: IGameBoard, tP: string[], last=false) {
         const isTowers = this.GV === 'towers'
-        console.log(isTowers, tP)
         const towers = this.updateTowersAfterMoveAnimation(from, to, state, isTowers, last)
         if (isTowers) {
             const middlePieceKey = tP[0]

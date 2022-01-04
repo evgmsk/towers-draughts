@@ -2,10 +2,15 @@
 
 
 .header {
+    position: fixed;
+    top: 0;
+    left: 0;
     box-sizing: border-box;
-    background-color:$header-back-color;
+    background: rgb(68,45,23);
+    background: linear-gradient(90deg, rgba(68,45,23,1) 25%, rgba(91,59,43,0.6222864145658263) 50%, rgba(55,31,17,1) 75%);
     height: $header-height;
-    z-index: 100;
+    width: 100%;
+    z-index: 500;
     .change-lang-button {
         border: none;
         display: flex;
@@ -29,7 +34,16 @@
         &:hover {
             transform: scale(1.1);
         }
+        @media (max-width: $tablet) and (orientation: landscape) {
+            span {
+                height: $lang-flag-size * .7;
+                width:$lang-flag-size  * .7;
+            }
+            height: $lang-flag-size * .7;
+            width:$lang-flag-size  * .7;
+        }
     }
+    
 }
 
 // nav 
@@ -120,7 +134,7 @@
         height: $header-height;
     }
     .brand-logo {
-        font-size: 24px;
+        font-size: 1.6rem;
         position: relative;
         display: block;
         color: $nav-bar-color;
@@ -130,6 +144,9 @@
         &:active, &:focus, &:hover {
             transition: all .3s;
             background-color: rgba(0, 0, 0, 0.1);;
+        }
+        @media (max-width: $tablet) and (orientation: landscape) {
+            font-size: 1.2rem;
         }
     }
 

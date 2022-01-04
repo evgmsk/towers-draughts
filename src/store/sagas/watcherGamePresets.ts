@@ -1,4 +1,4 @@
-import { call, put, takeLatest, select } from 'redux-saga/effects';
+import {put, takeLatest, select } from 'redux-saga/effects';
 
 import {FindOpponentAction, SetGameVariantAction, GameOptionActions as GOA} from '../gameOptions/types'
 // import { BoardOptionActions as BOA } from '../boardOptions/types';
@@ -20,37 +20,37 @@ function* findRival(action: FindOpponentAction) {
     }
 }
 
-function* lookForRival() {
-    const {
-        boardOptions: {boardSize}, 
-        gameOptions: {
-            playerColor,
-            timing: {timeToGame, adds}, 
-            gameVariant
-        },
-        user: {
-            rating
-        }
-    } = yield select()
-    const payload = {boardSize, playerColor, timing: `${timeToGame}/${adds}`, gameVariant, rating}
-    const message = "rival"
-    try {
-        console.log('send')
-        // sendMessage({message, payload})
-    } catch(e) {
-        console.log(e)
-        yield put({type: GOA.FINISH_GAME_SETUP, payload: false})
-        yield put({type: GOA.WAIT_RIVAL, payload: false})
-    }
-}
+// function* lookForRival() {
+//     const {
+//         boardOptions: {boardSize}, 
+//         gameOptions: {
+//             playerColor,
+//             timing: {timeToGame, adds}, 
+//             gameVariant
+//         },
+//         user: {
+//             rating
+//         }
+//     } = yield select()
+//     const payload = {boardSize, playerColor, timing: `${timeToGame}/${adds}`, gameVariant, rating}
+//     const message = "rival"
+//     try {
+//         console.log('send')
+//         // sendMessage({message, payload})
+//     } catch(e) {
+//         console.log(e)
+//         yield put({type: GOA.FINISH_GAME_SETUP, payload: false})
+//         yield put({type: GOA.WAIT_RIVAL, payload: false})
+//     }
+// }
 
 
-function* cancelRival() {
-    const {gameOptions: {gameVariant, timing}} = yield select()
-    yield put({type: GOA.WAIT_RIVAL, payload: false})
-    const payload = {waitingListKey: `${gameVariant}${timing.timeToGame}/${timing.adds}`}
-    // sendMessage({message: 'cancel rival', payload})
-}
+// function* cancelRival() {
+//     const {gameOptions: {gameVariant, timing}} = yield select()
+//     yield put({type: GOA.WAIT_RIVAL, payload: false})
+//     // const payload = {waitingListKey: `${gameVariant}${timing.timeToGame}/${timing.adds}`}
+//     // sendMessage({message: 'cancel rival', payload})
+// }
 
 function* workerGameVariant(action: SetGameVariantAction) {
     if (action.payload === 'international') {
@@ -64,6 +64,6 @@ function* workerGameVariant(action: SetGameVariantAction) {
 
 export default function* watcherPreGame() {
     yield takeLatest(GOA.FIND_RIVAL, findRival);
-    yield takeLatest(GOA.CANCEL_RIVAL_WAITING, cancelRival)
+    // yield takeLatest(GOA.CANCEL_RIVAL_WAITING, cancelRival)
     yield takeLatest(GOA.SET_GAME_VARIANT, workerGameVariant)
 }

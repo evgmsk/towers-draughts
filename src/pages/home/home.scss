@@ -4,40 +4,40 @@
 .home-page {
     background-color: rgb(240, 240, 230);
     @include flex(space-between, flex-start);
-    .side-bar_left, .side-bar_right {
-        width: 30%;
-    }
 }
-.home-content {
-    @include flex(space-between, flex-start);
+.home-page_content {
+    margin: auto;
+    padding: 3rem 0;
+    font-size: 2rem;
+    font-family: $font-main;
+    line-height: 2;
+    text-align: justify;
+    
+    figure {
+        font-size: 1rem;
+        margin: 30px 30px 0 0;
+        float:left;
+        img {
+            width: 30vw;
+            max-width: 300px;
+        }
+    }
+    @media (max-width: $tablet) {
+        font-size: 1.8rem;
+    }
+    @media (max-width: 500px) {
+        font-size: 1.2rem;
+    }
     @media (orientation: landscape) {
-        width: 100vw;
+        width: 70vw;
     }
     @media (orientation: portrait) {
-        width: 90vw
+        width: 90vw;
+        figure {
+            img {
+                width: 80vw;
+                max-width: 300px;
+            }
+        }
     };
-    figure {
-        margin-top: 30px;
-        // float:left;
-        // width: 100%;
-        // height: 100%;
-        img {
-            width: 100%
-        }
-    }
-    // float:right;
-    .home-invitation {
-        font-size: 2rem;
-        font-family: $font-main;
-        padding: 3rem;
-        line-height: 2;
-        @media (max-width: 900px) {
-            font-size: 1.1rem;
-        }
-        @media (max-width: 500px) {
-            font-size: 1rem;
-        }
-    }
-    
-    
 }
