@@ -31,7 +31,7 @@ export const Home: React.FC = () => {
                             </a>   
                         </figure>
                     <span>&nbsp;{i18n.about_continue}</span>
-                    <p className="home-page_to-game-button">
+                    <p className="home-page_to-game_button">
                         <button className='new-game' onClick={handleClick} type="button">{i18n.play}</button>
                     </p>
                 </section>

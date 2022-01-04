@@ -4,7 +4,12 @@
 .home-page {
     background-color: rgb(240, 240, 230);
     @include flex(space-between, flex-start);
+    &_to-game_button {
+        margin: 2rem 0 ;
+        @include flex(center);
+    }
 }
+
 .home-page_content {
     margin: auto;
     padding: 3rem 0;
@@ -12,7 +17,6 @@
     font-family: $font-main;
     line-height: 2;
     text-align: justify;
-    
     figure {
         font-size: 1rem;
         margin: 30px 30px 0 0;
