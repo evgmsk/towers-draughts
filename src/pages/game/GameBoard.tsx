@@ -72,13 +72,15 @@ export class GameClass extends React.Component<GameProps, IGameBoard> {
     componentDidUpdate(prevProps: GameProps) {
         const {
             game: {history, gameMode, moveOrder: {pieceOrder}, playerColor},
+            gameOptions: {rivalType},
             board,
             windowSize,
             boardOptions,
         } = this.props
         const histLength = history.length 
         // console.log(this.props)
-        if (prevProps.game.history.length !== histLength && pieceOrder === playerColor) {
+        if (prevProps.game.history.length !== histLength 
+            && ((pieceOrder === playerColor && rivalType === "PC") || rivalType === 'player')) {
             console.log('updated', this.props.board, this.props.game)
             this.makePremoveAction(history[history.length - 1])  
         }

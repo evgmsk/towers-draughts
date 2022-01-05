@@ -2,6 +2,7 @@ import React, { Suspense } from 'react'
 
 import Spinner from '../../page-components/spinners/Spinner'
 import gameExample from '../../assets/game-example.gif'
+import BGBoard from './Bg-board'
 import { sampleLink } from '../../constants/gameConstants'
 import {I18n} from '../../assets/i18n'
 
@@ -21,7 +22,8 @@ export const Home: React.FC = () => {
     return (
         <Suspense fallback={<Spinner />}>
             <div className="page home-page">
-                <div className=''></div>
+                <div className="bg-board"></div>
+                <BGBoard />
                 <section className="home-page_content">
                     <span>{i18n.about}</span>
                         <figure className="game-example-wrapper">
