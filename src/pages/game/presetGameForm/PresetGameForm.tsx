@@ -414,7 +414,7 @@ const PresetGameForm = (props: ConnectedProps<typeof presetGameConnector>) => {
     return (
         <div className={className}>
             <button className="new-game" type="button" value="new_game" onClick={findRival}>{i18n.newGame}</button>
-            <RivalVariantComponent />
+            {/* <RivalVariantComponent /> */}
             <div className="game-type-wrapper">
                 <GameVariantComponent />
                 <OpponentTypeSelectorC />
