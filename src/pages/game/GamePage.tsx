@@ -13,7 +13,7 @@ import {
     endGame,
     declineDraw,
 } from '../../store/game/actions'
-import { oppositColor } from '../../game-engine/gameplay-helper-fuctions'
+import { oppositeColor } from '../../game-engine/gameplay-helper-fuctions'
 import { PieceColor } from '../../store/app-interface'
 import { MovesHistory } from '../../game-components/moves-history/MovesHistory'
 import { GameMenu } from './PlayerGameMenu'
@@ -87,7 +87,7 @@ class GamePage extends React.Component<GPProps, {}> {
             <main className="portrait">
                 {   portrait 
                     ? <RivalGameBarComponent>
-                        <PlayerTimer timeOf={oppositColor(playerColor as PieceColor)} />
+                        <PlayerTimer timeOf={oppositeColor(playerColor as PieceColor)} />
                     </RivalGameBarComponent>
                     : null
                 }
@@ -114,7 +114,7 @@ class GamePage extends React.Component<GPProps, {}> {
                     </SideBar>
                     <SideBar side="right">
                         <RivalGameBarComponent>
-                            <PlayerTimer timeOf={oppositColor(playerColor as PieceColor)} />
+                            <PlayerTimer timeOf={oppositeColor(playerColor as PieceColor)} />
                         </RivalGameBarComponent>
                         <MovesHistory />
                         <PlayerGameBarComponent>

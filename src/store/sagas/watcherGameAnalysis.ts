@@ -2,7 +2,7 @@ import { put, takeLatest, select, delay } from 'redux-saga/effects';
 
 import { PieceColor, IMoveProps, IAnalysisState} from '../app-interface';
 
-import { copyMap, oppositColor, splitMove } from '../../game-engine/gameplay-helper-fuctions';
+import { copyMap, oppositeColor, splitMove } from '../../game-engine/gameplay-helper-fuctions';
 // import { Axios, setAuthorizationHeader } from '../../common/axios';
 import { GameAnalysisActions, GameAnalysisTypes } from '../gameAnalysis/types';
 import { createDefaultTowers, createEmptyBoard, createStartBoard} from '../../game-engine/prestart-help-function-constants';
@@ -91,7 +91,7 @@ function* workerStepForward(action: GameAnalysisTypes) {
     }
     yield put({
         type: GameAnalysisActions.UPDATE_ANALYSIS_STATE, 
-        payload: {...analyze, lastMove: nextLastMove, pieceOrder: oppositColor(pieceOrder)}
+        payload: {...analyze, lastMove: nextLastMove, pieceOrder: oppositeColor(pieceOrder)}
     })
     yield put({
         type: BoardActions.UPDATE_BOARD_STATE,
@@ -164,7 +164,7 @@ function* workerPlayMoves(action: GameAnalysisTypes) {
         payload: {
             ...analyze,
             lastMove: nextLastMove,
-            pieceOrder: oppositColor(pieceOrder),
+            pieceOrder: oppositeColor(pieceOrder),
         }
     })
     if (nextIndex < movesMainLine!.length - 1 || nextIndex < movesCurrentLine!.length -1) {
@@ -200,7 +200,7 @@ function* workerStepBack(action: GameAnalysisTypes) {
         payload: {
             ...analyze,
             lastMove: nextLastMove,
-            pieceOrder: oppositColor(pieceOrder),
+            pieceOrder: oppositeColor(pieceOrder),
         }
     })
 }
@@ -244,7 +244,7 @@ function* workerCurrentLine(action: GameAnalysisTypes) {
         })
         payload = {
             lastMove: {move, index: index + 1},
-            pieceOrder: oppositColor(pieceOrder),
+            pieceOrder: oppositeColor(pieceOrder),
         }
     } else {
         const movesLine = [...movesCurrentLine.slice(0, index + 1), move]
@@ -257,7 +257,7 @@ function* workerCurrentLine(action: GameAnalysisTypes) {
         })
         payload = { 
             lastMove: {move, index: index + 1},
-            pieceOrder: oppositColor(pieceOrder),
+            pieceOrder: oppositeColor(pieceOrder),
             movesCurrentLine: movesLine,
         }
     }
@@ -282,7 +282,7 @@ function* workerMainLine(action: GameAnalysisTypes) {
     if (!movesMainLine.length) {
         payload = {
             lastMove: {move, index: 0},
-            pieceOrder: oppositColor(pieceOrder),
+            pieceOrder: oppositeColor(pieceOrder),
             movesMainLine: [move]
         }
         const _positionsTree = copyMap(positionsTree!)
@@ -294,7 +294,7 @@ function* workerMainLine(action: GameAnalysisTypes) {
     } else if (movesMainLine[index + 1] === move) {
         payload = { 
             lastMove: {move, index: index + 1},
-            pieceOrder: oppositColor(pieceOrder),
+            pieceOrder: oppositeColor(pieceOrder),
         }
     } else {
         const movesLine = movesMainLine.slice(0, index + 1).concat(move)
@@ -303,7 +303,7 @@ function* workerMainLine(action: GameAnalysisTypes) {
         _positionTree.set(newKey, position)
         payload = {
             lastMove: {move, index: index + 1},
-            pieceOrder: oppositColor(pieceOrder),
+            pieceOrder: oppositeColor(pieceOrder),
             movesMainLine: [...movesMainLine, move]
         }
         yield put({
@@ -361,4 +361,3 @@ export default function* watcherAnalysis() {
     yield takeLatest(GameAnalysisActions.MAKE_NEW_MOVE, workerNewMove)
     yield takeLatest(GameAnalysisActions.SET_START_POSITION, workerStartPosition)
 }
- 

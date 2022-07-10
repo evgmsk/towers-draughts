@@ -23,7 +23,7 @@ export const Board: React.FC<IBoardProps> = (props) => {
             reversedBoard,
         },
         lastMove,
-        posibleMoves = new Map()
+        possibleMoves = new Map()
     } = props
     const DefaultTL = TopLegendValues.slice(0, boardSize)
     const DefaultSL = SideLegendValues.slice(0, boardSize)
@@ -41,7 +41,7 @@ export const Board: React.FC<IBoardProps> = (props) => {
             }
             const type = !((i + j) % 2) ? 'light' : 'dark'
             const index = `${h}${v}`
-            const marked = posibleMoves.get(index) ? 'marked' : ''
+            const marked = possibleMoves.get(index) ? 'marked' : ''
             const moveIndex = lastMove.indexOf(index)
             const highlighted = moveIndex >= 0 ? `highlighted${moveIndex}` : ''
             const className = `board__cell ${type} ${marked} ${highlighted}`.trim()
@@ -77,4 +77,3 @@ export const Board: React.FC<IBoardProps> = (props) => {
         </div>
     )  
 }
-    

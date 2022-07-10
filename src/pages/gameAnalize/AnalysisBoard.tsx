@@ -2,45 +2,46 @@ import React from 'react'
 import {connect, ConnectedProps} from 'react-redux'
 
 import {
-    IRef,
-    IAnalysisBoard,
-    TowerTouched,
     CellsMap,
-    TowersMap,
+    IAnalysisBoard,
     IBoardProps,
-    TowerConstructor,
-    TowerType,
-    PieceColor,
-    ITowerPosition,
-    IBoardToGame,
     IBoardToDraw,
+    IBoardToGame,
     IMMRResult,
+    IRef,
+    ITowerPosition,
+    PieceColor,
+    TowerConstructor,
+    TowersMap,
+    TowerTouched,
+    TowerType,
 } from '../../store/app-interface'
-import { makeMove } from '../../store/game/actions'
-import { updateAnalysisState, makeNewMove } from '../../store/gameAnalysis/actions'
+import {clearHistory, makeMove} from '../../store/game/actions'
+import {makeNewMove, updateAnalysisState} from '../../store/gameAnalysis/actions'
 import {
     checkMoveTargetCell,
-    possibleOutOfMandatory,
-    copyObj,
     copyMap,
+    copyObj,
+    possibleOutOfMandatory,
 } from '../../game-engine/gameplay-helper-fuctions'
+
 import {
     createAnalysisBoard,
+    createEmptyBoard,
     createEmptyBoardForCustomPosition,
     newOnBoardTower,
-    createEmptyBoard,
 } from '../../game-engine/prestart-help-function-constants'
 // import {AnimationDuration} from '../../constants/gameConstants'
 import tur from '../../game-engine/update-towers-functions'
 import mmr from '../../game-engine/mandatory-move-resolver'
 import TowerComponent from '../../game-components/tower/CheckerTower'
-import { Board } from '../../game-components/board/Board'
-import { IRootState } from '../../store/rootState&Reducer'
-import { updateBoardState } from '../../store/board/actions'
-import bms from '../../game-engine/position-evaluator'
+import {Board} from '../../game-components/board/Board'
+import {IRootState} from '../../store/rootState&Reducer'
+import {updateBoardState} from '../../store/board/actions'
+import bms from '../../game-engine/best-move-seeker'
 import {reverseBoard} from '../../store/boardOptions/actions'
-import {clearHistory} from '../../store/game/actions'
 import {finishGameSetup} from '../../store/gameOptions/actions'
+import {ISeekerProps} from "../../game-engine/engine-interfaces";
 
 const UnusedTowers = (props: {color: PieceColor, towers: TowersMap}) => {
     const {color, towers} = props
@@ -67,8 +68,8 @@ const mapDispatch = {
     finishGameSetup
 }
 
-const gameAnalizeConnector = connect(mapState, mapDispatch)
-type GameAnalyzeProps = ConnectedProps<typeof gameAnalizeConnector>
+const gameAnalyzeConnector = connect(mapState, mapDispatch)
+type GameAnalyzeProps = ConnectedProps<typeof gameAnalyzeConnector>
 
 type AnalysisBoardState = IAnalysisBoard & {[key: string]: any}
 
@@ -96,12 +97,16 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
             console.log(this.props)
             this.tur.updateCellsPosition(board, boardOptions, this.boardRef.current!);
         },0)
-        const props = {
-            bestMoveCB: updateBoardState,
+        const gameResult = this.props.analysis.gameResult
+        const props: ISeekerProps = {
+            pieceOrder: PieceColor.w,
+            position: this.props.board.currentPosition,
+            game: false,
             maxDepth: depth,
+            lastMove: gameResult?.movesHistory.slice(-1)[0] || '',
             evaluationStarted: true
         }
-        bms.resetProps(props)
+        bms.setState(props)
     }
 
     componentDidUpdate(prevProps: GameAnalyzeProps) {
@@ -128,7 +133,7 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
                 towers = this.tur.updateTowersPosition(cellSize, towers, cellsMap, reversedBoard)
                 updateBoardState({
                     currentPosition, towers, mandatoryMoves, mandatoryMoveStep: 0
-                 })
+                })
             } else {
                 const mandatoryMoves = this.mmr.lookForMandatoryMoves(pieceOrder, currentPosition)
                 if (mandatoryMoves.length) {
@@ -142,13 +147,13 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
             updateBoardState(board)
             this.tur.updateCellsPosition(board, boardOptions, this.boardRef.current!)
         }
-        if ((!settingPosition && pieceOrder !== prevProps.analysis.pieceOrder) 
+        if ((!settingPosition && pieceOrder !== prevProps.analysis.pieceOrder)
             || lastMove.move !== prevProps.analysis.lastMove.move
             || boardOptions.reversedBoard !== prevProps.boardOptions.reversedBoard) {
             const reversed = this.props.boardOptions.reversedBoard
             const towers = this.tur.updateTowersPosition(cellSize!, board.towers, cellsMap!, reversed)
             updateBoardState({
-               currentPosition, mandatoryMoves, mandatoryMoveStep: 0, towers
+                currentPosition, mandatoryMoves, mandatoryMoveStep: 0, towers
             })
         }
     }
@@ -160,13 +165,13 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
             movesMainLine: [],
             settingPosition: true,
             movesCurrentLine: [],
-            
+
         })
         const currentPosition = createEmptyBoard(boardOptions.boardSize)
         const positionsTree = new Map()
         positionsTree.set('sp', currentPosition)
         updateBoardState({
-            currentPosition, 
+            currentPosition,
             positionsTree
         })
     }
@@ -248,7 +253,7 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
             mandatoryMoves: _mandatoryMoves,
             mandatoryMoveStep: _mandatoryMoveStep,
             towerTouched: _towerTouched,
-        }) 
+        })
     }
 
     handleMouseUp = (event: any) => {
@@ -258,18 +263,18 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
             board: {towerTouched, moveDone, cellsMap, cellSize, towers},
             board,
         } = this.props
-        
+
         if (!towerTouched || moveDone) {
             return
         }
         const {clientX, clientY} = event.type === 'touchend' ? event.changedTouches['0'] : event
-        let cellsToCheck =  towerTouched.posibleMoves as CellsMap
+        let cellsToCheck =  towerTouched.possibleMoves as CellsMap
         if (settingPosition) {
             cellsToCheck = cellsMap
         }
         const cellKey = checkMoveTargetCell({x: clientX, y: clientY}, cellsToCheck, cellSize, this.boardRef)
         if (!cellKey) {
-            console.log('out of board')
+            console.log('out of position')
             this.tur.cancelTowerTransition({...board, reversed: reversedBoard})
         } else {
             if (!settingPosition) {
@@ -311,20 +316,20 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
         const {
             analysis: {removePiece},
             updateBoardState,
-            boardOptions: {reversedBoard}, 
+            boardOptions: {reversedBoard},
             board: {towerTouched, towers},
             board,
         } = this.props
         const mergingTower = towers!.get(towerTouched!.key)
-        const case1 = tower.bPiecesQuantity > 0 
-            && tower.wPiecesQuantity > 0 
+        const case1 = tower.bPiecesQuantity > 0
+            && tower.wPiecesQuantity > 0
             && mergingTower!.wPiecesQuantity > 0
             && mergingTower!.bPiecesQuantity > 0
         const case2 = tower.currentColor === mergingTower!.currentColor
             && mergingTower!.wPiecesQuantity > 0
             && mergingTower!.bPiecesQuantity > 0
         const case3 = tower.currentColor !== mergingTower!.currentColor
-            &&tower.bPiecesQuantity > 0 
+            &&tower.bPiecesQuantity > 0
             && tower.wPiecesQuantity > 0
         if (!case1 && !case2 && !case3 && tower.onBoardPosition !== mergingTower?.onBoardPosition) {
             console.log(tower, mergingTower)
@@ -343,7 +348,7 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
             }
         } else {
             this.tur.cancelTowerTransition({...board, reversed: reversedBoard})
-        }  
+        }
     }
 
     handleSettingPieces = (cellKey: string) => {
@@ -372,7 +377,7 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
         } else if (this.props.gameOptions.gameVariant === 'towers') {
             this.handleSettingTowers(tower)
         } else {
-            this.tur.cancelTowerTransition({...board, reversed}) 
+            this.tur.cancelTowerTransition({...board, reversed})
         }
     }
 
@@ -401,7 +406,7 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
         for (let i = 0; i < bPiecesQuantity; i++) {
             const key = `oB b${blackUnusedQuantity + i}`
             const positionInDOM = this.tur.calcPositionOutboardTowers(key, cellSize, reversedBoard) as ITowerPosition
-            
+
             const bTower = new TowerConstructor({
                 currentColor: PieceColor.b,
                 positionInDOM,
@@ -439,7 +444,7 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
         // console.log(towers, tower, key)
         updateBoardState({towers, currentPosition, mouseDown: false, towerTouched: null as unknown as TowerTouched})
     }
-    
+
     handleMouseMove = (event: any) => {
         const {board: {towerTouched, moveDone, mouseDown}, analysis: {settingPosition}, updateBoardState} = this.props
         if (!towerTouched || moveDone || (!mouseDown && !settingPosition)) {
@@ -466,7 +471,7 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
         const reversed = this.props.boardOptions.reversedBoard
         const towerKey = (target as HTMLDivElement).getAttribute('data-indexes') as string
         if (!towerKey) {
-            this.tur.cancelTowerTransition({...board, reversed}) 
+            this.tur.cancelTowerTransition({...board, reversed})
         }
         console.log(target, removePiece)
         if (removePiece) {
@@ -481,7 +486,7 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
             const tower = towers!.get(towerKey)!
             const towerTouched: TowerTouched = {
                 key: towerKey,
-                posibleMoves: new Map(),
+                possibleMoves: new Map(),
                 startCursorPosition: {x: clientX, y: clientY},
                 startTowerPosition: tower.positionInDOM!,
                 towerColor: tower.currentColor,
@@ -505,21 +510,21 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
         if (!classList.contains(pieceOrder)) return
         const towerKey = (target as HTMLDivElement).getAttribute('data-indexes') as string
         const tower = towers!.get(towerKey)!
-        let posibleMoves: CellsMap
+        let possibleMoves: CellsMap
         if (mandatoryMoves?.length) {
-           posibleMoves = possibleOutOfMandatory(this.props.board, towerKey)
+            possibleMoves = possibleOutOfMandatory(this.props.board, towerKey)
         } else {
-            posibleMoves = tower.currentType === TowerType.m 
-            ? this.mmr.manTowerFreeMoves(tower, currentPosition!, cellsMap!)
-            : this.mmr.kingTowerFreeMoves(towerKey, currentPosition!, cellsMap!)
+            possibleMoves = tower.currentType === TowerType.m
+                ? this.mmr.manTowerFreeMoves(tower, currentPosition!, cellsMap!)
+                : this.mmr.kingTowerFreeMoves(towerKey, currentPosition!, cellsMap!)
         }
-        if (!posibleMoves.size) {
+        if (!possibleMoves.size) {
             // sound
             return
         }
         const towerTouched: TowerTouched = {
             key: towerKey,
-            posibleMoves,
+            possibleMoves,
             startCursorPosition: {x: clientX, y: clientY},
             startTowerPosition: tower.positionInDOM!,
             towerColor: tower.currentColor,
@@ -527,7 +532,7 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
         }
         updateBoardState({towerTouched, mouseDown: true})
     }
-       
+
     contextMenuHandler = (e: React.MouseEvent) => {
         const {analysis: {settingPosition}, updateBoardState} = this.props
         e.preventDefault()
@@ -545,7 +550,7 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
     render() {
         const {boardOptions, board: {towerTouched}, board} = this.props
         const {towers, mandatoryMoves, mandatoryMoveStep, lastMoveSquares} = board
-        const boardProps = {boardOptions, posibleMoves: towerTouched?.posibleMoves, lastMove: lastMoveSquares}  as IBoardProps
+        const boardProps = {boardOptions, possibleMoves: towerTouched?.possibleMoves, lastMove: lastMoveSquares}  as IBoardProps
         const {boardSize, boardTheme, reversedBoard} = boardOptions
         const WrapperClass = `board__wrapper ${boardTheme} h${boardSize}v${boardSize}${reversedBoard ? ' reversed' : ''}`;
         const mandatoryTowers = (mandatoryMoves || []).map(m => m.move.split(':')[mandatoryMoveStep || 0])
@@ -555,22 +560,22 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
         })
         return (
             <section
-                    onContextMenu={this.contextMenuHandler}
-                    onMouseMove={this.handleMouseMove}
-                    onMouseUp={this.handleMouseUp}
-                    onMouseDown={this.handleMouseDown}
-                    onTouchStart={this.handleMouseDown}
-                    onTouchMove={this.handleMouseMove} 
-                    onTouchEnd={this.handleMouseUp}
-                    className={WrapperClass}
-                    ref={this.boardRef}
+                onContextMenu={this.contextMenuHandler}
+                onMouseMove={this.handleMouseMove}
+                onMouseUp={this.handleMouseUp}
+                onMouseDown={this.handleMouseDown}
+                onTouchStart={this.handleMouseDown}
+                onTouchMove={this.handleMouseMove}
+                onTouchEnd={this.handleMouseUp}
+                className={WrapperClass}
+                ref={this.boardRef}
             >
                 <div className="piece-boxes-container">
                     <div className="pieces-box white-b">
                         <UnusedTowers color={PieceColor.w} towers={towers!} />
                     </div>
                     <div className="pieces-box black-b">
-                       <UnusedTowers color={PieceColor.b} towers={towers!} />
+                        <UnusedTowers color={PieceColor.b} towers={towers!} />
                     </div>
                 </div>
                 {Towers}
@@ -580,6 +585,6 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
     }
 }
 
-export const GameBoardCompopnent =  gameAnalizeConnector(GameBoard)
+export const GameBoardComponent =  gameAnalyzeConnector(GameBoard)
 
-export default GameBoardCompopnent
+export default GameBoardComponent

@@ -107,7 +107,7 @@ export class GameClass extends React.Component<GameProps, IGameBoard> {
     makePremoveAction = (opponentMove: string) => {
         const {game: {history, moveOrder: {pieceOrder}}, board: {currentPosition}, endGame} = this.props
         const mandatoryMoves = this.mmr.lookForMandatoryMoves(pieceOrder, currentPosition)
-        const freeMoves = this.mmr.lookForAllPosibleMoves(pieceOrder, currentPosition)
+        const freeMoves = this.mmr.lookForAllPossibleMoves(pieceOrder, currentPosition)
         if (!mandatoryMoves.length && !freeMoves.length) {
             return setTimeout(() => endGame('noMoves'), AnimationDuration)
         }  
@@ -154,8 +154,8 @@ export class GameClass extends React.Component<GameProps, IGameBoard> {
     render() {
         const {towers, towerTouched, mandatoryMoves, mandatoryMoveStep, lastMoveSquares} = this.props.board
         const { boardOptions, game: {gameMode}} = this.props
-        const posibleMoves = towerTouched?.posibleMoves
-        const BoardProps = {boardOptions, posibleMoves, lastMove: lastMoveSquares} as IBoardProps
+        const possibleMoves = towerTouched?.possibleMoves
+        const BoardProps = {boardOptions, possibleMoves, lastMove: lastMoveSquares} as IBoardProps
         const mandatoryTowers = (mandatoryMoves || []).map(m => m.move.split(':')[mandatoryMoveStep || 0])
         const {boardSize, boardTheme} = boardOptions
         const WrapperClass = `board__wrapper ${boardTheme} h${boardSize}v${boardSize}`;

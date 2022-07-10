@@ -101,7 +101,7 @@ export class GameClass extends React.Component<GameProps, IGameBoard> {
             board: {currentPosition},
         } = this.props
         const mandatoryMoves = mmr.lookForMandatoryMoves(pieceOrder, currentPosition)
-        if (!mandatoryMoves.length && !mmr.lookForAllPosibleMoves(pieceOrder, currentPosition).length) {
+        if (!mandatoryMoves.length && !mmr.lookForAllPossibleMoves(pieceOrder, currentPosition).length) {
             console.log('no moves', this.props)
             return setTimeout(() => endGame('noMoves'), AnimationDuration)
         }
@@ -162,7 +162,7 @@ export class GameClass extends React.Component<GameProps, IGameBoard> {
         }
         const reversed = this.props.boardOptions.reversedBoard
         const {clientX, clientY} = event.type === 'touchend' ? event.changedTouches['0'] : event
-        const to = checkMoveTargetCell({x: clientX, y: clientY}, towerTouched.posibleMoves, cellSize, this.boardRef)
+        const to = checkMoveTargetCell({x: clientX, y: clientY}, towerTouched.possibleMoves, cellSize, this.boardRef)
         const cancelProps = {...board, reversed}
         if (!to) {
             tur.cancelTowerTransition(cancelProps)
@@ -229,7 +229,7 @@ export class GameClass extends React.Component<GameProps, IGameBoard> {
         }
         const towerTouched: TowerTouched = {
             key: towerKey,
-            posibleMoves,
+            possibleMoves: posibleMoves,
             startCursorPosition: {x: clientX, y: clientY},
             startTowerPosition: tower.positionInDOM!,
             towerColor: tower.currentColor,
@@ -250,8 +250,8 @@ export class GameClass extends React.Component<GameProps, IGameBoard> {
         const {towers, towerTouched, mandatoryMoves, mandatoryMoveStep, lastMoveSquares} = this.props.board
         const {boardOptions, game: {gameMode}} = this.props
         // console.log(towers)
-        const posibleMoves = towerTouched?.posibleMoves
-        const BoardProps = {boardOptions, posibleMoves, lastMove: lastMoveSquares} as IBoardProps
+        const possibleMoves = towerTouched?.possibleMoves
+        const BoardProps = {boardOptions, possibleMoves, lastMove: lastMoveSquares} as IBoardProps
         const mandatoryTowers = (mandatoryMoves || []).map(m => m.move.split(':')[mandatoryMoveStep || 0])
         const {boardSize, boardTheme} = boardOptions
         const WrapperClass = `board__wrapper ${boardTheme} h${boardSize}v${boardSize}`;

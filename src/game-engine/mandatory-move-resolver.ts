@@ -1,5 +1,5 @@
 import { PieceColor, IBoardToGame, TowerType, IBoardCell, IMMRResult } from '../store/app-interface'
-import { filterArrayByLength, copyObj, oppositColor } from './gameplay-helper-fuctions'
+import { filterArrayByLength, copyObj, oppositeColor } from './gameplay-helper-fuctions'
 import { KingMandatoryMoveResolver as KMMR} from './king-mandatory-move-resolver'
 import { createStartBoard } from './prestart-help-function-constants'
 
@@ -31,8 +31,8 @@ export class MandatoryMovesResolver extends KMMR{
         const mandatoryMoves = this.lookForMandatoryMoves(color, board)
         if (mandatoryMoves.length) {
             return mandatoryMoves
-        } 
-        return this.lookForAllPosibleMoves(color, board).map((m: string) => {
+        }
+        return this.lookForAllPossibleMoves(color, board).map((m: string) => {
             const [from, to] = m.split('-')
             return {move: m, position: this.makeFreeMove(from, to, board)}
         })
@@ -48,7 +48,7 @@ export class MandatoryMovesResolver extends KMMR{
         const nextMoves: IMMRResult[] = []
         const exludedDirection = this.getMoveDirection([to, from])
         Object.keys(neighbors).filter((dir: string) => (
-                dir !== exludedDirection
+            dir !== exludedDirection
         )).forEach((dir: string) => {
             if (!cell.tower) {
                 console.error('checkManMoveNextStep invalid start cell', move, board, cell, dir)
@@ -61,7 +61,7 @@ export class MandatoryMovesResolver extends KMMR{
         return nextMoves
     }
 
-    checkManFristMandatoryStep(cell: IBoardCell, board: IBoardToGame): IMMRResult[] {
+    checkManFirstMandatoryStep(cell: IBoardCell, board: IBoardToGame): IMMRResult[] {
         const moves = [] as IMMRResult[]
         Object.keys(cell!.neighbors).forEach((dir: string) => {
             const startProps = {move: '', position: board, takenPieces: [], currentPosition: cell.boardKey}
@@ -76,7 +76,7 @@ export class MandatoryMovesResolver extends KMMR{
 
     checkManMandatoryMoves(cell: IBoardCell, board: IBoardToGame): IMMRResult[] {
         let result = [] as IMMRResult[]
-        result = this.checkManFristMandatoryStep(cell, board)
+        result = this.checkManFirstMandatoryStep(cell, board)
         if (!result.length) {
             return result
         }
@@ -92,11 +92,11 @@ export class MandatoryMovesResolver extends KMMR{
         const takenPiece = neighborCell.boardKey
         if (this.GV !== 'towers' && preMove.move.length && preMove.takenPieces!.includes(takenPiece)) {
             return null as unknown as IMMRResult
-        } else if (neighborCell?.tower?.currentColor === oppositColor(cell!.tower!.currentColor!)) {
+        } else if (neighborCell?.tower?.currentColor === oppositeColor(cell!.tower!.currentColor!)) {
             const nextCellKey = neighborCell.neighbors[dir]
             if(nextCellKey && !board[nextCellKey].tower) {
-                const move = !preMove.move.length 
-                    ? `${cell?.boardKey}:${nextCellKey}` 
+                const move = !preMove.move.length
+                    ? `${cell?.boardKey}:${nextCellKey}`
                     : `${preMove.move}:${nextCellKey}`
                 if (move.split(':').length < 2) {
                     console.error('move too short', move)
@@ -114,24 +114,24 @@ export class MandatoryMovesResolver extends KMMR{
         let movesToCheckContinue = [] as IMMRResult[]
         moves.forEach((mr: IMMRResult) => {
             const board = mr.position
-            const currrentSquare = mr.move.split(':').slice(-1)[0]
-            if (board[currrentSquare].tower?.currentType === TowerType.k 
+            const currentSquare = mr.move.split(':').slice(-1)[0]
+            if (board[currentSquare].tower?.currentType === TowerType.k
                 && this.gameVariantMoveContinueRestriction()) {
                 const nextMoves = this.checkKingNextSteps([mr])
                 if (nextMoves.length) {
                     compleatedMoves = compleatedMoves.concat(nextMoves)
                 } else {
-                    compleatedMoves.push(mr) 
+                    compleatedMoves.push(mr)
                 }
             } else {
                 const nextMoves = this.checkMandatoryMoveNextStep(mr)
-                if (nextMoves.length) { 
+                if (nextMoves.length) {
                     movesToCheckContinue = movesToCheckContinue.concat(nextMoves)
                 } else if (this.GV !== 'international') {
                     if (!compleatedMoves.filter(m => m.move.startsWith(mr.move)).length) {
                         compleatedMoves.push(mr)
                     }
-                    
+
                 }
             }
         })
@@ -168,7 +168,7 @@ export class MandatoryMovesResolver extends KMMR{
             }
         }
         result = this.GV === 'towers'
-            ? result 
+            ? result
             : result.map((m: IMMRResult) => (this.removeTakenPieces(m)))
         return this.GV ===  'international' ? filterArrayByLength(result).cont : result
     }

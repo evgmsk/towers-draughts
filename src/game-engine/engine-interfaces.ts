@@ -3,31 +3,33 @@ import { IBoardToGame, PieceColor } from "../store/app-interface";
 export interface ILastResult {value: number, movesBranch: string}
 
 export interface IMove {
-    move: string, 
-    branchValue: number, 
-    position: IBoardToGame, 
-    validity?: {deep: number, coverage: number}
+    move: string,
+    baseValue: number,
+    position: IBoardToGame,
+    deepValue?: number,
 }
+
 
 export interface IBranch {
     moves: IMove[],
-    board: IBoardToGame,
-    evaluationResult?: {value: number, move: string, deep?: number}
-    engineMoveLast?: boolean
-    pieceOrder?: PieceColor
-    validity?: IValidity
-    value?: number
-    baseValue?: number
+    position: IBoardToGame,
+    pieceOrder: PieceColor
+    baseValue: number
+    deepValue?: number
 }
 
 export interface ISeekerProps {
-    bestLinesCB?: Function
-    bestMoveCB: Function
-    maxDepth: number
-    engineColor?: PieceColor
-    game?: boolean
+    maxDepth?: number
+    pieceOrder: PieceColor
+    position: IBoardToGame
+    game: boolean
     startDepth?: number
+    movesHistory?: string[]
+    lastMove: string
     evaluationStarted: boolean
+    positionBaseValue?: number
+    lastResult?: ILastResult
+    parentPositionValue?: { baseValue: number, calcValue: number }
 }
 
 export interface IValidity {deep: number, coverage: number}

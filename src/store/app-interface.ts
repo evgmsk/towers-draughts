@@ -81,13 +81,13 @@ export interface IAnalysisState {
 
 export type CellsMap = Map<string, ITowerPosition>
 
-export interface IBoardProps {boardOptions: IBoardOptions, posibleMoves?: CellsMap, lastMove: string[]}
+export interface IBoardProps {boardOptions: IBoardOptions, possibleMoves?: CellsMap, lastMove: string[]}
 
 export interface IBoardToDraw {
     cellsMap: CellsMap
     cellSize: number
     towerTouched?: TowerTouched
-    posibleMoves?: CellsMap
+    possibleMoves?: CellsMap
     towers: TowersMap
     mouseDown: boolean
     mandatoryMoves?: IMMRResult[]
@@ -221,7 +221,7 @@ export interface IGameOptionState {
 
 export interface TowerTouched {
     key: string
-    posibleMoves: CellsMap
+    possibleMoves: CellsMap
     startCursorPosition: ITowerPosition
     startTowerPosition: ITowerPosition
     towerColor: PieceColor
@@ -241,7 +241,7 @@ export interface IBoardOptions {
     topLegend?: string[],
     sideLegend?: number[],
     withOutLegend?: boolean,
-    lengendsInside?: boolean,
+    legendsInside?: boolean,
     boardNotation: BoardNotation,
     reversedBoard: boolean
 }

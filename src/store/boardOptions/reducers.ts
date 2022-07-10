@@ -9,7 +9,7 @@ import { BoardOptionActions, BoardOptionActionTypes } from "./types"
 export const InitialBoardOptionsState: IBoardOptions = {
     boardTheme: 'standart',
     withOutLegend: false,
-    lengendsInside: false,
+    legendsInside: false,
     boardNotation: BoardNotation.r,
     boardSize: BaseBoardSize,
     reversedBoard: false,

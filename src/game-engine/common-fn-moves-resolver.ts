@@ -15,7 +15,7 @@ import {
     TowersMap,
     TowerType 
 } from "../store/app-interface"
-import {  copyObj, crossDirections, oppositColor } from "./gameplay-helper-fuctions";
+import {  copyObj, crossDirections, oppositeColor } from "./gameplay-helper-fuctions";
 import { createEmptyBoard } from "./prestart-help-function-constants";
 
 export class BaseMoveResolver {
@@ -147,7 +147,7 @@ export class MoveResolveCommons extends BaseMoveResolver {
         }
     }
 
-    lookForAllPosibleMoves = (color: PieceColor, board: IBoardToGame): string[] => {
+    lookForAllPossibleMoves = (color: PieceColor, board: IBoardToGame): string[] => {
         let result: string[] = []
         for (let key of Object.keys(board)) {
             const cell = board[key]
@@ -225,7 +225,7 @@ export class MoveResolveCommons extends BaseMoveResolver {
     }
     
     getNewOrder = (props: Partial<IGameState>): IMoveOrder => {
-        const newPieceOrder = oppositColor(props.moveOrder!.pieceOrder)
+        const newPieceOrder = oppositeColor(props.moveOrder!.pieceOrder)
         const moveOrder = {
             pieceOrder:  newPieceOrder,
             playerTurn: props[newPieceOrder]!.name,
@@ -234,7 +234,7 @@ export class MoveResolveCommons extends BaseMoveResolver {
     }
 
     getPropsToMakeFreeMove = (from: string, to: string, props: {[key: string]: any}): IMoveProps => {
-        const newPieceOrder = oppositColor(props.moveOrder!.pieceOrder)
+        const newPieceOrder = oppositeColor(props.moveOrder!.pieceOrder)
         const moveOrder = {
             pieceOrder:  newPieceOrder,
             playerTurn: props[newPieceOrder]!.name,
@@ -269,17 +269,17 @@ export class MoveResolveCommons extends BaseMoveResolver {
     manTowerFreeMoves = (tower: TowerConstructor, board: IBoardToGame, cellsMap: CellsMap) => {
         const key = tower.onBoardPosition
         const color = tower.currentColor
-        const posibleMoves =  new Map() as CellsMap
+        const possibleMoves =  new Map() as CellsMap
         const cellNeighbors = board![key]!.neighbors
         Object.values(cellNeighbors!).forEach((k: string) => {
             const cell = board![k] 
             const [towerLine, neighborLine] = [parseInt(key.slice(1)), parseInt(k.slice(1))]
             if ((color === PieceColor.b && !cell!.tower && towerLine > neighborLine)
                 || (color === PieceColor.w && !cell!.tower && towerLine < neighborLine)) {
-                posibleMoves.set(k, cellsMap!.get(k) as ITowerPosition)
+                possibleMoves.set(k, cellsMap!.get(k) as ITowerPosition)
             }
         })
-        return posibleMoves
+        return possibleMoves
     }
 
     checkLastLine(to: string, whiteMove: boolean): boolean {

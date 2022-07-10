@@ -20,7 +20,7 @@ export const splitMove = (move: string) => {
     return move.split('-')
 }
 
-export const oppositColor = (color: PieceColor): PieceColor => (color === PieceColor.w ? PieceColor.b : PieceColor.w)
+export const oppositeColor = (color: PieceColor): PieceColor => (color === PieceColor.w ? PieceColor.b : PieceColor.w)
 
 export const copyMap = (board: Map<string, any>) => {
     const nm = new Map()
@@ -155,7 +155,7 @@ const GHF = {
     crossDirections,
     copyObj,
     copyMap,
-    oppositColor,
+    oppositeColor,
     compareMaps,
     filterArrayByLength,
 }

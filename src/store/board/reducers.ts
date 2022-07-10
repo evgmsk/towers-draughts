@@ -15,7 +15,7 @@ export const InitialBoardState: IBoardAndTowers = {
     currentPosition: createStartBoard(BaseBoardSize),
     towers: new Map(),
     mandatoryMoves: [],
-    posibleMoves: new Map(),
+    possibleMoves: new Map(),
     mouseDown: false,
     towerView: "face",
     mandatoryMoveStep: 0,

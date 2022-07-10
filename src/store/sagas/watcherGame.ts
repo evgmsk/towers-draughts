@@ -13,7 +13,7 @@ import {GameActions, GameActions as GM, GameActionTypes, GameActionTypes as GMA}
 import {ClockActions} from '../clock/types'
 // import {sendMessage} from '../../web-sockets/ws'
 // import { IRootState } from '../rootState&Reducer';
-import { oppositColor } from '../../game-engine/gameplay-helper-fuctions';
+import { oppositeColor } from '../../game-engine/gameplay-helper-fuctions';
 // import { Axios, setAuthorizationHeader } from '../../common/axios';
 import { GameAnalysisActions } from '../gameAnalysis/types';
 import {checkIfNumberOfKingsChanged} from '../../game-engine/gameplay-helper-fuctions'
@@ -193,13 +193,13 @@ function* workerGameEnd(action: GMA) {
     } else if (action.payload === 'outOfTime') {
         winner = !blackClock.timeToGame ? PieceColor.w : PieceColor.b
     } else {
-        winner = draw ? 'draw' : oppositColor(pieceOrder)
+        winner = draw ? 'draw' : oppositeColor(pieceOrder)
     }
     yield resolveEndGame(winner, action.payload as EndGameConditions)
 }
 
 function* workerSurrender(action: GMA) {
-    const winner = oppositColor(action.payload as PieceColor)
+    const winner = oppositeColor(action.payload as PieceColor)
     yield resolveEndGame(winner, 'surrender')
 }
 
