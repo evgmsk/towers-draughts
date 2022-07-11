@@ -2,8 +2,8 @@ import {evaluator} from './position-evaluator';
 import {IBranch, ILastResult, IMove, ISeekerProps} from './engine-interfaces';
 import {IBoardToGame, IMMRResult, PieceColor} from '../store/app-interface';
 import mmr from './mandatory-move-resolver';
-import {oppositeColor} from './gameplay-helper-fuctions';
 import movesTree from './movesMap';
+import {oppositeColor} from "./gameplay-helper-fuctions";
 
 const FirstMoves: {[key:string]: string[]} = {
     international: ['d4-e5', 'd4-e5', 'd4-e5',  'd4-c5',  'd4-c5',  'h4-g5',  'h4-i5'],
@@ -22,7 +22,7 @@ export class BestMoveSeeker implements ISeekerProps {
     lastResult = {} as ILastResult
     pieceOrder = PieceColor.w
     positionBaseValue = 0
-    parentPositionValue = {baseValue: 0, calcValue: 0}
+    parentPositionValue = {baseValue: 0, deepValue: 0}
     game = true
     evaluationStarted = false
 
@@ -33,7 +33,7 @@ export class BestMoveSeeker implements ISeekerProps {
         this.lastResult = {} as ILastResult
         this.movesHistory = props.movesHistory || []
         this.positionBaseValue = 0
-        this.parentPositionValue = props.parentPositionValue || {baseValue: 0, calcValue: 0}
+        this.parentPositionValue = props.parentPositionValue || { baseValue: 0, deepValue: 0 }
         this.pieceOrder = PieceColor.w
         this.evaluationStarted = props.evaluationStarted || false
     }
@@ -53,8 +53,29 @@ export class BestMoveSeeker implements ISeekerProps {
     setPositionBaseValue(val: number) {
         this.positionBaseValue = val
     }
-    setParentPositionValue(val: { baseValue: number, calcValue: number }) {
+    setParentPositionValue(val: { baseValue: number, deepValue: number }) {
         this.parentPositionValue = val
+    }
+    defineParentPositionValue() {
+        const history = this.movesHistory
+        let parentPositionKey
+        if (history.length > 2 && history.length < 5) {
+            parentPositionKey = history.slice(0, -2).join('_')
+        } else if (history.length > 4) {
+            parentPositionKey = history.slice(history.length - 5, -2).join('_')
+        }
+        if (parentPositionKey) {
+            const parentPosition = movesTree.getBranch(parentPositionKey)
+            this.parentPositionValue = {
+                baseValue: parentPosition?.baseValue || 0,
+                deepValue: parentPosition?.deepValue || 0
+            }
+        } else {
+            this.parentPositionValue = {
+                baseValue: 0,
+                deepValue: 0
+            }
+        }
     }
 
     setEvaluationStatus(status: boolean) {
@@ -93,22 +114,8 @@ export class BestMoveSeeker implements ISeekerProps {
         const positionKey = `${this.movesHistory}_${move}`
         const [from, to] = move.split('-')
         const moveToMake = {move, position: mmr.makeFreeMove(from, to, currentPosition)}
-        const availableMoves = mmr.lookForAllMoves(oppositeColor(this.pieceOrder), moveToMake.position)
-        const branchValue = -100
-        const positionToSave = {
-            moves: availableMoves.map((move: IMMRResult) => (
-                {move: move.move, baseValue: branchValue, position: move.position}
-            )),
-            position: moveToMake.position,
-            deepValue: branchValue,
-            baseValue: evaluator.evaluateCurrentPosition(currentPosition),
-        } as IBranch
-        movesTree.addBranch(positionKey, positionToSave)
+        this.savePositionInTree(positionKey, moveToMake.position, this.pieceOrder)
         this.bestMoveCB(moveToMake)
-    }
-
-    filterBranches = () => {
-       movesTree.filter(this.movesHistory.slice(-5).join('_'))
     }
 
     getAvailableMoves = (positionKey: string, board: IBoardToGame) => {
@@ -126,49 +133,64 @@ export class BestMoveSeeker implements ISeekerProps {
         return availableMoves
     }
 
-    setActualMovesBranchAfterMove = (props: {history: string[], cP: IBoardToGame, pieceOrder: PieceColor}) => {
-
-        const {history, cP: currentPosition, pieceOrder} = props
+    setActualMovesBranchAfterMove(props: {history: string[], cP: IBoardToGame, pieceOrder: PieceColor}) {
+        const {history, cP: position, pieceOrder} = props
         this.pieceOrder = pieceOrder
+        this.movesHistory = history
+        this.defineParentPositionValue()
         if (history.length < 2 && this.game) {
-            return this.debutResolver(currentPosition)
+            return this.debutResolver(position)
         }
         this.lastMove = history.slice(-1)[0] || 'sp'
-        let positionKey = history.slice(-5).join('_')
-        if (history.length > 3) {
-            const parentPosition = 0
-        } else {
-            this.parentPositionValue = {baseValue: 0, calcValue: 0}
-        }
-        this.movesHistory = history
+        let posKey = history.slice(-5).join('_')
         if (movesTree.tree.size){
-            this.filterBranches()
+            movesTree.filter(this.movesHistory.slice(-5).join('_'))
         }
-
-        const availableMoves = this.getAvailableMoves(positionKey, currentPosition)
-        console.error(this, movesTree, availableMoves)
-        let actualBranch = movesTree.getBranch(positionKey)
+        const availableMoves = this.getAvailableMoves(posKey, position)
+        let actualBranch = movesTree.getBranch(posKey)
         if (!availableMoves) {
             return this.bestMoveCB({move: '', position: {}})
+        } else if (availableMoves.length === 1) {
+            this.bestMoveCB({move: availableMoves[0].move, position: availableMoves[0].position})
+            return actualBranch
+                ? null
+                : this.savePositionInTree(posKey, position, pieceOrder, availableMoves)
         }
-        const whiteValue = evaluator.evaluateCurrentPosition(currentPosition) as number
-        const baseValue = this.pieceOrder === PieceColor.w ? whiteValue : -whiteValue
         if (!actualBranch) {
-            actualBranch = {
-                moves: availableMoves,
-                position: currentPosition,
-                pieceOrder,
-                baseValue,
-            }
-            movesTree.addBranch(positionKey, actualBranch)
-            console.log('new branch at', positionKey)
+            this.savePositionInTree(posKey, position, pieceOrder, availableMoves)
         } else {
             console.log('look forward')
-            positionKey = this.lookForUnevaluatedForward(this.lastMove)
+            posKey = this.lookForUnevaluatedForward(this.lastMove)
         }
-        if (positionKey) {
-            this.stepForward(positionKey)
+        if (posKey) {
+            this.stepForward(posKey)
         }
+    }
+
+    savePositionInTree(key: string, pos: IBoardToGame, pieceOrder: PieceColor, moves?: any[]) {
+        const availableMoves = mmr.lookForAllMoves(pieceOrder, pos)
+        moves = moves || availableMoves.map((move: IMMRResult) => {
+            const posValue = evaluator.evaluateCurrentPosition(move.position)
+            return {
+                move: move.move,
+                position: move.position,
+                baseValue: oppositeColor(pieceOrder) === PieceColor.w ? posValue : -posValue
+            }
+        })
+        const baseValue = moves.slice(0, -1).reduce((acc, move) => {
+            acc = acc.positionValue > move.positionValue ? acc : move
+            return acc
+        }, moves.slice(-1)[0]).positionValue
+        const positionToSave: IBranch = {
+            moves,
+            position: pos,
+            deepValue: -100,
+            baseValue,
+            pieceOrder: pieceOrder
+        }
+        movesTree.addBranch(key, positionToSave)
+        this.updateMoves(key, baseValue)
+        return baseValue
     }
 
     handleNoMovesBranch = (key1: string, branch1: IBranch, key2: string, branch2: IBranch) => {
@@ -193,62 +215,39 @@ export class BestMoveSeeker implements ISeekerProps {
     }
 
     stepForward = (key: string) => {
-        if (!this.evaluationStarted || !movesTree.getBranch(key)) {
+        const evaluatingPosition = movesTree.getBranch(key)
+        if (!this.evaluationStarted
+            || !evaluatingPosition
+            || evaluatingPosition.deepValue === -100
+            || !evaluatingPosition.moves.length
+        ) {
+            console.error('invalid key in step forward', key)
             return
         }
-        console.error('forward', key)
-        let evaluatingPosition = movesTree.getBranch(key)!
-        if (!evaluatingPosition) console.error('no branch', key)
-        const {moves} = evaluatingPosition!
-        const unevaluatedMoves = moves.filter(m => Math.abs(m.baseValue) === 100)
-        // if (!unevaluatedMoves.length) console.error('no moves in the branch', key, evaluatingPosition, this.moveBranchesTree)
+        console.warn('forward', key)
+        const { moves, pieceOrder } = evaluatingPosition!
+        const unevaluatedMoves = moves.filter(m => !m.deepValue)
+        if (!unevaluatedMoves.length) {
+            console.error('forward: all moves have been started', key)
+        }
         const {move, position} = unevaluatedMoves[0]
-        const whiteValue = evaluator.evaluateCurrentPosition(position)
-        const baseValue = this.pieceOrder === PieceColor.w ? whiteValue : -whiteValue
         const nextPositionKey = `${key}_${move}`
-        const availableMoves = mmr.lookForAllMoves(this.pieceOrder, position)
-        const branchValue = -100
-        const nextPosition = {
-            moves: availableMoves.map((move: IMMRResult) => (
-                {move: move.move, baseValue: branchValue, position: move.position}
-            )),
-            position: position,
-            deepValue: baseValue,
-            baseValue,
-        } as IBranch
-        if (!availableMoves.length) {
-            // console.log('branch game ended', color, evaluatingPosition, key)
-            return this.handleNoMovesBranch(key, evaluatingPosition, nextPositionKey, nextPosition)
-        }
-        evaluatingPosition = {
-            ...evaluatingPosition,
-            moves: moves.map(m => {
-                if (m.move === move) {
-                    return {...m, baseValue: baseValue}
-                }
-                return m
-            }) as IMove[]
-        }
-        movesTree.addBranch(key, evaluatingPosition)
-        movesTree.addBranch(nextPositionKey, nextPosition)
+        const color = oppositeColor(pieceOrder)
+        this.savePositionInTree(nextPositionKey, position, color)
         this.stepForward(nextPositionKey)
     }
 
     lookForUnevaluatedForward = (key: string): string => {
         const branch = movesTree.getBranch(key)
-        if (!branch || branch.pieceOrder !== this.pieceOrder) {
+        if (!branch) {
             return ''
         }
         const {moves} = branch!
-        const unevaluatedMoves = moves.filter(m => m.baseValue === 100)
-        if (unevaluatedMoves.length) {
-            console.log('unevaluated position found', branch)
-            return key
-        }
-        if (moves.length) {
-            return this.lookForUnevaluatedForward(`${key}_${moves[0].move}`)
+        if (branch.pieceOrder !== this.pieceOrder || branch.deepValue !== -100) {
+            return this.lookForUnevaluatedForward(`${key}_${moves.slice(-1)[0].move}`)
         } else {
-            return ''
+            console.log('unevaluated position found', branch, key)
+            return key
         }
     }
 
@@ -347,15 +346,21 @@ export class BestMoveSeeker implements ISeekerProps {
         }
     }
 
-    updateMoves = (branch: IBranch, move: string, branchValue: number): IBranch => {
-
-        const moves = branch.moves.map((m: IMove) => {
-            if (m.move === move) {
-                return {...m, branchValue}
+    updateMoves(key: string, baseValue: number) {
+        const keyArr = key.split('_')
+        const parentKey = keyArr.slice(0, -1).join('_')
+        const parentPos = movesTree.getBranch(parentKey)
+        if (!parentPos) {
+            console.error('parent pos not found')
+            return baseValue
+        }
+        parentPos.moves = parentPos.moves.map(m => {
+            if (m.move === keyArr.slice(-1)[0]) {
+                m.deepValue = baseValue
+                return m
             }
-            return {...m}
+            return m
         })
-        return {...branch, moves} as IBranch
     }
 
     updateParentBranches = (key: string[], branchValue: number): void => {
@@ -365,8 +370,8 @@ export class BestMoveSeeker implements ISeekerProps {
             return
         }
         const branch = movesTree.getBranch(branchKey) as IBranch
-        const updatedBranch = this.updateMoves(branch, move, branchValue)
-        movesTree.addBranch(branchKey, updatedBranch)
+        // const updatedBranch = this.updateMoves(branch, move, branchValue)
+        // movesTree.addBranch(branchKey, updatedBranch)
         if (branchKey === this.lastMove) {
             return
         }

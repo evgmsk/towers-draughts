@@ -67,11 +67,12 @@ export class Evaluator {
         this.bMoves = 0
     }
 
-    calcMoves = (key: string, board: IBoardToGame, white = true) => {
+    calcMoves = (key: string, board: IBoardToGame) => {
         const {wMoves, bMoves} = this
-        if (white) {
+        const color = board[key].tower?.currentColor
+        if (color === PieceColor.w) {
             this.wMoves = wMoves + this.mmr.lookForTowerFreeMoves(key, board, PieceColor.w).length
-        } else {
+        } else if (color === PieceColor.b) {
             this.bMoves = bMoves + this.mmr.lookForTowerFreeMoves(key, board, PieceColor.b).length
         }
     }
@@ -81,7 +82,7 @@ export class Evaluator {
             const {tower, boardKey} = cell
             if (!tower) { return }
             let {wPiecesQuantity = 0, bPiecesQuantity = 0} = tower
-            this.calcMoves(boardKey, board, tower.currentColor === PieceColor.w)
+            this.calcMoves(boardKey, board)
             if (this.GV === 'towers' && wPiecesQuantity + bPiecesQuantity > 1) {
                 this.handleTower(tower as ICheckerTower)
             } else {

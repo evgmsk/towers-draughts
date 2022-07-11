@@ -292,7 +292,7 @@ export interface INeighborCells {
     [key: string]: string
 }
 
-export interface IDaigonals {[key: string]: IBoardCell[]}
+export interface IDiagonals {[key: string]: IBoardCell[]}
 
 export interface IMMRResult {
     move: string

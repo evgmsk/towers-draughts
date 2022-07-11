@@ -74,7 +74,7 @@ class ClientEngine extends React.Component<BotProps, IBestMove> {
             evaluationStarted: true,
             pieceOrder: this.props.moveOrder.pieceOrder,
             positionBaseValue: 0,
-            parentPositionValue: {baseValue: 0, calcValue: 0},
+            parentPositionValue: {baseValue: 0, deepValue: 0},
             game: true,
             lastMove: ''
         }

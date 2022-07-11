@@ -29,7 +29,7 @@ export interface ISeekerProps {
     evaluationStarted: boolean
     positionBaseValue?: number
     lastResult?: ILastResult
-    parentPositionValue?: { baseValue: number, calcValue: number }
+    parentPositionValue?: { baseValue: number, deepValue: number }
 }
 
 export interface IValidity {deep: number, coverage: number}

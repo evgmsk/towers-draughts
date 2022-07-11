@@ -215,21 +215,21 @@ export class GameClass extends React.Component<GameProps, IGameBoard> {
             console.error(towerKey, board)
             return
         }
-        let posibleMoves: CellsMap
+        let possibleMoves: CellsMap
         if (mandatoryMoves?.length) {
-           posibleMoves = possibleOutOfMandatory(this.props.board, towerKey)
+           possibleMoves = possibleOutOfMandatory(this.props.board, towerKey)
         } else {
-            posibleMoves = tower.currentType === TowerType.m 
+            possibleMoves = tower.currentType === TowerType.m
             ? mmr.manTowerFreeMoves(tower, currentPosition, cellsMap)
             : mmr.kingTowerFreeMoves(towerKey, currentPosition, cellsMap)
         }
-        if (!posibleMoves.size) {
+        if (!possibleMoves.size) {
             // sound
             return
         }
         const towerTouched: TowerTouched = {
             key: towerKey,
-            possibleMoves: posibleMoves,
+            possibleMoves,
             startCursorPosition: {x: clientX, y: clientY},
             startTowerPosition: tower.positionInDOM!,
             towerColor: tower.currentColor,

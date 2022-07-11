@@ -193,7 +193,7 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
             payload = createAnalysisBoard({boardOptions})
         } else {
             console.log('clear history')
-            clearHistory('sdsf' as unknown as null)
+            clearHistory()
             payload = createEmptyBoardForCustomPosition({boardOptions})
         }
         // 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

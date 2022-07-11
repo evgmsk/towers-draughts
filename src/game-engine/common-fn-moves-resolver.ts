@@ -4,7 +4,7 @@ import {
     GameVariants,
     IBoardCell,
     IBoardToGame,
-    IDaigonals,
+    IDiagonals,
     IGameState,
     IMoveOrder,
     IMoveProps,
@@ -75,9 +75,9 @@ export class BaseMoveResolver {
         return diagonal;
     }
 
-    getDiagonals(cell: string, board:  IBoardToGame, preDirected = ''): IDaigonals {
+    getDiagonals(cell: string, board:  IBoardToGame, preDirected = ''): IDiagonals {
         const neighbors = board[cell]!.neighbors
-        const diagonals = {} as IDaigonals
+        const diagonals = {} as IDiagonals
         const availibleDirections = (d: string) => (!!preDirected ? crossDirections(preDirected)[d] : true)
         Object.keys(neighbors).filter((d: string) => availibleDirections(d)).forEach((dir: string) => {
             diagonals[dir] = this.getDiagonal(dir, cell, board)
@@ -138,7 +138,7 @@ export class MoveResolveCommons extends BaseMoveResolver {
         }).map((fN: string) => `${key}-${fN}`)
     }
 
-    lookForTowerFreeMoves = (boardKey: string, board: IBoardToGame, color: PieceColor): string[] => { 
+    lookForTowerFreeMoves = (boardKey: string, board: IBoardToGame, color: PieceColor): string[] => {
         const tower = board[boardKey].tower
         if (tower!.currentType === TowerType.m) {
             return this.checkNeighborsIsEmpty(boardKey, board, color)
@@ -298,13 +298,13 @@ export class MoveResolveCommons extends BaseMoveResolver {
 
     kingTowerFreeMoves = (key: string, board: IBoardToGame, cellsMap: CellsMap): CellsMap => {
         const moves = this.lookForKingFreeMoves(key, board)
-        const posibleMoves = new Map() as CellsMap
+        const possibleMoves = new Map() as CellsMap
         moves.forEach((m: string) => {
             const moveSteps = m.split('-')
             const cellKey = moveSteps[moveSteps.length - 1]
-            posibleMoves.set(cellKey, cellsMap.get(cellKey) as ITowerPosition)
+            possibleMoves.set(cellKey, cellsMap.get(cellKey) as ITowerPosition)
         })
-        return posibleMoves
+        return possibleMoves
     }
 
     makeMandatoryMove = (move: string[], board: IBoardToGame): IBoardToGame => {

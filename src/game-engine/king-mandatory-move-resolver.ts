@@ -1,4 +1,4 @@
-import { IBoardToGame, IBoardCell, IDaigonals, IMMRResult, PieceColor } from "../store/app-interface"
+import { IBoardToGame, IBoardCell, IDiagonals, IMMRResult, PieceColor } from "../store/app-interface"
 import {MoveResolveCommons as MRC} from "./common-fn-moves-resolver" 
 
 
@@ -116,7 +116,7 @@ export class KingMandatoryMoveResolver extends MRC {
         if (!board || !board[move.move.split(':').slice(-1)[0]].tower) {
             console.error('error in move', move)
         }
-        const diagonals = this.getDiagonals(cellKey, board, direction) as IDaigonals
+        const diagonals = this.getDiagonals(cellKey, board, direction) as IDiagonals
         let result = [] as IMMRResult[]
         Object.values(diagonals).forEach((diag: IBoardCell[]) => {
             if (!diag[0].tower) {
