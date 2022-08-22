@@ -10,7 +10,7 @@ import {
     IBoardOptions,
     IAnalysisBoard,
     IGameBoard,
-} from "../store/app-interface"
+} from "../store/models"
 import {
     TopLegendValues,
     SideLegendValues,

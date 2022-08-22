@@ -1,7 +1,7 @@
 import { put, takeLatest, select, delay } from 'redux-saga/effects';
 
 import {BoardActionTypes, BoardActions as BA, BoardActions} from '../board/types'
-import { GameVariants, IGameBoard, IGameState, IMoveProps, TowerConstructor } from '../app-interface';
+import { GameVariants, IGameBoard, IGameState, IMoveProps, TowerConstructor } from '../models';
 import { 
     createEmptyBoardForCustomPosition,
     createStartBoardToDraw,

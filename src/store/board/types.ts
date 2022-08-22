@@ -1,4 +1,4 @@
-import { IBoardAndTowers, IMoveProps } from "../app-interface";
+import { IBoardAndTowers, IMoveProps } from "../models";
 
 export const BoardActions = {
     CREATE_GAME_BOARD: 'CREATE_GAME_BOARD',

@@ -7,7 +7,7 @@ import {
     IGameMode,
     PieceColor,
     INewGameProps
-} from '../app-interface'
+} from '../models'
 import {GameActionTypes, GameActions} from './types'
 
 export function clearHistory(payload = null): GameActionTypes {

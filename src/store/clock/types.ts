@@ -1,4 +1,4 @@
-import { IClock } from "../app-interface";
+import { IClock } from "../models";
 
 export const ClockActions = {
     WHITE_TICK: 'WHITE_TICK',

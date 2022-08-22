@@ -2,7 +2,7 @@ import React from 'react'
 import {connect, ConnectedProps} from 'react-redux'
 import { CellTowerRatio } from '../../constants/gameConstants';
 
-import { PieceColor, TowerConstructor, TowerType } from '../../store/app-interface';
+import { PieceColor, TowerConstructor, TowerType } from '../../store/models';
 import { IRootState } from '../../store/rootState&Reducer';
 import './checker-tower.scss';
 

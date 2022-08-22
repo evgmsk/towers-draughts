@@ -1,4 +1,4 @@
-import { IAnalysisState, IApp, IBoardAndTowers, IBoardOptions, IGameOptionState, IGameState, IUser } from './app-interface';
+import { IAnalysisState, IApp, IBoardAndTowers, IBoardOptions, IGameOptionState, IGameState, IUser } from './models';
 import {InitialGameState, gameReducer} from './game/reducers'
 import {InitialGameOptionsState, gameOptionsReducer} from './gameOptions/reducers'
 import {InitialUserState, userReducer} from './user/reducer'

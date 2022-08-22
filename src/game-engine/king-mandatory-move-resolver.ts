@@ -1,4 +1,4 @@
-import { IBoardToGame, IBoardCell, IDiagonals, IMMRResult, PieceColor } from "../store/app-interface"
+import { IBoardToGame, IBoardCell, IDiagonals, IMMRResult, PieceColor } from "../store/models"
 import {MoveResolveCommons as MRC} from "./common-fn-moves-resolver" 
 
 

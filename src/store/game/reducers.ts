@@ -1,4 +1,4 @@
-import {PieceColor, IGameState, IMoveOrder, IMoveProps, IBoardToGame, IPlayer, IGameMode} from '../app-interface'
+import {PieceColor, IGameState, IMoveOrder, IMoveProps, IBoardToGame, IPlayer, IGameMode} from '../models'
 import { GameActions, GameActions as GM, GameActionTypes} from "./types";
 
 export const InitialGameState: IGameState = {

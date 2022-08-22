@@ -4,7 +4,7 @@ import {
     IBoardAndTowers, 
     IBoardToGame,
     TowerTouched 
-} from "../app-interface"
+} from "../models"
 import { BoardActions, BoardActionTypes } from "./types"
 
 export const InitialBoardState: IBoardAndTowers = {

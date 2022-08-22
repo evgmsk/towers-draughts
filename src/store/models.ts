@@ -38,7 +38,7 @@ export interface Timing {
 
 export interface IError {
     message: string | null
-};
+}
 
 // boardtodraw
 export enum TowerType {

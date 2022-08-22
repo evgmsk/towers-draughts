@@ -10,7 +10,7 @@ import {
     TowerConstructor,
     TowersMap,
     TowerType,
-} from "../store/app-interface"
+} from "../store/models"
 
 //common functions
 export const splitMove = (move: string) => {

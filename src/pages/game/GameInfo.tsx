@@ -1,7 +1,7 @@
 import React from 'react'
 import {connect, ConnectedProps, useSelector} from 'react-redux'
 import { IRootState } from '../../store/rootState&Reducer'
-import {PieceColor} from '../../store/app-interface'
+import {PieceColor} from '../../store/models'
 
 const PlayerInfo = (props: {color: PieceColor}) => {
     const {color} = props

@@ -1,4 +1,4 @@
-import { IMessage } from "../app-interface"
+import { IMessage } from "../models"
 
 export const AppActions = {
     // CHECK_LOCAL_STORAGE: 'CHECK_LOCAL_STORAGE',

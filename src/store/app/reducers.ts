@@ -1,4 +1,4 @@
-import { IApp, IMessage } from '../app-interface'
+import { IApp, IMessage } from '../models'
 import {AppActions, AppActionTypes} from './types'
 
 export const AppDefaultState: IApp = {
@@ -19,4 +19,3 @@ export function appReducer(state = AppDefaultState, action: AppActionTypes): IAp
             return state
     }
 }
- 

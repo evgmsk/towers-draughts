@@ -1,4 +1,4 @@
-import { IAnalysisState, IGameResult, PieceColor } from "../app-interface"
+import { IAnalysisState, IGameResult, PieceColor } from "../models"
 import { GameAnalysisActions, GameAnalysisTypes } from "./types"
 
 export const InitialGameAnalysisState: IAnalysisState = {

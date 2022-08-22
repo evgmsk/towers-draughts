@@ -2,7 +2,7 @@ import { BaseBoardSize } from "../../constants/gameConstants"
 import {  
     BoardNotation, 
     IBoardOptions,
-} from "../app-interface"
+} from "../models"
 import { BoardOptionActions, BoardOptionActionTypes } from "./types"
 
 

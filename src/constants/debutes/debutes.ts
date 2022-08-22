@@ -1,4 +1,4 @@
-import { GameVariants } from "../../store/app-interface"
+import { GameVariants } from "../../store/models"
 
 export const getDebutes = (gv: GameVariants) => Debutes[gv]
 

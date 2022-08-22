@@ -1,4 +1,4 @@
-import {IBoardCell, IBoardToGame, ICheckerTower, PieceColor, TowerType} from "../store/app-interface"
+import {IBoardCell, IBoardToGame, ICheckerTower, PieceColor, TowerType} from "../store/models"
 import mmr from './mandatory-move-resolver'
 
 export class Evaluator {
@@ -23,6 +23,7 @@ export class Evaluator {
                 this.bPieces = bPieces + 1
             }
         } else {
+
             if (currentColor === PieceColor.w) {
                 this.wKings = wKings + 1
             } else {
@@ -49,9 +50,11 @@ export class Evaluator {
         const king = currentType === TowerType.k
         if (currentColor === PieceColor.w) {
             this.wTowers += wPiecesQuantity
+            this.wKings = king ? this.wKings + 1 : this.wKings
             this.bTowers += this.bottomTowersValue(wPiecesQuantity, bPiecesQuantity, king)
         } else {
             this.bTowers += bPiecesQuantity
+            this.bKings = king ? this.bKings + 1 : this.bKings
             this.wTowers += this.bottomTowersValue(bPiecesQuantity, wPiecesQuantity, king)
         }
     }
@@ -103,7 +106,7 @@ export class Evaluator {
 
     advantageInKings = () => {
         const {wKings: wK, bKings: bK} = this
-        return  wK > bK ? wK/(bK + 1) * 2 : -bK/(wK + 1) * 2
+        return  wK/(bK + 1) * 2
     }
 
     evaluateCurrentPosition = (board: IBoardToGame) => {

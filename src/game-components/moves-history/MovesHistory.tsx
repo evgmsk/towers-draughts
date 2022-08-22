@@ -3,7 +3,7 @@ import { ConnectedProps, connect } from "react-redux"
 import {useHistory} from 'react-router-dom'
 
 import { convertToMovesHistory } from "../../game-engine/gameplay-helper-fuctions"
-import { IRef } from "../../store/app-interface"
+import { IRef } from "../../store/models"
 import {analyzeLastGame, stepForward, stepBack, goToPosition, playMoves} from '../../store/gameAnalysis/actions'
 import { IRootState } from "../../store/rootState&Reducer"
 

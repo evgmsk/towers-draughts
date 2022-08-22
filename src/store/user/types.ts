@@ -1,4 +1,4 @@
-import { IUser } from "../app-interface"
+import { IUser } from "../models"
 
 export const UserActions = {
     LOGIN_SUCCEED: 'LOGIN_SUCCEED',

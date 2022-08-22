@@ -1,4 +1,4 @@
-import { IBoardAndTowers, IMoveProps } from "../app-interface";
+import { IBoardAndTowers, IMoveProps } from "../models";
 import { BoardActions, BoardActionTypes } from "./types";
 
 

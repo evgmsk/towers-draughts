@@ -1,20 +1,26 @@
-
-
-import { createEmptyBoard} from './prestart-help-function-constants'
-import { newOnBoardTower} from './prestart-help-function-constants'
-import { IBoardToGame, PieceColor, TowerType } from '../store/app-interface'
-// import { checkDiagonalToMadatoryMove} from './king-mandatory-move-resolver'
+import {createEmptyBoard, newOnBoardTower} from './prestart-help-function-constants'
+import {IBoardToGame, ICheckerTower, PieceColor, TowerType} from '../store/models'
+// import { checkDiagonalToMandatoryMove} from './king-mandatory-move-resolver'
 // import { getMiddlePieceKey, getMoveDirection, takeTower } from './common-fn-mandatory-moves-resolver'
-import { MandatoryMovesResolver } from './mandatory-move-resolver'
-import { checkIfNumberOfKingsChanged } from './gameplay-helper-fuctions'
+import {MandatoryMovesResolver} from './mandatory-move-resolver'
+import {checkIfNumberOfKingsChanged} from './gameplay-helper-fuctions'
+import movesTree from "./moves-tree";
+import {IBranch} from "./engine-interfaces";
+import {evaluator} from "./position-evaluator";
 
- 
-// test('copyObj', () => {
-//     const o = {s: {w:9, i:8}}
-//     const q = copyObj(o)
-//     o.s.w = 11
-//     expect(q.s.w).toBe(9)
-// })
+
+test('movesMap', () => {
+    movesTree.addBranch('k', {} as IBranch)
+    const d = movesTree.getBranch('k')
+    console.error(d)
+    expect(d).toBe(d)
+})
+test('king eval', () => {
+    const d: ICheckerTower = {currentColor: PieceColor.b, currentType: TowerType.k, bPiecesQuantity: 1, onBoardPosition: 'a1'}
+    evaluator.handlePieces(d)
+    console.error(evaluator)
+    expect(d).toBe(d)
+})
 
 // test('copyMap', () => {
 //     const o = new Map()

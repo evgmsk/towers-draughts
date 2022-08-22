@@ -1,6 +1,6 @@
 import {GamePlay, GameClass} from '../pages/game/GameBoard'
 import {InitialState} from '../store/rootState&Reducer'
-import { PieceColor, TowerConstructor } from '../store/app-interface'
+import { PieceColor, TowerConstructor } from '../store/models'
 import {copyMap, updateTowerMapAfterMove, updateTowerMapAfterObligatedMoveStep} from '../game-engine/gameplay-helper-fuctions'
 import { AnimationDuration, BaseTransform } from '../constants/gameConstants'
 
@@ -37,4 +37,3 @@ const gp = new GameClass(InitialState)
 test('update towers after move', () => {
 
 })
- 

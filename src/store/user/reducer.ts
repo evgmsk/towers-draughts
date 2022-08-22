@@ -1,4 +1,4 @@
-import { IUser } from '../app-interface'
+import { IUser } from '../models'
 import {UserActionTypes, UserActions as UA} from './types'
 
 export const InitialUserState: IUser = {

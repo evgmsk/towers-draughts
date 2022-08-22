@@ -11,7 +11,7 @@ import {
     TowerConstructor,
     TowersMap,
     TowerTouched,
-} from "../store/app-interface"
+} from "../store/models"
 
 import {BaseMoveResolver} from './common-fn-moves-resolver'
 import { copyMap, getCellSize } from "./gameplay-helper-fuctions"

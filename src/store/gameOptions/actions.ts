@@ -1,4 +1,4 @@
-import { IPlayer, Online, RivalType, PieceColor, Timing, GameVariants, GameType } from '../app-interface';
+import { IPlayer, Online, RivalType, PieceColor, Timing, GameVariants, GameType } from '../models';
 import {GameOptionActionTypes, GameOptionActions, FindOpponentAction} from './types'
 
 

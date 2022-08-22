@@ -1,4 +1,4 @@
-import { IAnalysisState, IBoardToGame, IGameResult, IMoveProps} from "../app-interface"; 
+import { IAnalysisState, IBoardToGame, IGameResult, IMoveProps} from "../models";
 import { GameAnalysisActions, GameAnalysisTypes } from "./types";
 
 

@@ -15,7 +15,7 @@ import {
     TowersMap,
     TowerTouched,
     TowerType,
-} from '../../store/app-interface'
+} from '../../store/models'
 import {clearHistory, makeMove} from '../../store/game/actions'
 import {makeNewMove, updateAnalysisState} from '../../store/gameAnalysis/actions'
 import {
@@ -41,7 +41,7 @@ import {updateBoardState} from '../../store/board/actions'
 import bms from '../../game-engine/best-move-seeker'
 import {reverseBoard} from '../../store/boardOptions/actions'
 import {finishGameSetup} from '../../store/gameOptions/actions'
-import {ISeekerProps} from "../../game-engine/engine-interfaces";
+import {IEvaluatingState, ISeekerProps, ValueDynamic} from "../../game-engine/engine-interfaces";
 
 const UnusedTowers = (props: {color: PieceColor, towers: TowersMap}) => {
     const {color, towers} = props
@@ -104,7 +104,8 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
             game: false,
             maxDepth: depth,
             lastMove: gameResult?.movesHistory.slice(-1)[0] || '',
-            evaluationStarted: true
+            rootKeyLength: gameResult?.movesHistory.slice(-5).length,
+            rootKey: gameResult?.movesHistory.slice(-5).join('_')
         }
         bms.setState(props)
     }

@@ -1,6 +1,6 @@
 import React from 'react'
 
-import {BoardNotation, IBoardProps, ICell} from '../../store/app-interface'
+import {BoardNotation, IBoardProps, ICell} from '../../store/models'
 import {TopLegendValues, SideLegendValues} from '../../constants/gameConstants'
 
 import './board.scss';

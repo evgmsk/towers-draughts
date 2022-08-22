@@ -1,4 +1,4 @@
-import { PieceColor, IBoardToGame, TowerType, IBoardCell, IMMRResult } from '../store/app-interface'
+import { PieceColor, IBoardToGame, TowerType, IBoardCell, IMMRResult } from '../store/models'
 import { filterArrayByLength, copyObj, oppositeColor } from './gameplay-helper-fuctions'
 import { KingMandatoryMoveResolver as KMMR} from './king-mandatory-move-resolver'
 import { createStartBoard } from './prestart-help-function-constants'

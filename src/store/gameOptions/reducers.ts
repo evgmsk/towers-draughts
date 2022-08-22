@@ -6,7 +6,7 @@ import {
     RivalType,
     GameVariants,
     GameType,
-} from '../app-interface'
+} from '../models'
 
 export const InitialGameOptionsState: IGameOptionState = {
     gameVariant: 'towers',

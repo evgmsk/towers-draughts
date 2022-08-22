@@ -1,6 +1,6 @@
 import { put, takeLatest, select, delay } from 'redux-saga/effects';
 
-import { PieceColor, IMoveProps, IAnalysisState} from '../app-interface';
+import { PieceColor, IMoveProps, IAnalysisState} from '../models';
 
 import { copyMap, oppositeColor, splitMove } from '../../game-engine/gameplay-helper-fuctions';
 // import { Axios, setAuthorizationHeader } from '../../common/axios';

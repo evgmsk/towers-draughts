@@ -11,7 +11,7 @@ import {
     IBoardProps,
     IGameBoard,
     IMMRResult,
-} from '../../store/app-interface'
+} from '../../store/models'
 import { endGame, updateIneffectiveMoves } from '../../store/game/actions'
 import {
     checkMoveTargetCell,

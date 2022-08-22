@@ -1,4 +1,4 @@
-import { IClock } from "../app-interface"
+import { IClock } from "../models"
 import { ClockActionTypes, ClockActions } from "../clock/types"
 
 export function setClock(payload: any): ClockActionTypes {
@@ -45,4 +45,3 @@ export function setWhiteClock(payload: IClock): ClockActionTypes {
         payload
     }
 }
-   

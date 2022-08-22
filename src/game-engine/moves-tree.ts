@@ -1,19 +1,19 @@
 import { IBranch } from "./engine-interfaces";
 
 
-export class MovesMap {
-    moveBranchesTree: {[key: string]: IBranch} = {}
+export class MovesTree {
+    moveBranchesTree = new Map<string, IBranch>()
 
     get tree() {
         return this.moveBranchesTree
     }
 
     getBranch(key: string) {
-        return this.moveBranchesTree[key]
+        return this.moveBranchesTree.get(key)
     }
 
     addBranch(key: string, value: IBranch) {
-        this.moveBranchesTree[key] =  value
+        this.moveBranchesTree.set(key, value)
     }
 
     set tree(tree: any) {
@@ -21,15 +21,15 @@ export class MovesMap {
     }
 
     reset() {
-        this.moveBranchesTree = {}
+        this.moveBranchesTree = new Map()
     }
 
     filter(movesHistory: string) {
         const { moveBranchesTree } = this
-        const newTree: {[key: string]: IBranch} = {}
-        Object.keys(moveBranchesTree).forEach((k: string) => {
+        const newTree = new Map<string, IBranch>()
+        moveBranchesTree.forEach((v: IBranch, k: string) => {
             if (k.startsWith(movesHistory)) {
-                newTree[k] = moveBranchesTree[k]
+                newTree.set(k.slice(-5), v)
             }
         })
         this.moveBranchesTree = newTree
@@ -37,6 +37,6 @@ export class MovesMap {
     }
 }
 
-const movesTree = new MovesMap()
+const movesTree = new MovesTree()
 
 export default movesTree

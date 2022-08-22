@@ -1,4 +1,4 @@
-import { IAnalysisState, IBoardToGame, IGameResult, IMoveProps } from "../app-interface"
+import { IAnalysisState, IBoardToGame, IGameResult, IMoveProps } from "../models"
 
 export const GameAnalysisActions = {
     ANALYZE_LAST_GAME: 'ANALYZE_LAST_GAME',

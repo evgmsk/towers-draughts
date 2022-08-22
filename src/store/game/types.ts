@@ -1,4 +1,4 @@
-import {EndGameConditions, IBoardToGame, INewGameProps, IGameMode, IGameState, IMoveOrder, IMoveProps, PieceColor} from "../app-interface";
+import {EndGameConditions, IBoardToGame, INewGameProps, IGameMode, IGameState, IMoveOrder, IMoveProps, PieceColor} from "../models";
 // import { GameOptionActions } from "../gameOptions/types";
 
 export const GameActions = {

@@ -14,7 +14,7 @@ import {
     TowerConstructor,
     TowersMap,
     TowerType 
-} from "../store/app-interface"
+} from "../store/models"
 import {  copyObj, crossDirections, oppositeColor } from "./gameplay-helper-fuctions";
 import { createEmptyBoard } from "./prestart-help-function-constants";
 

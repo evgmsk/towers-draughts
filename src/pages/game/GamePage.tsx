@@ -14,7 +14,7 @@ import {
     declineDraw,
 } from '../../store/game/actions'
 import { oppositeColor } from '../../game-engine/gameplay-helper-fuctions'
-import { PieceColor } from '../../store/app-interface'
+import { PieceColor } from '../../store/models'
 import { MovesHistory } from '../../game-components/moves-history/MovesHistory'
 import { GameMenu } from './PlayerGameMenu'
 import GameInfo from './GameInfo'

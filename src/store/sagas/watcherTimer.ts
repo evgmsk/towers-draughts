@@ -1,7 +1,7 @@
 import { put, takeLatest, delay, select} from 'redux-saga/effects';
 
 import { Interval} from '../../constants/gameConstants';
-import { PieceColor } from '../app-interface';
+import { PieceColor } from '../models';
 import { ClockActions, ClockActionTypes } from '../clock/types';
 import { GameActions, GameActionTypes} from '../game/types'
 import { GameAnalysisActions } from '../gameAnalysis/types';

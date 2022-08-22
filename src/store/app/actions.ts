@@ -1,4 +1,4 @@
-import { IMessage } from '../app-interface'
+import { IMessage } from '../models'
 import {AppActions, AppActionTypes} from './types'
 
 export function addMessageToGameChat(payload: IMessage): AppActionTypes {

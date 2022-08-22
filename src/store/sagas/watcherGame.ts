@@ -8,7 +8,7 @@ import {
     IMoveOrder,
     IPlayer,
     IClock
-} from '../app-interface';
+} from '../models';
 import {GameActions, GameActions as GM, GameActionTypes, GameActionTypes as GMA} from '../game/types'
 import {ClockActions} from '../clock/types'
 // import {sendMessage} from '../../web-sockets/ws'

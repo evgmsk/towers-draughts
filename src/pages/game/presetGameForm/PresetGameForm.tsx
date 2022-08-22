@@ -13,7 +13,7 @@ import {
 } from '../../../store/gameOptions/actions'
 import { I18n } from '../../../assets/i18n'
 
-import { RivalType, PieceColor, GameVariants, GameType } from '../../../store/app-interface'
+import { RivalType, PieceColor, GameVariants, GameType } from '../../../store/models'
 import { StandartTiming } from '../../../constants/gameConstants'
 
 

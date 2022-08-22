@@ -1,4 +1,4 @@
-import { BoardNotation, IBoardOptions } from "../app-interface";
+import { BoardNotation, IBoardOptions } from "../models";
 import { BoardOptionActions, BoardOptionActionTypes } from "./types";
 
 

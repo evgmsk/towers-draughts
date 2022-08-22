@@ -1,16 +1,16 @@
 import React from 'react'
 
 import {connect, ConnectedProps} from 'react-redux'
-import { endGame, surrender} from '../store/game/actions'
-import { IBoardToGame, PieceColor} from "../store/app-interface";
-import { oppositeColor } from './gameplay-helper-fuctions';
-import { IRootState } from '../store/rootState&Reducer';
+import {endGame, surrender} from '../store/game/actions'
+import {IBoardToGame, PieceColor} from "../store/models";
+import {oppositeColor} from './gameplay-helper-fuctions';
+import {IRootState} from '../store/rootState&Reducer';
 import mmr from './mandatory-move-resolver';
 import bms from './best-move-seeker';
 
-import { turn } from '../store/board/actions';
-import { AnimationDuration } from '../constants/gameConstants';
-import { ISeekerProps } from './engine-interfaces';
+import {turn} from '../store/board/actions';
+import {AnimationDuration} from '../constants/gameConstants';
+import {IEvaluatingState, ISeekerProps, ValueDynamic} from './engine-interfaces';
 
 interface IBestMove {move: string, deep: number}
 
@@ -62,7 +62,7 @@ class ClientEngine extends React.Component<BotProps, IBestMove> {
                 bms.setActualMovesBranchAfterMove(props)
             } else {
                 console.log('stop engine', this.props)
-                bms.setEvaluationStatus(false)
+                bms.setEvaluatingMove('')
             }
         }
     }
@@ -71,12 +71,11 @@ class ClientEngine extends React.Component<BotProps, IBestMove> {
         return {
             maxDepth: 6,
             position: this.props.currentPosition,
-            evaluationStarted: true,
             pieceOrder: this.props.moveOrder.pieceOrder,
-            positionBaseValue: 0,
-            parentPositionValue: {baseValue: 0, deepValue: 0},
             game: true,
-            lastMove: ''
+            lastMove: '',
+            rootKey: '',
+            rootKeyLength: 0
         }
     }
 
