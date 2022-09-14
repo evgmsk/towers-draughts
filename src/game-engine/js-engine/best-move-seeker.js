@@ -465,7 +465,7 @@ export class BestMoveSeeker {
         if (evaluatingBranchLength === 1) {
             if (!unevaluatedMoves.length) {
                 const {branchValue, ...bestMove} = this.getBestForEngine(position.moves)
-                console.log('evaluation engine move finished', moves, this.moveBranchesTree)
+                console.log('evaluation engine rivalMove finished', moves, this.moveBranchesTree)
                 return this.bestMoveCB(bestMove)
             } 
             setTimeout(() => this.stepForward(positionKey), 0)
@@ -592,7 +592,7 @@ export class BestMoveSeeker {
     lastLineEvaluation = (branchKey) => {
         const lastEngineBranch = this.moveBranchesTree.get(branchKey)
         if (!lastEngineBranch.engineMoveLast) {
-            console.error('engine move not last', branchKey)
+            console.error('engine rivalMove not last', branchKey)
         }
         const moves = lastEngineBranch.moves.map((m) => {
             const {position} = m

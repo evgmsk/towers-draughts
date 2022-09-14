@@ -15,7 +15,7 @@ import {
     TowersMap,
     TowerType 
 } from "../store/models"
-import {  copyObj, crossDirections, oppositeColor } from "./gameplay-helper-fuctions";
+import {  copyObj, crossDirections, oppositeColor } from "./gameplay-helper-functions";
 import { createEmptyBoard } from "./prestart-help-function-constants";
 
 export class BaseMoveResolver {
@@ -187,7 +187,7 @@ export class MoveResolveCommons extends BaseMoveResolver {
             }
             i++
         }
-        throw Error('start tower in move not found')
+        throw Error('start tower in rivalMove not found')
     }
 
     makeMoveWithoutTakingPieces = (move: string[], board: IBoardToGame): IBoardToGame => {
@@ -337,7 +337,7 @@ export class MoveResolveCommons extends BaseMoveResolver {
         let middlePieceKey = this.getCapturedPieceKey(from, to, board)
         const newMiddleTower = this.cuptureTower(newBoard[middlePieceKey].tower)
         if (!tower || !middlePieceKey) {
-            console.error('invalid board:', JSON.stringify(board), 'move:', move)
+            console.error('invalid board:', JSON.stringify(board), 'rivalMove:', move)
             return board
         }
         if (this.GV === 'towers') {

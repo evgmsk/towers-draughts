@@ -13,10 +13,10 @@ import {GameActions, GameActions as GM, GameActionTypes, GameActionTypes as GMA}
 import {ClockActions} from '../clock/types'
 // import {sendMessage} from '../../web-sockets/ws'
 // import { IRootState } from '../rootState&Reducer';
-import { oppositeColor } from '../../game-engine/gameplay-helper-fuctions';
+import { oppositeColor } from '../../game-engine/gameplay-helper-functions';
 // import { Axios, setAuthorizationHeader } from '../../common/axios';
 import { GameAnalysisActions } from '../gameAnalysis/types';
-import {checkIfNumberOfKingsChanged} from '../../game-engine/gameplay-helper-fuctions'
+import {checkIfNumberOfKingsChanged} from '../../game-engine/gameplay-helper-functions'
 import { InitialGameState } from '../game/reducers';
 import { AnimationDuration } from '../../constants/gameConstants';
 import { AppActions } from '../app/types';

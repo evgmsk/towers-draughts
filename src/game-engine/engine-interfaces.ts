@@ -1,25 +1,28 @@
-import {IBoardToGame, IMMRResult, IMoveProps, PieceColor} from "../store/models";
+import {IBoardToGame, PieceColor} from "../store/models";
 
+export interface IDeepValue {
+    depth: number,
+    value: number,
+    movesLine?: string[]
+}
 
 export interface IMove {
-    move: string,
-    baseValue: number,
-    position: IBoardToGame,
-    deepValue?: IDeepValue
+    move: string
+    baseValue: number
+    position: IBoardToGame
+    pieceOrder?: PieceColor
 }
 
-export interface IValidationResult {
-    key: string, branch: IBranch, validity: number
-}
-
-export interface IDeepValue {depth: number, value: number, movesLine?: string[]}
+export interface IChildren {[key: string]: IBranch}
 
 export interface IBranch {
-    moves: IMove[],
+    moves: IMove[]
+    parentBranch?: IBranch,
     position: IBoardToGame,
-    pieceOrder: PieceColor
-    baseValue: number
-    deepValue?: IDeepValue
+    pieceOrder: PieceColor,
+    deepValue: IDeepValue,
+    children: IChildren,
+    rivalMove: string
 }
 
 export interface ISeekerProps extends IEvaluatingState{
@@ -29,23 +32,11 @@ export interface ISeekerProps extends IEvaluatingState{
     game: boolean
     startDepth?: number
     movesHistory?: string[]
-    lastMove: string
-    rootKey: string
-    rootKeyLength: number
+    parentBranch?: IBranch
 }
 
 export interface IEvaluatingState {
-    evaluatingMove?: string
-    valueDynamic?: ValueDynamic
-    lastResult?: ILastResult
-    parentPositionValue?: IDeepValue
+    valueIncreased?: boolean
+    lastBranch?: IBranch
     evaluatingLine?: string[]
-}
-
-export interface ILastResult {movesLine: string, value: number, depth?: number}
-
-export enum ValueDynamic {
-    und = 0,
-    incr = 1,
-    decr = -1,
 }

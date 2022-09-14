@@ -1,20 +1,21 @@
 import {createEmptyBoard, newOnBoardTower} from './prestart-help-function-constants'
 import {IBoardToGame, ICheckerTower, PieceColor, TowerType} from '../store/models'
-// import { checkDiagonalToMandatoryMove} from './king-mandatory-move-resolver'
+// import { checkDiagonalToMandatoryMove} from './king-mandatory-rivalMove-resolver'
 // import { getMiddlePieceKey, getMoveDirection, takeTower } from './common-fn-mandatory-moves-resolver'
 import {MandatoryMovesResolver} from './mandatory-move-resolver'
-import {checkIfNumberOfKingsChanged} from './gameplay-helper-fuctions'
+import {checkIfNumberOfKingsChanged} from './gameplay-helper-functions'
 import movesTree from "./moves-tree";
+import bms from './best-move-seeker'
 import {IBranch} from "./engine-interfaces";
 import {evaluator} from "./position-evaluator";
 
 
-test('movesMap', () => {
-    movesTree.addBranch('k', {} as IBranch)
-    const d = movesTree.getBranch('k')
-    console.error(d)
-    expect(d).toBe(d)
-})
+// test('movesMap', () => {
+//     movesTree.addBranch('k', {} as IBranch)
+//     const d = movesTree.getBranch('k')
+//     console.error(d)
+//     expect(d).toBe(d)
+// })
 test('king eval', () => {
     const d: ICheckerTower = {currentColor: PieceColor.b, currentType: TowerType.k, bPiecesQuantity: 1, onBoardPosition: 'a1'}
     evaluator.handlePieces(d)
@@ -22,15 +23,12 @@ test('king eval', () => {
     expect(d).toBe(d)
 })
 
-// test('copyMap', () => {
-//     const o = new Map()
-//     o.set('s', {w:9, i:8})
-//     const q = copyMap(o)
-//     o.get('s').w = 11
-//     expect(q.get('s').w).toBe(9)
-// })
+test('best move', () => {
 
-// test('ordinary move', () => {
+    // expect(bms.getBestMove(['ls'])).toBe({"deepValue": {"depth": 0, "value": undefined}, "move": undefined, "position": undefined})
+})
+
+// test('ordinary rivalMove', () => {
 //     const board = createEmptyBoard(8)
 //     board['f2').tower = newOnBoardTower({color: PieceColor.w})
 //     const expected = createEmptyBoard(8)
@@ -80,9 +78,9 @@ test('king eval', () => {
 //     const board = createEmptyBoard(8)
 //     board['f4'].tower = newOnBoardTower(PieceColor.w)
 //     board['e5'].tower = newOnBoardTower(PieceColor.b)
-//     const move = ['f4:d6']
+//     const rivalMove = ['f4:d6']
 //     // board['f4').tower = newOnBoardTower(PieceColor.w)
-//     expect(possibleOutOfMandatory({mandatoryMoves: move, mandatoryMoveStep: 0, cellsMap}, move[0])).toMatchObject({"d6": {"x": 150, "y": 100}})
+//     expect(possibleOutOfMandatory({mandatoryMoves: rivalMove, mandatoryMoveStep: 0, cellsMap}, rivalMove[0])).toMatchObject({"d6": {"x": 150, "y": 100}})
 // })
 
 // test('take tower', () => {
@@ -98,7 +96,7 @@ test('king eval', () => {
 //     expect(takeTower(tower, true)).toMatchObject(updated)
 // })
 
-// test('check move', () => {
+// test('check rivalMove', () => {
 //     const board = createEmptyBoard(8)
 //     board['f4'].tower = newOnBoardTower(PieceColor.w)
 //     board['e5'].tower = newOnBoardTower(PieceColor.b)
@@ -125,7 +123,7 @@ test('king eval', () => {
 //     expect(lookForAllPossibleMoves(PieceColor.w, board3)).toMatchObject([]) 
 // }) 
 
-// test('check possible move looking', () => {
+// test('check possible rivalMove looking', () => {
 //     const board = createEmptyBoard(8)
 //     board['f6'].tower = newOnBoardTower(PieceColor.w)
 //     const king = newOnBoardTower(PieceColor.w)
@@ -158,7 +156,7 @@ test('king eval', () => {
 //     board['d6').tower = null
 //     // console.log(board)
 //     const expected = ["f4:d6"]
-//     expect(defineObligatedMoveNextStep({color: PieceColor.w, board, move: expected})).toMatchObject(expected)
+//     expect(defineObligatedMoveNextStep({color: PieceColor.w, board, rivalMove: expected})).toMatchObject(expected)
 // })
 
 // test('check next obligated steps', () => {
@@ -167,8 +165,8 @@ test('king eval', () => {
 //     board['e5').tower = newOnBoardTower({color: PieceColor.b})
 //     board['f2').tower = newOnBoardTower({color: PieceColor.w})
 //     const expected = ["e5:g3:e1"]
-//     expect(defineObligatedMoveNextSteps({color: PieceColor.b, board, move: expected})).toMatchObject(expected)
-//     expect(defineObligatedMoveNextSteps({color: PieceColor.w, board, move: ['f4:d6']})).toMatchObject(['f4:d6'])
+//     expect(defineObligatedMoveNextSteps({color: PieceColor.b, board, rivalMove: expected})).toMatchObject(expected)
+//     expect(defineObligatedMoveNextSteps({color: PieceColor.w, board, rivalMove: ['f4:d6']})).toMatchObject(['f4:d6'])
 //     // const _board = createStartBoard(8)
     
 // })
@@ -195,7 +193,7 @@ test('check kings num changed', () => {
 })
 
 
-test('check obligated move', () => {
+test('check obligated rivalMove', () => {
     const mmr = new MandatoryMovesResolver()
     mmr.setProps({GV: 'towers', size: 8})
     const board = createEmptyBoard(8)
@@ -211,10 +209,10 @@ test('check obligated move', () => {
     // board['b6'].tower = newOnBoardTower(PieceColor.w)
     // board['f2'].tower = newOnBoardTower(PieceColor.w)
     const expected = ["b6:d8:f6"]
-    // expect(mmr.lookForMandatoryMoves(PieceColor.b, board).map(r => r.move)).toMatchObject(expected)    
+    // expect(mmr.lookForMandatoryMoves(PieceColor.b, board).map(r => r.rivalMove)).toMatchObject(expected)
 })
 
-test('make obligated move', () => {
+test('make obligated rivalMove', () => {
     const mmr = new MandatoryMovesResolver()
     mmr.setProps({GV: 'towers', size: 8})
     // const board = createEmptyBoard(8)

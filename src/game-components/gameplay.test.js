@@ -1,12 +1,12 @@
 import {GamePlay, GameClass} from '../pages/game/GameBoard'
 import {InitialState} from '../store/rootState&Reducer'
 import { PieceColor, TowerConstructor } from '../store/models'
-import {copyMap, updateTowerMapAfterMove, updateTowerMapAfterObligatedMoveStep} from '../game-engine/gameplay-helper-fuctions'
+import {copyMap, updateTowerMapAfterMove, updateTowerMapAfterObligatedMoveStep} from '../game-engine/gameplay-helper-functions'
 import { AnimationDuration, BaseTransform } from '../constants/gameConstants'
 
 const gp = new GameClass(InitialState)
 
-// test('animate opponent move', () => {
+// test('animate opponent rivalMove', () => {
 //     // console.log(gp.props, gp.state)
 //     const {game: {board, history}, gameOptions: {player, opponent}} = gp.props
     
@@ -34,6 +34,6 @@ const gp = new GameClass(InitialState)
 //     expect(gp.state.towers.blackTowers.values.length).toBe(blackTowers.values.length)
 // })
 
-test('update towers after move', () => {
+test('update towers after rivalMove', () => {
 
 })

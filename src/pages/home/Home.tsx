@@ -22,7 +22,6 @@ export const Home: React.FC = () => {
     return (
         <Suspense fallback={<Spinner />}>
             <div className="page home-page">
-                <div className="bg-board"></div>
                 <BGBoard />
                 <section className="home-page_content">
                     <span>{i18n.about}</span>

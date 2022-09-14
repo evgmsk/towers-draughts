@@ -107,7 +107,7 @@ const GameMenuComponent: React.FC<ConnectedProps<typeof gameMenuConnector>> = (p
     if (pcGame && gameConfirmed) {
         return (
             <ul className="game-menu">
-                <li title="undo move" className={undoClass} role="button" onClick={handleUndo}>
+                <li title="undo rivalMove" className={undoClass} role="button" onClick={handleUndo}>
                     <i className="material-icons">history</i>
                 </li>
                 <li title="new game" role="button" className="game-menu__item" onClick={handleNewGame}>

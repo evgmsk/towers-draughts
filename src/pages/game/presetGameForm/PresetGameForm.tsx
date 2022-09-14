@@ -110,7 +110,7 @@ const Timing = (props: ConnectedProps<typeof timingConnector>) => {
             {StandartTiming.map((t: number[], i: number) => {
                 const Class = t[0] === timeToGame && t[1] === adds ? 'timing-menu-item actual' : 'timing-menu-item'
                 return <button 
-                            title={"time limit: minuts / add per move: seconds"} 
+                            title={"time limit: minuts / add per rivalMove: seconds"}
                             key={i} 
                             className={Class}
                             type="button"

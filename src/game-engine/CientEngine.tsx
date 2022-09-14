@@ -3,14 +3,14 @@ import React from 'react'
 import {connect, ConnectedProps} from 'react-redux'
 import {endGame, surrender} from '../store/game/actions'
 import {IBoardToGame, PieceColor} from "../store/models";
-import {oppositeColor} from './gameplay-helper-fuctions';
+import {oppositeColor} from './gameplay-helper-functions';
 import {IRootState} from '../store/rootState&Reducer';
 import mmr from './mandatory-move-resolver';
 import bms from './best-move-seeker';
 
 import {turn} from '../store/board/actions';
 import {AnimationDuration} from '../constants/gameConstants';
-import {IEvaluatingState, ISeekerProps, ValueDynamic} from './engine-interfaces';
+import {ISeekerProps} from './engine-interfaces';
 
 interface IBestMove {move: string, deep: number}
 
@@ -53,16 +53,15 @@ class ClientEngine extends React.Component<BotProps, IBestMove> {
             bms.setState(this.getSeekerProps())
             bms.setBestMoveCB(this.moveCB)
             if (engineMove) {
-                setTimeout(() => bms.setActualMovesBranchAfterMove(props), AnimationDuration)
+                setTimeout(() => bms.updateAfterRivalMove(props), AnimationDuration)
             }
         }
         if (prev.movesHistory.length !== movesHistory.length) {
             if (this.props.gameMode === 'isPlaying' && engineMove) {
                 console.log('start engine', this.props)
-                bms.setActualMovesBranchAfterMove(props)
+                bms.updateAfterRivalMove(props)
             } else {
                 console.log('stop engine', this.props)
-                bms.setEvaluatingMove('')
             }
         }
     }
@@ -73,9 +72,6 @@ class ClientEngine extends React.Component<BotProps, IBestMove> {
             position: this.props.currentPosition,
             pieceOrder: this.props.moveOrder.pieceOrder,
             game: true,
-            lastMove: '',
-            rootKey: '',
-            rootKeyLength: 0
         }
     }
 

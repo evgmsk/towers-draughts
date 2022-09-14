@@ -1,17 +1,9 @@
 import {evaluator} from './position-evaluator';
-import {
-    IBranch,
-    IDeepValue,
-    ILastResult,
-    IMove,
-    ISeekerProps,
-    IValidationResult,
-    ValueDynamic
-} from './engine-interfaces';
+import {IBranch, IDeepValue, IMove, ISeekerProps} from './engine-interfaces';
 import {IBoardToGame, IMMRResult, PieceColor} from '../store/models';
 import mmr from './mandatory-move-resolver';
 import movesTree from './moves-tree';
-import {oppositeColor} from "./gameplay-helper-fuctions";
+import {oppositeColor} from "./gameplay-helper-functions";
 
 const FirstMoves: {[key:string]: string[]} = {
     international: ['d4-e5', 'd4-e5', 'd4-e5',  'd4-c5',  'd4-c5',  'h4-g5',  'h4-i5'],
@@ -19,26 +11,24 @@ const FirstMoves: {[key:string]: string[]} = {
     towers: ['c3-d4', 'c3-d4', 'c3-d4', 'c3-b4', 'c3-b4', 'e3-f4', 'a3-b4', ]
 }
 
+const debutStage = 2
+
 export class BestMoveSeeker implements ISeekerProps {
     bestMoveCB: Function = () => {
     }
     bestLineCB: Function = () => {
     }
-    maxDepth = 6
-    startDepth = 4
+    maxDepth = 5
+    startDepth = 5
     position = null as unknown as IBoardToGame
     movesHistory = [] as string[]
-    lastMove = ''
     pieceOrder = PieceColor.w
     game = true
-    evaluatingMove = ''
-    rootKey = 'sp'
     evaluatingLine: string[] = []
-    valueDynamic?: ValueDynamic
+    valueIncreased?: boolean
     bestMove?: IMMRResult | null
-    lastResult?: ILastResult
-    parentPositionValue?:  IDeepValue = {value: 0, depth: 0}
-    rootKeyLength = 0
+    parentBranch?:  IBranch
+    lastBranch?: IBranch
 
     setState = (props: ISeekerProps) => {
         this.maxDepth = props.maxDepth || 6
@@ -46,20 +36,7 @@ export class BestMoveSeeker implements ISeekerProps {
         this.game = props.game || true
         this.movesHistory = props.movesHistory || []
         this.pieceOrder = PieceColor.w
-        this.rootKey = props.movesHistory?.length ? props.movesHistory.slice(-5).join('_') : 'sp'
-        this.rootKeyLength = (props.movesHistory && props.movesHistory.slice(-5).length) || 0
-        this.evaluatingMove = props.evaluatingMove || ''
-        this.valueDynamic = props.valueDynamic || ValueDynamic.und
-        this.lastResult = props.lastResult || null as unknown as ILastResult
-        this.parentPositionValue = props.parentPositionValue || this.parentPositionValue
-
     }
-    setEvaluatingMove(move: string) {
-        this.evaluatingMove = move
-    }
-    // setMaxDepth(depth: number) {
-    //     this.maxDepth = depth
-    // }
 
     setBestMoveCB = (cb: Function) => {
         this.bestMoveCB = cb
@@ -68,8 +45,7 @@ export class BestMoveSeeker implements ISeekerProps {
         this.bestLineCB = cb
     }
 
-    makeMove = (move: string, board: IBoardToGame) => {
-        if (!this.evaluatingMove) return
+    makeMove = (move: string, board: IBoardToGame): IBoardToGame => {
         if (move.includes(':')) {
             return mmr.makeMandatoryMove(move.split(':'), board)
         }
@@ -77,224 +53,194 @@ export class BestMoveSeeker implements ISeekerProps {
         return mmr.makeFreeMove(from, to, board)
     }
 
-    debutResolver = (currentPosition: IBoardToGame) => {
-        let move
-        if (this.movesHistory.length < 1) {
-            const moves = FirstMoves[mmr.GV]
-            move = moves[Math.floor(Math.random() * moves.length)]
-        } else  {
-            const availableMoves = mmr.lookForAllPossibleMoves(this.pieceOrder, currentPosition)
-            move = availableMoves[Math.floor(Math.random() * availableMoves.length)]
-        }
-        const positionKey = this.movesHistory.length ? `${this.movesHistory}_${move}` : move
+    debutResolver = () => {
+        console.warn('debut resolver', this)
+        const _moves = this.movesHistory.length < 1
+            ? FirstMoves[mmr.GV]
+            : mmr.lookForAllPossibleMoves(this.pieceOrder, this.position)
+        const pieceOrder = oppositeColor(this.pieceOrder)
+        const move = _moves[Math.floor(Math.random() * _moves.length)]
         const [from, to] = move.split('-')
-        const moveToMake = {move, position: mmr.makeFreeMove(from, to, currentPosition)}
-        this.addPositionToTree(positionKey, moveToMake.position, this.pieceOrder)
-        this.prepareMove(moveToMake)
+        const moveToMake = {move, position: mmr.makeFreeMove(from, to, this.position)}
+        const moves = this.getAvailableMoves(moveToMake.position, pieceOrder)
+        const branch = this.defineNewBranch(move, moveToMake.position, pieceOrder, moves)
+        movesTree.addRoot(branch)
+        this.finalizeMove(moveToMake)
     }
 
-    getAvailableMoves = (positionKey: string, board: IBoardToGame): IMove[] => {
-        let availableMoves = movesTree.getBranch(positionKey)?.moves
-        if (!availableMoves) {
-            availableMoves = mmr.lookForAllMoves(this.pieceOrder, board)
-                .map((m: IMMRResult) => {
-                    const {move, position} = m
-                    return {move, baseValue: 0, position}
-                }) as IMove[]
-        }
-        return availableMoves
-    }
-
-    setActualMovesBranchAfterMove = (props: {history: string[], cP: IBoardToGame, pieceOrder: PieceColor}) => {
+    updateAfterRivalMove = (props: {history: string[], cP: IBoardToGame, pieceOrder: PieceColor}) => {
         const {history, cP: position, pieceOrder} = props
+        this.evaluatingLine.length = 0
         this.pieceOrder = pieceOrder
         this.movesHistory = history
         this.position = position
-        if (history.length < 1 && this.game) {
-            return this.debutResolver(position)
+        const hLength = history.length
+        if (hLength < debutStage && this.game) {
+            console.warn('first rivalMove', position)
+            return this.debutResolver()
         }
-        this.evaluatingLine = history.slice(-5)
-        this.lastMove = history.slice(-1)[0]
-        const filterKey = `${this.rootKey}_${this.lastMove}`
-        this.rootKey = history.slice(-5).join('_')
-        this.rootKeyLength = history.slice(-5).length
-        if (movesTree.tree.size){
-            movesTree.filter(filterKey)
+        let actualBranch = movesTree.getBranch(history.slice(-1)) as IBranch
+        if (!actualBranch){
+            const moves = this.getAvailableMoves(position, pieceOrder)
+            actualBranch = this.defineNewBranch(history.slice(-1)[0], position, pieceOrder, moves)
+            console.warn('new branch', actualBranch, movesTree)
         }
-
-        const availableMoves = this.getAvailableMoves(this.rootKey, position)
-        if (!availableMoves.length) {
-            return this.prepareMove()
+        const availableMovesLength = actualBranch.moves.length
+        if (!availableMovesLength) {
+            return this.finalizeMove()
         }
-        let actualBranch = movesTree.getBranch(this.rootKey)
-        if (!actualBranch) {
-            this.addPositionToTree(this.rootKey, position, pieceOrder)
-            console.warn('add branch', movesTree)
-        }
-        if (availableMoves.length === 1) {
-            const {move, position} = availableMoves[0]
-            return this.prepareMove({move, position})
+        this.parentBranch = movesTree.getRoot() as IBranch
+        movesTree.addRoot(actualBranch)
+        console.warn('moves length ' , availableMovesLength, movesTree, this.parentBranch)
+        if (availableMovesLength === 1) {
+            const {move, position} = actualBranch.moves[0]
+            return this.finalizeMove({move, position})
         }
         console.warn('step forward', this)
-        return this.resolveStepForward(this.rootKey, null as unknown as IBranch)
+        this.startEvaluation()
     }
 
-    resolveStepForward = (key: string, branch?: IBranch, depth = 1) => {
-        branch = branch || movesTree.getBranch(key)!
-        console.warn('forward', key, branch)
-        if (!branch || !branch.moves.length) {
-            console.error('invalid key in step forward', key)
-            return
+    startEvaluation() {
+        const root = movesTree.getRoot() as IBranch
+        const {move, position, pieceOrder} = this.lookUnevaluatedForward(root)
+        if (!move || !position || !pieceOrder) {
+            return this.finalizeMove(this.getBestMove(root))
         }
-        const {unevalMoves, unevalBranch} = this.lookUnevaluatedForward(key.split('_'), branch, depth)
-        const {move, position} = unevalMoves[0]
-        if (this.evaluatingLine!.join('_') === this.rootKey) {
-            this.evaluatingMove = move
+        const moves = this.getAvailableMoves(position, pieceOrder)
+        const nextBranch = this.defineNewBranch(move, position, pieceOrder, moves)
+        console.warn('evline at start ev', this.evaluatingLine)
+        this.addBranch(nextBranch)
+        if (this.evaluatingLine.length < this.maxDepth || nextBranch.pieceOrder === this.pieceOrder) {
+            this.resolveStepForwardForCurrentBranch(nextBranch)
+        } else if (this.pieceOrder !== nextBranch.pieceOrder) {
+            this.resolveMaxDepthOrNoMoves()
         }
-        const nextPositionKey = this.evaluatingLine?.join('_')
-        const color = oppositeColor(unevalBranch.pieceOrder)
-        const maxDeep = nextPositionKey.split('_').length - this.movesHistory.slice(-5).length === this.maxDepth
-            && color === this.pieceOrder
-        this.addPositionToTree(nextPositionKey, position, color)
-        if (maxDeep) {
-            console.warn('max depth achieved', this.rootKey, 'key: ', nextPositionKey, movesTree.tree)
-            this.lastResult = {
-                movesLine: nextPositionKey,
-                value: movesTree.getBranch(nextPositionKey)!.baseValue,
-                depth
+    }
+
+
+    resolveStepForwardForCurrentBranch = (branch: IBranch) => {
+        console.warn('forward', branch)
+        let unevalMove = this.lookUnevaluatedForward(branch)
+        if (!unevalMove.move) {
+            const root = movesTree.getRoot() as IBranch
+            unevalMove = branch.parentBranch
+                ? this.lookUnevaluatedForward(root)
+                : unevalMove
+            if (!unevalMove.move) {
+                return this.finalizeMove(this.getBestMove(root))
             }
-            return setTimeout(() => this.resolveMaxDeep(nextPositionKey))
         }
-        this.resolveStepForward(nextPositionKey)
-    }
-
-    lookUnevaluatedForward(key: string[], branch: IBranch, depth = 1)
-        : {unevalMoves: IMove[], unevalBranch: IBranch} {
-        const {moves} = branch || {}
+        const {move, position, pieceOrder} = unevalMove as IMove
+        const moves = this.getAvailableMoves(position, pieceOrder!)
+        const nextBranch = this.defineNewBranch(move, position, pieceOrder!, moves)
+        console.warn('evline at forw', this.evaluatingLine)
+        this.addBranch(nextBranch)
         if (!moves.length) {
-            console.error('not moves for evaluation', branch)
+            return this.resolveMaxDepthOrNoMoves()
         }
-        const unevalMoves = this.filterWithDepth(moves, depth)
-        if (unevalMoves.length) {
-            this.evaluatingLine = key.concat(unevalMoves[0].move)
-            return {unevalMoves, unevalBranch: branch}
+        if (this.evaluatingLine.length >= this.maxDepth && pieceOrder !== this.pieceOrder) {
+            console.warn('max depth achieved', movesTree.getTree)
+            this.lastBranch = nextBranch
+            return setTimeout(this.resolveMaxDepthOrNoMoves)
         } else {
-            this.evaluatingLine = key.concat(moves.slice(-1)[0].move)
-            const nextBranchKey = this.evaluatingLine.join('_')
-            const nextBranch = movesTree.getBranch(nextBranchKey)
-            return this.lookUnevaluatedForward(this.evaluatingLine, nextBranch!)
+            this.resolveStepForwardForCurrentBranch(nextBranch)
         }
     }
 
-    maxBranchDepth(key = this.evaluatingLine): number {
-        return Math.abs(key.length - this.maxDepth - this.rootKeyLength)
+    addBranch(branch: IBranch) {
+        movesTree.addBranch(branch, this.evaluatingLine)
+        this.evaluatingLine.push(branch.rivalMove)
     }
 
-    filterWithDepth = (moves: IMove[], depth: number) => moves.filter(m =>
-        m.deepValue === undefined || m.deepValue === null || m.deepValue.depth < depth)
-
-    validateEvaluationResult(movesLine?: string[], sameOrder = true): IValidationResult | null {
-        if (!this.lastResult) { console.error(this); return null }
-        console.warn('validation of result')
-        movesLine = movesLine || this.lastResult!.movesLine.split('_')
-        const moveLineLength = movesLine!.length
-        const valueIncreased = this.valueDynamic === ValueDynamic.incr
-        const conditionToCheckDeepValue = (i: number) => {
-            return sameOrder
-                ? (valueIncreased && i % 2 === (moveLineLength - 1) % 2 && i > this.rootKeyLength - 1)
-                    || (!valueIncreased && i % 2 === moveLineLength % 2)
-                : (valueIncreased && i % 2 === moveLineLength % 2)
-                    || (!valueIncreased && i % 2 === (moveLineLength - 1) % 2)
-        }
-        for (let i = moveLineLength - 1; i >= this.rootKeyLength; i--) {
-            const key = movesLine!.slice(0, i + 1).join('_')
-
-            const branch = movesTree.getBranch(key)!
-            const validity = this.checkValidity(branch)
-            console.warn('validation key', key, 'branch ', branch, 'valid ', validity)
-            if (validity > 1) {
-                this.updateBranchDeepValue(branch, movesLine.slice(0, i + 1), validity)
-            }
-            if (conditionToCheckDeepValue(i)) {
-                this.evaluatingLine = key.split('_')
-                return {key, branch, validity}
+    lookUnevaluatedForward(branch: IBranch): Partial<IMove> {
+        console.warn('look ineval 1', branch, this.evaluatingLine)
+        const {moves, pieceOrder} = branch
+        let unEval = branch.children[moves[moves.length - 1].move]
+        const newPieceOrder = oppositeColor(pieceOrder)
+        if (!unEval) {
+            const {move, position} = moves[moves.length - 1]
+            return {
+                move,
+                position,
+                pieceOrder: newPieceOrder
             }
         }
-        console.error('validation failed')
-        return null
-    }
-
-    updateBranchDeepValue(branch: IBranch, movesLine: string[], depth: number) {
-        const move = this.getBestMove(branch.moves, depth)
-        const value = -move.deepValue!
-        console.warn('VVALUE', value)
-        branch!.deepValue = {
-            depth,
-            movesLine: movesLine.concat(move.move),
-            value
+        for (let i = 0; i < moves.length - 1; i++) {
+            const nextBranch = branch.children[moves[i].move]
+            if (!nextBranch) {
+                const {move, position} = moves[i]
+                return {move, position, pieceOrder: newPieceOrder}
+            }
+            unEval = nextBranch.deepValue.depth < unEval.deepValue.depth ? nextBranch : unEval
         }
-        const parentKey = movesLine!.slice(0, -1).join('_')
-        this.updateParentBranchMoves(parentKey, move.move, value, depth)
+        if (!unEval || (this.pieceOrder === unEval.pieceOrder
+            && this.evaluatingLine.length >= this.maxDepth)) {
+            return {}
+        }
+        this.evaluatingLine = this.evaluatingLine.length
+            ? this.evaluatingLine.concat(unEval.rivalMove)
+            : [unEval.rivalMove]
+        console.warn('look ineval 2', branch, this.evaluatingLine)
+        return this.lookUnevaluatedForward(unEval)
     }
 
-    prepareMove(moveProps?: IMMRResult) {
-        this.evaluatingMove = ''
+    filterEqualOrGreaterThanDepth = (branch: IBranch, depth: number)  => {
+        const {moves, children} = branch
+        let best: IMove & {deepValue: IDeepValue}
+        const filterMoves = moves.filter(m => {
+            const included = children[m.move].deepValue && children[m.move].deepValue.depth >= depth
+            if (included) {
+                const deepValue = children[m.move].deepValue
+                best = best || {...m, deepValue}
+                best = best.deepValue.value > deepValue.value
+                        ? best
+                        : {...m, deepValue}
+            }
+            return included
+        })
+        return filterMoves.length ? filterMoves.concat(best!) : []
+    }
+
+    filterBelowOfDepth = (branch: IBranch, depth: number) => {
+        const {moves, children} = branch
+        return moves.filter(m =>
+            !children[m.move] || children[m.move].deepValue!.depth < depth)
+    }
+
+    finalizeMove(moveProps?: IMMRResult) {
         moveProps = moveProps || {move: '', position: {}}
-        this.defineParentPositionValue()
-        this.lastResult = null as unknown as ILastResult
+        this.evaluatingLine.length = 0
+        if (moveProps.move && this.movesHistory.length >= debutStage) {
+            movesTree.updateRoot(moveProps.move)
+        }
         this.bestMoveCB(moveProps)
     }
 
-    resolveMaxDeep(movesLine?: string) {
-        this.defineValueDynamic()
-        const validationResult = this.validateEvaluationResult(movesLine?.split('_'), true)
-        if (!validationResult?.branch) {
-            console.error('ha ha ha', movesLine, validationResult )
-        } else if (validationResult.validity === this.maxDepth) {
-            const rootBranch = movesTree.getBranch(this.rootKey)
-            const {move, position} = this.getBestMove(rootBranch!.moves, this.maxDepth)
-            this.prepareMove({move, position})
-        } else {
-            console.warn('validation', validationResult)
-            const {key, branch, validity} = validationResult
-            setTimeout(() => this.resolveStepForward(key, branch, validity))
+    getBestMove(props: IMove[] | IBranch) {
+        if (Array.isArray(props)) {
+            const bestMove = props.slice(0, -1).reduce((acc, move) => {
+                return acc.baseValue > move.baseValue ? acc : move
+            }, props[props!.length - 1])
+            const deepValue = {depth: 0, value: bestMove.baseValue}
+            return {move: bestMove.move, position: bestMove.position, deepValue}
         }
-    }
-
-    defineParentPositionValue() {
-        if (this.rootKey === 'sp') {
-            this.parentPositionValue = {
-                movesLine: ['sp'],
-                value: 0,
-                depth: this.maxDepth
-            }
-        }
-        const branch = movesTree.getBranch(this.rootKey)!
-
-        const {maxDepth, movesHistory} = this
-        if (this.filterWithDepth(branch.moves, maxDepth).length
-            && this.valueDynamic === ValueDynamic.decr) {
-            console.error('root branch evaluation does not complete', branch)
-        }
-        const bestMove = this.getBestMove(branch.moves, this.maxDepth)
-        this.parentPositionValue = {
-            movesLine: movesHistory.slice(-5).concat(bestMove.move),
-            value: bestMove.deepValue?.value!,
-            depth: maxDepth
-        }
-    }
-
-    getBestMove(moves: IMove[], deep?: number) {
-        return moves.slice(0, -1).reduce((acc, move) => {
-            const condition = (deep && move.deepValue && acc.deepValue!.value < move.deepValue.value)
-                                || (!deep && move.baseValue > acc.baseValue)
-            acc = condition ? move : acc
+        const {moves, children} = props
+        const acc = children[moves.slice(-1)[0].move] as IBranch
+        const bestMove = moves.slice(0, -1).reduce((acc: IBranch, move) => {
+            const condition = children[move.move].deepValue.depth >= acc.deepValue.depth
+                    && acc.deepValue.value < children[move.move].deepValue.value
+            acc = condition ? children[move.move] : acc
             return acc
-        }, moves.slice(-1)[0])
+        }, acc)
+        return {
+            move: bestMove.rivalMove,
+            position: bestMove.position,
+            deepValue: bestMove.deepValue
+        }
     }
 
-    addPositionToTree(key: string, pos: IBoardToGame, pieceOrder: PieceColor, moves?: IMove[]) {
-        moves = (moves || mmr.lookForAllMoves(pieceOrder, pos)).map((move: IMMRResult) => {
+    getAvailableMoves = (pos: IBoardToGame, pieceOrder: PieceColor) => {
+        return mmr.lookForAllMoves(pieceOrder, pos).map((move: IMMRResult) => {
             const posValue = evaluator.evaluateCurrentPosition(move.position)
             return {
                 move: move.move,
@@ -302,94 +248,70 @@ export class BestMoveSeeker implements ISeekerProps {
                 baseValue: pieceOrder === PieceColor.w ? posValue : -posValue
             }
         })
-        const splittedKey = key.split('_')
-        const move = splittedKey.slice(-1)[0]
+    }
 
-        const baseValue = !moves.length
-            ? 50
-            : -this.getBestMove(moves).baseValue
-        const positionToSave: IBranch = {
+    defineNewBranch(rivalMove: string, pos: IBoardToGame, pieceOrder: PieceColor, moves: IMove[]) {
+        let deepValue: IDeepValue
+        if (moves.length) {
+            const bestMove = this.getBestMove(moves)
+            deepValue = { ...bestMove.deepValue, value: -bestMove.deepValue.value }
+        } else {
+            deepValue = { depth: this.maxDepth, value: 50 }
+        }
+        return {
             moves,
             position: pos,
-            baseValue,
-            pieceOrder: pieceOrder
-        }
-        if (this.movesHistory.length) {
-            const parentKey = splittedKey.slice(0, -1).join('_')
-            this.updateParentBranchMoves(parentKey, move, baseValue)
-            if (!moves.length) {
-                const grantKey = splittedKey.slice(0, -2).join('_')
-                const grandMove = this.evaluatingLine!.slice(-2)[0]
-                this.updateParentBranchMoves(grantKey, grandMove, -baseValue, this.maxDepth)
-            }
-        }
-        movesTree.addBranch(key, positionToSave)
-        return !moves.length
-            ? this.handleNoMovesBranch(splittedKey, pieceOrder === this.pieceOrder)
-            : baseValue
+            rivalMove,
+            deepValue,
+            pieceOrder,
+            children: {}
+        } as IBranch
     }
 
-    updateParentBranchMoves(key: string, move: string, value: number, depth = 1) {
-        const parentBranch = movesTree.getBranch(key)
-        if (!parentBranch) { return }
-        parentBranch.moves = parentBranch.moves.map(m => {
-            if (m.move === move) {
-                m.deepValue = m.deepValue ? {...m.deepValue, depth, value} : {depth, value}
-            }
-            return m
-        })
-    }
-
-    checkValidity(branch: IBranch, startDepth = 1) {
-        const { moves } = branch
-        for (let j = startDepth; j <= this.maxDepth; j++) {
-            for (let i = 0; i < moves.length; i++) {
-                const deepValue = moves[i].deepValue
-                if (deepValue === undefined || deepValue === null || deepValue.depth < j) {
-                    return j
-                }
-            }
-        }
-        return this.maxDepth - 1
-    }
-
-    handleNoMovesBranch = (key: string[], sameOrder: boolean) => {
-        if (!this.evaluatingMove) {
-            return
-        }
-        if (key.length < 2 && sameOrder) {
-            return this.prepareMove()
-        }
-        const {unevalBranch} = this.lookAvailableBackward(key.slice(0, -2))
-        if (!unevalBranch && sameOrder) {
-            return this.prepareMove()
-        }
-        this.resolveStepForward(this.evaluatingLine!.join('_'), unevalBranch)
-    }
-
-    lookAvailableBackward(key: string[])
-        : {unevalMoves: IMove[], unevalBranch: IBranch} {
-        const depth = this.maxBranchDepth(key)
-        const branch = movesTree.getBranch(key.join('_'))!
-        const unevalMoves = this.filterWithDepth(branch.moves, depth)
+    lookAvailableBackward(branch: IBranch) {
+        const unevalMoves = this.filterBelowOfDepth(branch, 0)
         if (unevalMoves.length) {
-            return {unevalMoves, unevalBranch: branch}
-        } else if (key.length > 2) {
-            return this.lookAvailableBackward(key.slice(0, -2))
+            setTimeout(() => this.resolveStepForwardForCurrentBranch(branch))
+        } else {
+            this.resolveMaxDepthOrNoMoves()
         }
-        return {} as {unevalMoves: IMove[], unevalBranch: IBranch}
     }
 
-    defineValueDynamic(newValue = this.lastResult?.value) {
-        if (!this.parentPositionValue) { console.error('no parent value', this, movesTree, newValue) }
-        this.valueDynamic = (newValue || 0) > (this.parentPositionValue?.value || 0)
-            ? ValueDynamic.incr
-            : ValueDynamic.decr
+    resolveMaxDepthOrNoMoves() {
+        const evaluatingLine = this.determineBackwardBranch() as string[]
+        console.warn('evline', this.evaluatingLine, evaluatingLine)
+        if (evaluatingLine[0] !== 'fin') {
+            this.evaluatingLine = evaluatingLine
+            const branch = movesTree.getBranch(evaluatingLine)
+            return this.lookAvailableBackward(branch)
+        }
+        const rootMoves = this.filterEqualOrGreaterThanDepth(movesTree.getRoot() as IBranch, this.maxDepth)
+        if (rootMoves.length) {
+            return this.finalizeMove(rootMoves[rootMoves.length - 1])
+        }
+        console.error('not evaluated branches in the root', movesTree, this)
+    }
+
+    determineBackwardBranch(sameOrder = !(this.evaluatingLine.length % 2)) {
+        const lastValue = this.lastBranch?.deepValue.value
+        if (!lastValue) {console.error('comparison value not specified'); return}
+        console.warn('determine evolution of value', sameOrder, this.parentBranch, movesTree)
+        const root =
+            movesTree.getRoot() as IBranch
+        if ((sameOrder && lastValue > root.deepValue.value)
+            || (!sameOrder && lastValue > this.parentBranch!.deepValue.value)) {
+            return this.evaluatingLine.length >= 1
+                ? this.evaluatingLine.slice(0, -1)
+                : ['fin']
+        } else if ((!sameOrder && lastValue < this.parentBranch!.deepValue.value)
+            || (sameOrder && lastValue < root.deepValue.value)) {
+            return this.evaluatingLine.length >= 2
+                ? this.evaluatingLine.slice(0, -2)
+                : ['fin']
+        }
     }
 }
 
-const bms = new BestMoveSeeker()
-
 export type BestMoveSeekerType = BestMoveSeeker
 
-export default bms
+export default new BestMoveSeeker()

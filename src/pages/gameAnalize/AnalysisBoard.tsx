@@ -23,7 +23,7 @@ import {
     copyMap,
     copyObj,
     possibleOutOfMandatory,
-} from '../../game-engine/gameplay-helper-fuctions'
+} from '../../game-engine/gameplay-helper-functions'
 
 import {
     createAnalysisBoard,
@@ -41,7 +41,7 @@ import {updateBoardState} from '../../store/board/actions'
 import bms from '../../game-engine/best-move-seeker'
 import {reverseBoard} from '../../store/boardOptions/actions'
 import {finishGameSetup} from '../../store/gameOptions/actions'
-import {IEvaluatingState, ISeekerProps, ValueDynamic} from "../../game-engine/engine-interfaces";
+import { ISeekerProps} from "../../game-engine/engine-interfaces";
 
 const UnusedTowers = (props: {color: PieceColor, towers: TowersMap}) => {
     const {color, towers} = props
@@ -97,15 +97,12 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
             console.log(this.props)
             this.tur.updateCellsPosition(board, boardOptions, this.boardRef.current!);
         },0)
-        const gameResult = this.props.analysis.gameResult
+        // const gameResult = this.props.analysis.gameResult
         const props: ISeekerProps = {
             pieceOrder: PieceColor.w,
             position: this.props.board.currentPosition,
             game: false,
             maxDepth: depth,
-            lastMove: gameResult?.movesHistory.slice(-1)[0] || '',
-            rootKeyLength: gameResult?.movesHistory.slice(-5).length,
-            rootKey: gameResult?.movesHistory.slice(-5).join('_')
         }
         bms.setState(props)
     }

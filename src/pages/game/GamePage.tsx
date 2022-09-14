@@ -13,7 +13,7 @@ import {
     endGame,
     declineDraw,
 } from '../../store/game/actions'
-import { oppositeColor } from '../../game-engine/gameplay-helper-fuctions'
+import { oppositeColor } from '../../game-engine/gameplay-helper-functions'
 import { PieceColor } from '../../store/models'
 import { MovesHistory } from '../../game-components/moves-history/MovesHistory'
 import { GameMenu } from './PlayerGameMenu'

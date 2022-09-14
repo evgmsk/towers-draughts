@@ -14,7 +14,7 @@ import {
 } from "../store/models"
 
 import {BaseMoveResolver} from './common-fn-moves-resolver'
-import { copyMap, getCellSize } from "./gameplay-helper-fuctions"
+import { copyMap, getCellSize } from "./gameplay-helper-functions"
 import { createStartBoard, updateCellsMap } from "./prestart-help-function-constants"
 
 
@@ -29,12 +29,12 @@ export class TowersUpdateResolver extends BaseMoveResolver {
 
     // animateRivalMove(history: string[], board: IBoardToDraw, reversed: boolean) {
     //     this.setPositions(board.positionsTree!, history)
-    //     const move = history.slice(-1)[0]
-    //     const mandatory = move.includes(':')
+    //     const rivalMove = history.slice(-1)[0]
+    //     const mandatory = rivalMove.includes(':')
     //     if (mandatory) {
-    //         return this.animateMadatoryMove(move)
+    //         return this.animateMadatoryMove(rivalMove)
     //     }
-    //     return this.animateSimpleMove(move, board, reversed)
+    //     return this.animateSimpleMove(rivalMove, board, reversed)
     // }
 
     animateMadatoryMove(move: string) {

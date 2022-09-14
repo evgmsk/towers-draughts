@@ -2,7 +2,7 @@ import { put, takeLatest, select, delay } from 'redux-saga/effects';
 
 import { PieceColor, IMoveProps, IAnalysisState} from '../models';
 
-import { copyMap, oppositeColor, splitMove } from '../../game-engine/gameplay-helper-fuctions';
+import { copyMap, oppositeColor, splitMove } from '../../game-engine/gameplay-helper-functions';
 // import { Axios, setAuthorizationHeader } from '../../common/axios';
 import { GameAnalysisActions, GameAnalysisTypes } from '../gameAnalysis/types';
 import { createDefaultTowers, createEmptyBoard, createStartBoard} from '../../game-engine/prestart-help-function-constants';

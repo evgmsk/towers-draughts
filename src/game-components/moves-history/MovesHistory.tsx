@@ -2,7 +2,7 @@ import React, { useEffect} from "react"
 import { ConnectedProps, connect } from "react-redux"
 import {useHistory} from 'react-router-dom'
 
-import { convertToMovesHistory } from "../../game-engine/gameplay-helper-fuctions"
+import { convertToMovesHistory } from "../../game-engine/gameplay-helper-functions"
 import { IRef } from "../../store/models"
 import {analyzeLastGame, stepForward, stepBack, goToPosition, playMoves} from '../../store/gameAnalysis/actions'
 import { IRootState } from "../../store/rootState&Reducer"
@@ -90,16 +90,16 @@ const Moves:React.FC<ConnectedProps<typeof historyConnector>> = (props) => {
     }
 
     const {index} = lastMove!
-    const toStartClass = `moves-history-menu__item to-start${index < 0 ? ' disabled' : ''}`
-    const stepBackClass = `moves-history-menu__item step-back${!index ? ' disabled' : ''}`
-    const stepForwardClass = `moves-history-menu__item step-forward${index >= length - 1 ? ' disabled' : ''}`
-    const toEndClass = `moves-history-menu__item to-end${index >= length - 1 ? ' disabled' : ''}`
+    const toStartClass = `nextMoves-history-menu__item to-start${index < 0 ? ' disabled' : ''}`
+    const stepBackClass = `nextMoves-history-menu__item step-back${!index ? ' disabled' : ''}`
+    const stepForwardClass = `nextMoves-history-menu__item step-forward${index >= length - 1 ? ' disabled' : ''}`
+    const toEndClass = `nextMoves-history-menu__item to-end${index >= length - 1 ? ' disabled' : ''}`
     const playClass = `moves-history-menu__item play-moves`
     return (
         <div className="moves-history-wrapper">
             <div className="moves-history-menu">
                 { gameMode === 'isPlaying' || !analyzingLastGame
-                    ? <p>moves:</p> 
+                    ? <p>nextMoves:</p>
                     : <ul onClick={handleClickOnMenuItem}>
                         <li className={toStartClass}>
                             <i className="material-icons" >first_page</i>
@@ -121,20 +121,20 @@ const Moves:React.FC<ConnectedProps<typeof historyConnector>> = (props) => {
             </div>
             <div className="moves-container" ref={ref}>           
                 {
-                    moves.map((move: {black: string, white: string}, i: number) => {
+                    moves.map((rivalMove: {black: string, white: string}, i: number) => {
                         const white = (analyzingLastGame ? index : mHistory.length - 1) === i * 2
                         const black =  (analyzingLastGame ? index : mHistory.length - 1) === i * 2 + 1
-                        const whiteClass = `white-move${white ? ' current-move': ''}`
-                        const blackClass = `black-move${black ? ' current-move': ''}`
+                        const whiteClass = `white-rivalMove${white ? ' current-rivalMove': ''}`
+                        const blackClass = `black-rivalMove${black ? ' current-rivalMove': ''}`
                         return (
                             <div className="move-wrapper" key={i}>
                                 <div className="move-number">{i + 1}</div>
                                 <div className="move">
                                     <div className={whiteClass} onClick={(e) => handleClickOnMove(e, i * 2)}>
-                                        {move.white}
+                                        {rivalMove.white}
                                     </div>
                                     <div className={blackClass} onClick={(e) => handleClickOnMove(e, i * 2 + 1)}>
-                                        {move.black}
+                                        {rivalMove.black}
                                     </div>
                                 </div>
                             </div>

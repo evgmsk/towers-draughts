@@ -114,7 +114,7 @@ export class KingMandatoryMoveResolver extends MRC {
         const direction = this.getMoveDirection(moveArr)
         const board = move.position
         if (!board || !board[move.move.split(':').slice(-1)[0]].tower) {
-            console.error('error in move', move)
+            console.error('error in rivalMove', move)
         }
         const diagonals = this.getDiagonals(cellKey, board, direction)
         let result = []

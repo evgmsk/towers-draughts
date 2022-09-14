@@ -1,5 +1,5 @@
 import { PieceColor, IBoardToGame, TowerType, IBoardCell, IMMRResult } from '../store/models'
-import { filterArrayByLength, copyObj, oppositeColor } from './gameplay-helper-fuctions'
+import { filterArrayByLength, copyObj, oppositeColor } from './gameplay-helper-functions'
 import { KingMandatoryMoveResolver as KMMR} from './king-mandatory-move-resolver'
 import { createStartBoard } from './prestart-help-function-constants'
 
@@ -39,7 +39,7 @@ export class MandatoryMovesResolver extends KMMR{
     }
 
     checkMandatoryMoveNextStep = (move: IMMRResult): IMMRResult[] => {
-        // console.log('move', move.move)
+        // console.log('rivalMove', rivalMove.rivalMove)
         const moveArray = move.move.split(':')
         const [from, to] = moveArray.slice(moveArray.length - 2)
         const board = move.position
@@ -99,7 +99,7 @@ export class MandatoryMovesResolver extends KMMR{
                     ? `${cell?.boardKey}:${nextCellKey}`
                     : `${preMove.move}:${nextCellKey}`
                 if (move.split(':').length < 2) {
-                    console.error('move too short', move)
+                    console.error('rivalMove too short', move)
                 }
                 const position = this.updateBoardOnMandatoryMoveStep(move.split(':'), board)
                 const takenPieces = [...preMove.takenPieces!, takenPiece]

@@ -92,7 +92,7 @@ export class MandatoryMovesResolver extends KMMR{
                     ? `${cell?.boardKey}:${nextCellKey}` 
                     : `${preMove.move}:${nextCellKey}`
                 if (move.split(':').length < 2) {
-                    console.error('move too short', move)
+                    console.error('rivalMove too short', move)
                 }
                 const position = this.updateBoardOnMandatoryMoveStep(move.split(':'), board)
                 const takenPieces = [...preMove.takenPieces, takenPiece]

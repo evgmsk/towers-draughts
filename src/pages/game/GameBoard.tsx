@@ -18,7 +18,7 @@ import {
     possibleOutOfMandatory,
     compareMaps,
     copyMap,
-} from '../../game-engine/gameplay-helper-fuctions'
+} from '../../game-engine/gameplay-helper-functions'
 import { IRootState } from '../../store/rootState&Reducer'
 import {AnimationDuration} from '../../constants/gameConstants'
 import tur from '../../game-engine/update-towers-functions'

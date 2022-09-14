@@ -12,7 +12,7 @@ import { GameOptionActions,  GameOptionActionTypes} from '../gameOptions/types';
 import tur from '../../game-engine/update-towers-functions'
 import { GameActions } from '../game/types';
 import { IRootState } from '../rootState&Reducer';
-import { copyMap, splitMove } from '../../game-engine/gameplay-helper-fuctions';
+import { copyMap, splitMove } from '../../game-engine/gameplay-helper-functions';
 import { AnimationDuration } from '../../constants/gameConstants';
 
  
