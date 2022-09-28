@@ -14,7 +14,7 @@ import {
 } from "../store/models"
 
 import {BaseMoveResolver} from './common-fn-moves-resolver'
-import { copyMap, getCellSize } from "./gameplay-helper-functions"
+import { copyObj, getCellSize } from "./gameplay-helper-functions"
 import { createStartBoard, updateCellsMap } from "./prestart-help-function-constants"
 
 
@@ -47,32 +47,32 @@ export class TowersUpdateResolver extends BaseMoveResolver {
 
     relocateTower(from: string, to: string, board: IGameBoard, reversed: boolean) {
         const {cellSize, cellsMap} = board
-        const towers = copyMap(board.towers)
-        const tower = towers.get(from) as TowerConstructor
+        const towers = copyObj(board.towers) as TowersMap
+        const tower = towers[from] as TowerConstructor
         tower.positionInDOM = this.calcTowerPosition(to, cellsMap, cellSize, reversed)
-        towers.set(from, tower)
-        console.log(tower)
+        towers[from] = tower
+        // console.log(tower)
         this.callBack({towers})
     }
 
     finalizeSimpleMove(from: string, to: string, board: IGameBoard, reversed = false) {
         const {cellSize, cellsMap} = board
-        const towers = copyMap(board.towers)
-        const tower = towers.get(from) as TowerConstructor
+        const towers = copyObj(board.towers) as TowersMap
+        const tower = towers[from] as TowerConstructor
         tower.onBoardPosition = to
         tower.currentType = this.checkTowerTypeChanging(to, this.size, tower.currentColor, tower.currentType)
         tower.positionInDOM = this.calcTowerPosition(to, cellsMap, cellSize, reversed)
-        towers.set(to, tower)
-        towers.delete(from)
+        towers[to] = tower
+        delete towers[from]
         const towerTouched = null as unknown as TowerTouched
         const lastMoveSquares = [from, to]
         this.callBack({towers, towerTouched, lastMoveSquares, mouseDown: false, moveDone: true})
     }
 
     finalizeMandatoryMoveStep(from: string, to: string, board: IGameBoard, reversed = false, last = false) {
-        const towers = copyMap(board.towers)
+        const towers = copyObj(board.towers) as TowersMap
         const {cellSize, cellsMap} = board
-        const tower = towers.get(from) as TowerConstructor
+        const tower = towers[from] as TowerConstructor
         tower.onBoardPosition = to
         if (this.GV === 'towers') {
             if (tower!.currentColor === PieceColor.w) {
@@ -85,9 +85,9 @@ export class TowersUpdateResolver extends BaseMoveResolver {
             tower.currentType = this.checkTowerTypeChanging(to, this.size, tower.currentColor, tower.currentType)
         }
         tower.positionInDOM = this.calcTowerPosition(to, cellsMap, cellSize, reversed)
-        towers.set(to, tower)
-        towers.delete(from)
-        console.log(tower)
+        towers[to] = tower
+        delete towers[from]
+        // console.log(tower)
         return towers
     }
 
@@ -104,18 +104,18 @@ export class TowersUpdateResolver extends BaseMoveResolver {
         const towers = this.updateTowersAfterMoveAnimation(from, to, state, isTowers, last)
         if (isTowers) {
             const middlePieceKey = tP[0]
-            const middlePiece = towers.get(middlePieceKey) as PartialTower
-            const takenTower = this.cuptureTower(middlePiece) as TowerConstructor
+            const middlePiece = towers[middlePieceKey] as PartialTower
+            const takenTower = this.captureTower(middlePiece) as TowerConstructor
             if (!takenTower) {
-                towers.delete(middlePieceKey)
+                delete towers[middlePieceKey]
             } else {
-                towers.set(middlePieceKey, takenTower)
+                towers[middlePieceKey] = takenTower
             }
             return towers
         } else if (last) {
-            console.log(towers, tP)
+            // console.log(towers, tP)
             tP.forEach((key: string) => {
-                towers.delete(key)
+                delete towers[key]
             })
             return towers
         }
@@ -123,35 +123,35 @@ export class TowersUpdateResolver extends BaseMoveResolver {
     }
 
     updateTowersToBoard(board: IBoardToGame): TowersMap {
-        const towers = new Map() as TowersMap
+        const towers = {} as TowersMap
         Object.keys(board).forEach((key: string) => {
             let tower = board[key].tower as TowerConstructor
             if (tower) {
                 const _tower = new TowerConstructor(tower)
                 _tower.onBoardPosition = key
-                towers.set(key, _tower)
+                towers[key] = _tower
             }
         })
         return towers
     }
     
     updateMiddleTowerOnOpponentMove(key: string, state: IGameBoard, board: IBoardToGame) {
-        const towers = copyMap(state.towers) as TowersMap
+        const towers = copyObj(state.towers) as TowersMap
         const takenTower = board[key]!.tower as PartialTower
         if (takenTower) {
-            const newMiddleTower = {...towers.get(key), ...takenTower} as TowerConstructor;
-            towers.set(key, newMiddleTower)
+            const newMiddleTower = Object.assign(towers[key], takenTower) as TowerConstructor;
+            towers[key] = newMiddleTower
         } else {
-            towers.delete(key)
+        delete towers[key]
         }
-        console.log('middle update', key, towers, board, takenTower)
+        // console.log('middle update', key, towers, board, takenTower)
         return towers
     }
 
     updateTowersAfterMoveAnimation(from: string, to: string, board: IBoardToDraw, wT=false, last=false): TowersMap {
         const {cellSize, cellsMap} = board
-        const towers = copyMap(board.towers!) as TowersMap
-        const tower = towers.get(from) as TowerConstructor
+        const towers = copyObj(board.towers!) as TowersMap
+        const tower = towers[from] as TowerConstructor
         if (wT) {
             if (tower!.currentColor === PieceColor.w) {
                 tower.bPiecesQuantity = (tower.bPiecesQuantity as number) + 1
@@ -164,14 +164,14 @@ export class TowersUpdateResolver extends BaseMoveResolver {
         if (this.GV !== 'international' || last) {
             tower.currentType = this.checkTowerTypeChanging(to, this.size, tower.currentColor, tower.currentType)
         }
-        towers.set(to, tower)
-        towers.delete(from)
+        towers[to] = tower
+            delete towers[from]
         return towers
     }
 
     animateRivalTowerMove(from: string, to: string, state: IGameBoard) {
         const {cellsMap, cellSize} = state
-        const towers = copyMap(state.towers)
+        const towers = copyObj(state.towers)
         const opponentTower = towers.get(from) as TowerConstructor
         opponentTower.positionInDOM = this.calcTowerPosition(to, cellsMap, cellSize)
         return {...state, towers}
@@ -193,7 +193,7 @@ export class TowersUpdateResolver extends BaseMoveResolver {
         if (key.includes('oB') || key.includes('oW')) {
             return this.calcPositionOutboardTowers(key, cellSize, reversed) as ITowerPosition
         }
-        const cellPosition = map.get(key) as ITowerPosition
+        const cellPosition = map[key] as ITowerPosition
         if (!cellPosition) return  {x: 0, y: 0}
         const {x, y} = cellPosition
         const towerElem = document.querySelector('.checker-tower')
@@ -207,19 +207,20 @@ export class TowersUpdateResolver extends BaseMoveResolver {
     cancelTowerTransition(props: IGameBoard & {reversed?: boolean}) { 
         const {key} = props.towerTouched as TowerTouched
         const {cellSize, cellsMap, reversed = false} = props
-        const towers = copyMap(props.towers) as TowersMap
-        const tower = towers.get(key) as TowerConstructor
+        const towers = copyObj(props.towers) as TowersMap
+        const tower = towers[key] as TowerConstructor
         tower.positionInDOM = this.calcTowerPosition(key, cellsMap, cellSize, reversed)
-        towers.set(key, tower)
+        towers[key] = tower
         this.callBack({...props, towers, towerTouched: null as unknown as TowerTouched, mouseDown: false})
     }
 
     updateTowersPosition = (cellSize: number, towers: TowersMap, map: CellsMap, reversed = false): TowersMap => {
-        const _towers = copyMap(towers)
-        towers.forEach((val: TowerConstructor, key: string) => {
+        const _towers = copyObj(towers) as TowersMap
+        Object.keys(towers).forEach((key: string) => {
+            const val = towers[key]
             const positionInDOM = this.calcTowerPosition(key, map, cellSize, reversed)
             const tower = {...val, positionInDOM, onBoardPosition: key}
-            _towers.set(key, tower)
+            _towers[key] = tower
         })
         return _towers
     }

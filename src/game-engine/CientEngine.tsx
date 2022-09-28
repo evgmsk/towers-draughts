@@ -68,7 +68,7 @@ class ClientEngine extends React.Component<BotProps, IBestMove> {
 
     getSeekerProps = (): ISeekerProps => {
         return {
-            maxDepth: 6,
+            maxDepth: this.props.rivalLevel + 2,
             position: this.props.currentPosition,
             pieceOrder: this.props.moveOrder.pieceOrder,
             game: true,

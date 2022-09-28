@@ -7,7 +7,7 @@ import {
     IBoardProps,
     IBoardToDraw,
     IBoardToGame,
-    IMMRResult,
+    IMMRResult, IPositionsTree,
     IRef,
     ITowerPosition,
     PieceColor,
@@ -20,7 +20,6 @@ import {clearHistory, makeMove} from '../../store/game/actions'
 import {makeNewMove, updateAnalysisState} from '../../store/gameAnalysis/actions'
 import {
     checkMoveTargetCell,
-    copyMap,
     copyObj,
     possibleOutOfMandatory,
 } from '../../game-engine/gameplay-helper-functions'
@@ -46,7 +45,7 @@ import { ISeekerProps} from "../../game-engine/engine-interfaces";
 const UnusedTowers = (props: {color: PieceColor, towers: TowersMap}) => {
     const {color, towers} = props
     const subStr = color === PieceColor.w ? 'oW' : 'oB'
-    const number = [...towers.keys()].filter((key: string) => key.includes(subStr)).length
+    const number = Object.keys(towers).filter((key: string) => key.includes(subStr)).length
     return <span className={`unused-${color}`}>{number}</span>
 }
 
@@ -56,6 +55,7 @@ const mapState = (state: IRootState) => ({
     analysis: state.analyze,
     board: state.board,
     boardOptions: state.boardOptions,
+    bestMoveLine: state.analyze.bestMoveLine
 })
 
 const mapDispatch = {
@@ -75,27 +75,17 @@ type AnalysisBoardState = IAnalysisBoard & {[key: string]: any}
 
 export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardState> {
     private boardRef: IRef<HTMLDivElement> = React.createRef()
-    mmr = mmr
-    tur = tur
-    bms = bms
-    constructor(props: GameAnalyzeProps) {
-        super(props);
-        console.log(props)
-        const Props = {GV: props.gameOptions.gameVariant, size: props.boardOptions.boardSize}
-        this.mmr.setProps(Props)
-        this.tur.setProps(Props)
-        this.tur.setCalBack(this.props.updateBoardState)
-    }
 
     componentDidMount() {
         if (!window) return
+        tur.setCalBack(this.props.updateBoardState)
         this.props.finishGameSetup(false)
         this.createBoardToAnalysis()
         const {analysis: {depth}} = this.props
         setTimeout(() => {
             const {board, boardOptions} = this.props
             console.log(this.props)
-            this.tur.updateCellsPosition(board, boardOptions, this.boardRef.current!);
+            tur.updateCellsPosition(board, boardOptions, this.boardRef.current!);
         },0)
         // const gameResult = this.props.analysis.gameResult
         const props: ISeekerProps = {
@@ -117,23 +107,22 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
             board: {currentPosition, cellSize, cellsMap},
             board
         } = this.props
-
-        console.log(this.props)
-        const mandatoryMoves = this.mmr.lookForMandatoryMoves(pieceOrder, currentPosition)
+        // console.log(this.props)
+        const mandatoryMoves = mmr.lookForMandatoryMoves(pieceOrder, currentPosition)
         if ((analyzeLastGame && !prevProps.analysis.analyzeLastGame)
             || (settingPosition && !prevProps.analysis.settingPosition)
             || (startPosition && !prevProps.analysis.startPosition)) {
-            this.tur.updateCellsPosition(board, boardOptions, this.boardRef.current!)
+            tur.updateCellsPosition(board, boardOptions, this.boardRef.current!)
         }
         if (!settingPosition && prevProps.analysis.settingPosition) {
             if (JSON.stringify(prevProps.board.currentPosition) !== JSON.stringify(currentPosition)) {
-                let towers = this.tur.updateTowersToBoard(currentPosition)
-                towers = this.tur.updateTowersPosition(cellSize, towers, cellsMap, reversedBoard)
+                let towers = tur.updateTowersToBoard(currentPosition)
+                towers = tur.updateTowersPosition(cellSize, towers, cellsMap, reversedBoard)
                 updateBoardState({
                     currentPosition, towers, mandatoryMoves, mandatoryMoveStep: 0
                 })
             } else {
-                const mandatoryMoves = this.mmr.lookForMandatoryMoves(pieceOrder, currentPosition)
+                const mandatoryMoves = mmr.lookForMandatoryMoves(pieceOrder, currentPosition)
                 if (mandatoryMoves.length) {
                     updateBoardState({mandatoryMoveStep: 0, mandatoryMoves})
                 }
@@ -143,13 +132,13 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
             const {updateBoardState, boardOptions} = this.props
             const board = createEmptyBoardForCustomPosition({boardOptions}) as IBoardToDraw
             updateBoardState(board)
-            this.tur.updateCellsPosition(board, boardOptions, this.boardRef.current!)
+            tur.updateCellsPosition(board, boardOptions, this.boardRef.current!)
         }
         if ((!settingPosition && pieceOrder !== prevProps.analysis.pieceOrder)
             || lastMove.move !== prevProps.analysis.lastMove.move
             || boardOptions.reversedBoard !== prevProps.boardOptions.reversedBoard) {
             const reversed = this.props.boardOptions.reversedBoard
-            const towers = this.tur.updateTowersPosition(cellSize!, board.towers, cellsMap!, reversed)
+            const towers = tur.updateTowersPosition(cellSize!, board.towers, cellsMap!, reversed)
             updateBoardState({
                 currentPosition, mandatoryMoves, mandatoryMoveStep: 0, towers
             })
@@ -166,8 +155,8 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
 
         })
         const currentPosition = createEmptyBoard(boardOptions.boardSize)
-        const positionsTree = new Map()
-        positionsTree.set('sp', currentPosition)
+        const positionsTree = {} as IPositionsTree
+        positionsTree.sp = currentPosition
         updateBoardState({
             currentPosition,
             positionsTree
@@ -199,12 +188,12 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
     }
 
     updateCurrentPositionWhileSettingBoard = (tower: TowerConstructor) => {
-        console.log('update current position')
         const {board, updateBoardState} = this.props
         const {wPiecesQuantity, bPiecesQuantity, currentColor, currentType, onBoardPosition} = tower
         const key = onBoardPosition
         const onBoardTower = {...newOnBoardTower(currentColor, currentType), wPiecesQuantity, bPiecesQuantity, key}
         const currentPosition = copyObj(board.currentPosition)
+        console.log('update current position', tower, board, currentPosition)
         currentPosition[key].tower = onBoardTower
         updateBoardState({currentPosition})
     }
@@ -228,7 +217,7 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
                 const takenPieces = fitMoves[0].takenPieces!
                 const tP = gameVariant === 'towers' ? [takenPieces![mandatoryMoveStep]] : takenPieces
                 const moveToSave = fitMoves[0]
-                towers = this.tur.updateTowersOnMandatoryMoveStep(from, cellKey, board, tP, true)
+                towers = tur.updateTowersOnMandatoryMoveStep(from, cellKey, board, tP, true)
                 makeNewMove({moveToSave})
                 nCP = fitMoves[0].position
                 mouseDown = false
@@ -236,12 +225,12 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
                 const tP = fitMoves[0].takenPieces![mandatoryMoveStep]
                 _mandatoryMoves = fitMoves
                 _mandatoryMoveStep = mandatoryMoveStep! + 1
-                towers = this.tur.updateTowersOnMandatoryMoveStep(from, cellKey, board, [tP])
+                towers = tur.updateTowersOnMandatoryMoveStep(from, cellKey, board, [tP])
             }
         } else {
-            nCP = this.mmr.makeFreeMove(from, cellKey, currentPosition)
+            nCP = mmr.makeFreeMove(from, cellKey, currentPosition)
             makeNewMove({moveToSave: {move, position: nCP}})
-            towers = this.tur.updateTowersAfterMoveAnimation(from, cellKey, board, false, true)
+            towers = tur.updateTowersAfterMoveAnimation(from, cellKey, board, false, true)
             mouseDown = false
         }
         updateBoardState({
@@ -273,11 +262,11 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
         const cellKey = checkMoveTargetCell({x: clientX, y: clientY}, cellsToCheck, cellSize, this.boardRef)
         if (!cellKey) {
             console.log('out of position')
-            this.tur.cancelTowerTransition({...board, reversed: reversedBoard})
+            tur.cancelTowerTransition({...board, reversed: reversedBoard})
         } else {
             if (!settingPosition) {
                 this.handleUpToMove(cellKey)
-            } else if (!towers.get(cellKey)) {
+            } else if (!towers[cellKey]) {
                 this.handleSettingPieces(cellKey)
             }
         }
@@ -291,8 +280,8 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
         if (t1.currentColor !== t2.currentColor) {
             tower!.currentColor = t2.currentColor
         }
-        towers!.delete(t2.onBoardPosition)
-        towers!.set(tower.onBoardPosition, tower as TowerConstructor)
+        delete towers[t2.onBoardPosition]
+        towers![tower.onBoardPosition] = tower as TowerConstructor
         this.updateCurrentPositionWhileSettingBoard(tower)
         return towers!
     }
@@ -300,12 +289,12 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
     setTowerOnBoard = (cellKey: string, reversed = false):TowersMap => {
         const { towers, cellsMap, cellSize} = this.props.board
         const towerTouched = this.props.board.towerTouched
-        const tower = towers!.get(towerTouched!.key)!
-        tower.positionInDOM = this.tur.calcTowerPosition(cellKey, cellsMap!, cellSize!, reversed)
+        const tower = towers![towerTouched!.key]!
+        tower.positionInDOM = tur.calcTowerPosition(cellKey, cellsMap!, cellSize!, reversed)
         tower.onBoardPosition = cellKey
-        const _towers = copyMap(towers!)
-        _towers!.set(cellKey, tower)
-        _towers!.delete(towerTouched!.key)
+        const _towers = copyObj(towers!) as TowersMap
+        _towers![cellKey] = tower
+        delete _towers![towerTouched!.key]
         this.updateCurrentPositionWhileSettingBoard(tower)
         return _towers
     }
@@ -318,7 +307,7 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
             board: {towerTouched, towers},
             board,
         } = this.props
-        const mergingTower = towers!.get(towerTouched!.key)
+        const mergingTower = towers![towerTouched!.key]
         const case1 = tower.bPiecesQuantity > 0
             && tower.wPiecesQuantity > 0
             && mergingTower!.wPiecesQuantity > 0
@@ -345,7 +334,7 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
                 }
             }
         } else {
-            this.tur.cancelTowerTransition({...board, reversed: reversedBoard})
+            tur.cancelTowerTransition({...board, reversed: reversedBoard})
         }
     }
 
@@ -355,12 +344,13 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
             board: {towerTouched, towers},
             board,
         } = this.props
-        let tower = towers!.get(cellKey)
+        let tower = towers![cellKey]
         const reversed = this.props.boardOptions.reversedBoard
         if (!tower) {
             const _towers = this.setTowerOnBoard(cellKey, reversed)
+            console.warn('tower', tower)
             const currentPosition = copyObj(board.currentPosition)
-            const {currentColor, currentType} = _towers.get(cellKey) as TowerConstructor
+            const {currentColor, currentType} = _towers[cellKey] as TowerConstructor
             currentPosition[cellKey].tower = newOnBoardTower(currentColor, currentType)
             let TT = null as unknown as TowerTouched
             const {key} = towerTouched!
@@ -375,35 +365,35 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
         } else if (this.props.gameOptions.gameVariant === 'towers') {
             this.handleSettingTowers(tower)
         } else {
-            this.tur.cancelTowerTransition({...board, reversed})
+            tur.cancelTowerTransition({...board, reversed})
         }
     }
 
     handleRemoveTower = (tower: TowerConstructor) => {
-        const towers = copyMap(this.props.board.towers)
+        const towers = copyObj(this.props.board.towers) as TowersMap
         const {boardOptions: {reversedBoard}, updateBoardState, board: {cellSize}, board} = this.props
         const {onBoardPosition, wPiecesQuantity, bPiecesQuantity} = tower
-        const towersKeysArray = [...this.props.board.towers.keys()]
+        const towersKeysArray = Object.keys(this.props.board.towers)
         const whiteUnusedQuantity = towersKeysArray.filter((v: string) => v.includes('oW')).length
         const blackUnusedQuantity = towersKeysArray.filter((v: string) => v.includes('oB')).length
         const currentPosition = copyObj(board.currentPosition)
         currentPosition[onBoardPosition].tower = null
         updateBoardState({currentPosition})
-        towers.delete(onBoardPosition)
+        delete towers[onBoardPosition]
         for (let i = 0; i < wPiecesQuantity; i++) {
             const key = `oW w${whiteUnusedQuantity + i}`
-            const positionInDOM = this.tur.calcPositionOutboardTowers(key, cellSize, reversedBoard) as ITowerPosition
+            const positionInDOM = tur.calcPositionOutboardTowers(key, cellSize, reversedBoard) as ITowerPosition
             const wTower = new TowerConstructor({
                 currentColor: PieceColor.w,
                 positionInDOM,
                 onBoardPosition: key
             })
             console.log(positionInDOM, key, reversedBoard, wTower)
-            towers.set(key, wTower)
+            towers[key] = wTower
         }
         for (let i = 0; i < bPiecesQuantity; i++) {
             const key = `oB b${blackUnusedQuantity + i}`
-            const positionInDOM = this.tur.calcPositionOutboardTowers(key, cellSize, reversedBoard) as ITowerPosition
+            const positionInDOM = tur.calcPositionOutboardTowers(key, cellSize, reversedBoard) as ITowerPosition
 
             const bTower = new TowerConstructor({
                 currentColor: PieceColor.b,
@@ -411,7 +401,7 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
                 onBoardPosition: key
             })
             console.log(positionInDOM, key, reversedBoard, bTower)
-            towers.set(key, bTower)
+            towers[key] = bTower
         }
         updateBoardState({towers})
     }
@@ -421,24 +411,25 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
         const currentPosition = copyObj(board.currentPosition)
         if (!currentPosition[key]) {
             if (this.props.board.towerTouched) {
-                this.tur.cancelTowerTransition({...board, reversed: reversedBoard})
+                tur.cancelTowerTransition({...board, reversed: reversedBoard})
             }
             return console.error(key, currentPosition)
         }
         currentPosition[key].tower = null
-        const towers = copyMap(this.props.board.towers!)
-        const tower = towers.get(key)! as TowerConstructor
+        const towers = copyObj(this.props.board.towers!) as TowersMap
+        const tower = towers[key]! as TowerConstructor
         if (this.props.gameOptions.gameVariant === 'towers' && (tower.wPiecesQuantity + tower.bPiecesQuantity) > 1) {
             return this.handleRemoveTower(tower)
         }
         let outboardKey = tower.currentColor === PieceColor.w ? `oW w` : 'oB b'
-        const outboardPicesNumber = [...towers.values()].filter(t => t.onBoardPosition.includes(outboardKey)).length
+        const outboardPicesNumber = Object.values(towers)
+            .filter(t => t.onBoardPosition.includes(outboardKey)).length
         outboardKey = `${outboardKey}${outboardPicesNumber}`
         tower.onBoardPosition = outboardKey
         tower.currentType = TowerType.m
-        tower.positionInDOM = this.tur.calcPositionOutboardTowers(outboardKey, cellSize, reversedBoard)
-        towers.set(outboardKey, tower)
-        towers.delete(key)
+        tower.positionInDOM = tur.calcPositionOutboardTowers(outboardKey, cellSize, reversedBoard)
+        towers[outboardKey] = tower
+        delete towers[key]
         // console.log(towers, tower, key)
         updateBoardState({towers, currentPosition, mouseDown: false, towerTouched: null as unknown as TowerTouched})
     }
@@ -450,15 +441,15 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
         }
         const {key, startCursorPosition: SCP, startTowerPosition: STP} = towerTouched;
         const {clientX, clientY} = event.type === 'touchmove' ? event.changedTouches['0'] : event
-        const towers = copyMap(this.props.board.towers!)
-        const tower = copyObj(towers.get(key))! as TowerConstructor
+        const towers = copyObj(this.props.board.towers!) as TowersMap
+        const tower = copyObj(towers[key])! as TowerConstructor
         const newPosition = {x: STP.x + clientX - SCP.x, y: STP.y + clientY - SCP.y}
         const pos = tower.positionInDOM!
         tower.positionInDOM = newPosition
         const deltaX = Math.abs(pos.x - newPosition.x)
         const deltaY = Math.abs(pos.y - newPosition.y)
         if ( deltaX + deltaY >= 6) {
-            towers.set(key, tower)
+            towers[key] = tower
             updateBoardState({towers})
         }
     }
@@ -469,7 +460,7 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
         const reversed = this.props.boardOptions.reversedBoard
         const towerKey = (target as HTMLDivElement).getAttribute('data-indexes') as string
         if (!towerKey) {
-            this.tur.cancelTowerTransition({...board, reversed})
+            tur.cancelTowerTransition({...board, reversed})
         }
         console.log(target, removePiece)
         if (removePiece) {
@@ -481,10 +472,10 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
             }
             return
         } else {
-            const tower = towers!.get(towerKey)!
+            const tower = towers![towerKey]!
             const towerTouched: TowerTouched = {
                 key: towerKey,
-                possibleMoves: new Map(),
+                possibleMoves: {} as CellsMap,
                 startCursorPosition: {x: clientX, y: clientY},
                 startTowerPosition: tower.positionInDOM!,
                 towerColor: tower.currentColor,
@@ -507,14 +498,14 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
         if (settingPosition) return this.handleSettingPositionMouseDown({target, clientX, clientY})
         if (!classList.contains(pieceOrder)) return
         const towerKey = (target as HTMLDivElement).getAttribute('data-indexes') as string
-        const tower = towers!.get(towerKey)!
+        const tower = towers![towerKey]!
         let possibleMoves: CellsMap
         if (mandatoryMoves?.length) {
             possibleMoves = possibleOutOfMandatory(this.props.board, towerKey)
         } else {
             possibleMoves = tower.currentType === TowerType.m
-                ? this.mmr.manTowerFreeMoves(tower, currentPosition!, cellsMap!)
-                : this.mmr.kingTowerFreeMoves(towerKey, currentPosition!, cellsMap!)
+                ? mmr.manTowerFreeMoves(tower, currentPosition!, cellsMap!)
+                : mmr.kingTowerFreeMoves(towerKey, currentPosition!, cellsMap!)
         }
         if (!possibleMoves.size) {
             // sound
@@ -538,10 +529,10 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
         const target = e.target as HTMLElement
         if (!target.classList.contains('checker-tower')) { return }
         const key = target.getAttribute('data-indexes')!
-        const tower = copyObj(this.props.board.towers!.get(key) as TowerConstructor)! as TowerConstructor
+        const tower = copyObj(this.props.board.towers![key] as TowerConstructor)! as TowerConstructor
         tower.currentType = tower.currentType === TowerType.m ? TowerType.k : TowerType.m
-        const towers = copyMap(this.props.board.towers!)
-        towers!.set(key, tower)
+        const towers = copyObj(this.props.board.towers!) as TowersMap
+        towers![key] = tower
         updateBoardState({towers})
     }
 
@@ -552,7 +543,8 @@ export class GameBoard extends React.Component<GameAnalyzeProps, AnalysisBoardSt
         const {boardSize, boardTheme, reversedBoard} = boardOptions
         const WrapperClass = `board__wrapper ${boardTheme} h${boardSize}v${boardSize}${reversedBoard ? ' reversed' : ''}`;
         const mandatoryTowers = (mandatoryMoves || []).map(m => m.move.split(':')[mandatoryMoveStep || 0])
-        const Towers = Array.from(towers!.values()).map((tower: TowerConstructor, i: number) => {
+        const Towers = (Object.keys(towers!)).map((key: string, i: number) => {
+            const tower = towers[key]
             const mt = mandatoryTowers.includes(tower.onBoardPosition)
             return <TowerComponent {...tower} key={tower.onBoardPosition} mandatory={mt} />
         })

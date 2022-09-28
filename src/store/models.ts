@@ -77,9 +77,12 @@ export interface IAnalysisState {
     evaluate: boolean
     removePiece: boolean
     startPosition: boolean,
+    bestMoveLine: { move: string, value: number }[]
 }
 
-export type CellsMap = Map<string, ITowerPosition>
+export interface IPositionsTree {[key: string]: IBoardToGame}
+
+export interface CellsMap {[key: string]: ITowerPosition}
 
 export interface IBoardProps {boardOptions: IBoardOptions, possibleMoves?: CellsMap, lastMove: string[]}
 
@@ -91,7 +94,7 @@ export interface IBoardToDraw {
     towers: TowersMap
     mouseDown: boolean
     mandatoryMoves?: IMMRResult[]
-    positionsTree?: Map<string, IBoardToGame>
+    positionsTree?: IPositionsTree
     lastMoveSquares: string[]
     currentPosition: IBoardToGame
 }
@@ -121,7 +124,7 @@ export interface ITowerPosition {
     y: number;
 }
 
-export type TowersMap = Map<string, TowerConstructor>
+export interface TowersMap {[key: string]: TowerConstructor}
 
 export interface IRef<T> {
     readonly current: T | null

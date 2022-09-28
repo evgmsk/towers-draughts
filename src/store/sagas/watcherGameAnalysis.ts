@@ -1,8 +1,8 @@
 import { put, takeLatest, select, delay } from 'redux-saga/effects';
 
-import { PieceColor, IMoveProps, IAnalysisState} from '../models';
+import {PieceColor, IMoveProps, IAnalysisState, CellsMap, IPositionsTree} from '../models';
 
-import { copyMap, oppositeColor, splitMove } from '../../game-engine/gameplay-helper-functions';
+import { copyObj, oppositeColor, splitMove } from '../../game-engine/gameplay-helper-functions';
 // import { Axios, setAuthorizationHeader } from '../../common/axios';
 import { GameAnalysisActions, GameAnalysisTypes } from '../gameAnalysis/types';
 import { createDefaultTowers, createEmptyBoard, createStartBoard} from '../../game-engine/prestart-help-function-constants';
@@ -35,7 +35,7 @@ function* workerUpdatePosition(action: GameAnalysisTypes) {
     if (movesMainLine![lastMove.index] === lastMove.move && movesMainLine!.length === lastMove.index + 1) {
         nextLastMove = {move, index: lastMove.index + 1}
         nextPositionKey = `${movesMainLine?.join('_')}_${move}`
-        positionsTree!.set(nextPositionKey, position!)
+        positionsTree![nextPositionKey] = position!
         yield put({
             type: GameAnalysisActions.UPDATE_ANALYSIS_STATE,
             payload: {
@@ -48,7 +48,7 @@ function* workerUpdatePosition(action: GameAnalysisTypes) {
     } else if (movesMainLine![lastMove.index] === lastMove.move && movesMainLine!.length > lastMove.index + 1) {
         nextLastMove = {move, index: lastMove.index + 1}
         nextPositionKey = `${movesMainLine?.join('_')}_${move}`
-        positionsTree!.set(nextPositionKey, position!)
+        positionsTree[nextPositionKey] = position!
         const newCurrentLine = [...movesMainLine!.slice(0, lastMove.index + 1), lastMove.move]
         yield put({
             type: GameAnalysisActions.UPDATE_ANALYSIS_STATE, 
@@ -58,7 +58,7 @@ function* workerUpdatePosition(action: GameAnalysisTypes) {
     } else if (movesCurrentLine!.slice(-1)[0] === lastMove.move) {
         nextLastMove = {move, index: lastMove.index + 1}
         nextPositionKey = `${movesCurrentLine?.join('_')}_${move}`
-        positionsTree!.set(nextPositionKey, position!)
+        positionsTree[nextPositionKey] = position!
         yield put({
             type: GameAnalysisActions.UPDATE_ANALYSIS_STATE, 
             payload: {...analyze, lastMove: nextLastMove, movesCurrentLine: movesCurrentLine?.push(move)}
@@ -248,12 +248,12 @@ function* workerCurrentLine(action: GameAnalysisTypes) {
         }
     } else {
         const movesLine = [...movesCurrentLine.slice(0, index + 1), move]
-        const _positionsTree = copyMap(positionsTree!)
+        const _positionsTree = copyObj(positionsTree!) as IPositionsTree
         const newKey = movesLine.join('_')
-        _positionsTree.set(newKey, position)
+        _positionsTree[newKey] = position
         yield put({
             type: BoardActions.UPDATE_BOARD_STATE, 
-            payload: {positionsTree: _positionsTree, currentPositoin: position}
+            payload: {positionsTree: _positionsTree, currentPosition: position}
         })
         payload = { 
             lastMove: {move, index: index + 1},
@@ -285,8 +285,8 @@ function* workerMainLine(action: GameAnalysisTypes) {
             pieceOrder: oppositeColor(pieceOrder),
             movesMainLine: [move]
         }
-        const _positionsTree = copyMap(positionsTree!)
-        _positionsTree.set(move, position)
+        const _positionsTree = copyObj(positionsTree!) as IPositionsTree
+        _positionsTree[move] = position
         yield put({
             type: BoardActions.UPDATE_BOARD_STATE,
             payload: {positionsTree: _positionsTree, history: [move], currentPosition: position}
@@ -298,9 +298,9 @@ function* workerMainLine(action: GameAnalysisTypes) {
         }
     } else {
         const movesLine = movesMainLine.slice(0, index + 1).concat(move)
-        const _positionTree = copyMap(positionsTree!)
+        const _positionTree = copyObj(positionsTree!)
         const newKey = movesLine.join('_')
-        _positionTree.set(newKey, position)
+        _positionTree[newKey] = position
         payload = {
             lastMove: {move, index: index + 1},
             pieceOrder: oppositeColor(pieceOrder),
@@ -333,14 +333,16 @@ function* workerNewMove(action: GameAnalysisTypes) {
 function* workerStartPosition(action: GameAnalysisTypes) {
     const {
         boardOptions: {boardSize},
-        board: {positionsTree}
     } = yield select((state: IRootState) => state)
     yield put({type: GameAnalysisActions.UPDATE_ANALYSIS_STATE, payload: {startPosition: false}})
     const currentPosition = createStartBoard(boardSize)
-    positionsTree.clear()
-    positionsTree.set('sp', currentPosition)
+    const positionsTree = {} as IPositionsTree
+    positionsTree.sp = currentPosition
     const towers = createDefaultTowers(boardSize)
-    yield put ({type: BoardActions.UPDATE_BOARD_STATE, paylaod: {currentPosition, positionsTree, towers}})
+    yield put ({
+        type: BoardActions.UPDATE_BOARD_STATE,
+        payload: {currentPosition, positionsTree, towers}
+    })
     const payload: Partial<IAnalysisState> = {
         ...InitialGameAnalysisState,
         startPosition: true,

@@ -9,6 +9,13 @@ export function setStartPosition(payload = null) {
     }
 }
 
+export function setBestMoveLine(payload: {move: string, value: number[]}) {
+    return {
+        type: GameAnalysisActions.SET_BEST_MOVE_LINE,
+        payload
+    }
+}
+
 export function makeNewMove(payload: Partial<IMoveProps>) {
     return {
         type: GameAnalysisActions.MAKE_NEW_MOVE,
@@ -30,16 +37,16 @@ export function updateAnalysisState(payload: Partial<IAnalysisState>) {
     }
 }
 
-export function evaluatePosition(paylaod: boolean) {
+export function evaluatePosition(payload: boolean) {
     return {
         type: GameAnalysisActions.EVALUATE_POSITION,
-        paylaod
+        payload
     }
 }
-export function setDepth(paylaod:number) {
+export function setDepth(payload:number) {
     return {
         type: GameAnalysisActions.SET_DEPTH,
-        paylaod
+        payload
     }
 }
 

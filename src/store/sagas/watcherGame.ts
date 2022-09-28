@@ -61,8 +61,6 @@ function* workerNewGameVSPlayer(action: GMA) {
         portrait: window.innerWidth / window.innerHeight < 1.3,
         ineffectiveMoves: 0,
     }
-    tur.setProps({GV: gameVariant, size: boardSize})
-    mmr.setProps({GV: gameVariant, size: boardSize})
     yield put({type: BoardActions.CREATE_GAME_BOARD})
     yield put({type: GM.SET_GAME, payload: gamePayload})
     yield put({type: ClockActions.SET_CLOCK, payload: {blackClock: clock, whiteClock: clock}})
@@ -106,8 +104,6 @@ function* workerNewGameVsPC() {
         portrait: window.innerWidth / window.innerHeight < 1.3,
         ineffectiveMoves: 0
     }
-    mmr.setProps({GV: gameVariant, size: boardSize})
-    tur.setProps({GV: gameVariant, size: boardSize})
     yield put({type: BoardActions.CREATE_GAME_BOARD})
     yield put({type: GM.SET_GAME, payload: gamePayload})
     yield put({type: AppActions.SET_PORTRAIT, payload: window.innerWidth / window.innerHeight < 1.3,})

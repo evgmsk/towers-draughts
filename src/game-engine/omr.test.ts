@@ -1,13 +1,12 @@
 import {createEmptyBoard, newOnBoardTower} from './prestart-help-function-constants'
-import {IBoardToGame, ICheckerTower, PieceColor, TowerType} from '../store/models'
+import {IBoardToGame, PieceColor, TowerType} from '../store/models'
 // import { checkDiagonalToMandatoryMove} from './king-mandatory-rivalMove-resolver'
 // import { getMiddlePieceKey, getMoveDirection, takeTower } from './common-fn-mandatory-moves-resolver'
 import {MandatoryMovesResolver} from './mandatory-move-resolver'
 import {checkIfNumberOfKingsChanged} from './gameplay-helper-functions'
-import movesTree from "./moves-tree";
 import bms from './best-move-seeker'
-import {IBranch} from "./engine-interfaces";
-import {evaluator} from "./position-evaluator";
+import movesTree from "./moves-tree";
+import {IBranch, IMove} from "./engine-interfaces";
 
 
 // test('movesMap', () => {
@@ -16,18 +15,55 @@ import {evaluator} from "./position-evaluator";
 //     console.error(d)
 //     expect(d).toBe(d)
 // })
-test('king eval', () => {
-    const d: ICheckerTower = {currentColor: PieceColor.b, currentType: TowerType.k, bPiecesQuantity: 1, onBoardPosition: 'a1'}
-    evaluator.handlePieces(d)
-    console.error(evaluator)
-    expect(d).toBe(d)
+// test('king eval', () => {
+//     const d: ICheckerTower = {currentColor: PieceColor.b, currentType: TowerType.k, bPiecesQuantity: 1, onBoardPosition: 'a1'}
+//     evaluator.handlePieces(d)
+//     console.error(evaluator)
+//     expect(d).toBe(d)
+// })
+
+test('best move1 engine', () => {
+    const board = createEmptyBoard(8)
+    board['a3'].tower = newOnBoardTower(PieceColor.w, TowerType.k)
+    board['c3'].tower = newOnBoardTower(PieceColor.w)
+    board['a5'].tower = newOnBoardTower(PieceColor.b)
+    const props = {
+        history: ['', ''],
+        cP: board,
+        pieceOrder: PieceColor.w,
+    }
+    // console.error(JSON.stringify(board))
+    const moves = bms.getAvailableMoves(board, PieceColor.w)
+    // console.log(moves.map(m => ({move: m.move, val: m.baseValue})), moves.length)
+    const bmc = (move: any) => {
+        expect(move.move).toBe('a3-b4')
+    }
+    bms.setBestMoveCB(bmc)
+    bms.updateAfterRivalMove(props)
 })
 
-test('best move', () => {
+test('best move2 engine', async () => {
+    movesTree.addRoot({} as IBranch)
+    const board = createEmptyBoard(8)
+    board['b2'].tower = newOnBoardTower(PieceColor.w, TowerType.k)
+    board['g7'].tower = newOnBoardTower(PieceColor.w, TowerType.k)
+    board['d8'].tower = newOnBoardTower(PieceColor.b)
+    // board['d6'].tower = newOnBoardTower(PieceColor.b)
+    board['c5'].tower = newOnBoardTower(PieceColor.w, TowerType.k)
+    const props = {
+        history: ['', ''],
+        cP: board,
+        pieceOrder: PieceColor.w,
+    }
+    // console.error(JSON.stringify(board))
+    const moves = bms.getAvailableMoves(board, PieceColor.w)
+    console.log(moves.map(m => ({move: m.move, val: m.baseValue})), moves.length)
 
-    // expect(bms.getBestMove(['ls'])).toBe({"deepValue": {"depth": 0, "value": undefined}, "move": undefined, "position": undefined})
+    bms.updateAfterRivalMove(props)
+    const res = await bms.updateAfterRivalMove(props)
+    expect((res as any).move ).toBe('a3-b4')
+
 })
-
 // test('ordinary rivalMove', () => {
 //     const board = createEmptyBoard(8)
 //     board['f2').tower = newOnBoardTower({color: PieceColor.w})
@@ -120,7 +156,7 @@ test('best move', () => {
 //     board2['f2'].tower = newOnBoardTower( PieceColor.w)
 //     expect(checkMove(PieceColor.w, board2, 'f2-e3', 'towers')).toMatchObject({board: res2, availibleMoves: 2}) 
 //     const board3 = createStartBoard(8)
-//     expect(lookForAllPossibleMoves(PieceColor.w, board3)).toMatchObject([]) 
+//     expect(lookForAllFreeMoves(PieceColor.w, board3)).toMatchObject([])
 // }) 
 
 // test('check possible rivalMove looking', () => {
@@ -129,10 +165,10 @@ test('best move', () => {
 //     const king = newOnBoardTower(PieceColor.w)
 //     king.currentType = TowerType.k
 //     board['b4'].tower = king
-//     // console.log(lookForAllPossibleMoves(PieceColor.b, board), board)
+//     // console.log(lookForAllFreeMoves(PieceColor.b, board), board)
 //     // board['e5').tower = newOnBoardTower({color: PieceColor.b})
 //     // const expected = ["f4:d6"]
-//     expect(lookForAllPossibleMoves(PieceColor.w, board)).toMatchObject(['f6-e7', 'f6-g7'])
+//     expect(lookForAllFreeMoves(PieceColor.w, board)).toMatchObject(['f6-e7', 'f6-g7'])
 // })
 
 // test('check new tower creation', () => {

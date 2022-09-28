@@ -1,6 +1,6 @@
 import React from 'react'
 
-import {BoardNotation, IBoardProps, ICell} from '../../store/models'
+import {BoardNotation, CellsMap, IBoardProps, ICell} from '../../store/models'
 import {TopLegendValues, SideLegendValues} from '../../constants/gameConstants'
 
 import './board.scss';
@@ -23,7 +23,7 @@ export const Board: React.FC<IBoardProps> = (props) => {
             reversedBoard,
         },
         lastMove,
-        possibleMoves = new Map()
+        possibleMoves = {} as CellsMap
     } = props
     const DefaultTL = TopLegendValues.slice(0, boardSize)
     const DefaultSL = SideLegendValues.slice(0, boardSize)
@@ -41,7 +41,7 @@ export const Board: React.FC<IBoardProps> = (props) => {
             }
             const type = !((i + j) % 2) ? 'light' : 'dark'
             const index = `${h}${v}`
-            const marked = possibleMoves.get(index) ? 'marked' : ''
+            const marked = possibleMoves[index] ? 'marked' : ''
             const moveIndex = lastMove.indexOf(index)
             const highlighted = moveIndex >= 0 ? `highlighted${moveIndex}` : ''
             const className = `board__cell ${type} ${marked} ${highlighted}`.trim()

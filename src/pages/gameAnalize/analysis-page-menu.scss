@@ -12,17 +12,26 @@
         .material-icons {
             font-size: 1.6rem;
         }
-        button {
+        button, div{
+            position: relative;
             width: 100%;
             height: 100%;
             background-color: rgb(55, 71, 18);
             color:white;
             border: unset;
             border-radius: 3px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             &:hover {
                 background-color: darken(rgb(142, 170, 78), 10%);
             }
-        }     
+        }
+        input {
+            opacity: 0;
+            position: absolute;
+            width: 10px;
+        }
     }
     .depth-range_container {
         position: relative;

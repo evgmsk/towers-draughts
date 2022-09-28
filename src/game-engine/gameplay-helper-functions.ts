@@ -22,31 +22,12 @@ export const splitMove = (move: string) => {
 
 export const oppositeColor = (color: PieceColor): PieceColor => (color === PieceColor.w ? PieceColor.b : PieceColor.w)
 
-export const copyMap = (board: Map<string, any>) => {
-    const nm = new Map()
-    board.forEach((v: any, k: string) => {
-        if (typeof v === 'object') {
-            if (Array.isArray(v)) {
-                nm.set(k, [...v])
-            } else {
-                nm.set(k, {...v})
-            }
-        } else {
-            nm.set(k, v)
-        }
-    })
-    return nm
-}
-
 export const copyObj = (board: {[key: string]: any}): {[key: string]: any} => {
     return Object.keys(board).reduce((acc: {[key: string]: any}, k: string) => {
         const v = board[k]
         if (typeof v === 'object') {
-            if (Array.isArray(v)) {
-                acc[k] = [...v]
-            } else {
-                acc[k] = {...v}
-            }
+            const target = Array.isArray(v) ? [] : {}
+            acc[k] = Object.assign(target, v)
         } else {
             acc[k] = v
         }
@@ -55,23 +36,22 @@ export const copyObj = (board: {[key: string]: any}): {[key: string]: any} => {
 }
 
 export const possibleOutOfMandatory = (state: Partial<IGameBoard>, key: string):CellsMap => {
-    const posibleMoves = new Map() as CellsMap
+    const possibleMoves = {} as CellsMap
     const {mandatoryMoveStep: MS, mandatoryMoves, cellsMap } = state
     const availableSteps = mandatoryMoves!
     .filter((m: IMMRResult) => m.move.includes(key)).map((m: IMMRResult) => m.move.split(':')[MS as number + 1])
     availableSteps.forEach((step: string) => {
-        posibleMoves.set(step, cellsMap!.get(step) as ITowerPosition)
+        possibleMoves[step] = cellsMap![step] as ITowerPosition
     })
-    return posibleMoves
+    return possibleMoves
 }
 
-export const compareMaps = (map1: TowersMap, map2: TowersMap): boolean => {
-    return JSON.stringify([...map1.entries()]) !== JSON.stringify([...map2.entries()])
-}
 
 export const filterArrayByLength = (arr: IMMRResult[]):  {ended: IMMRResult[], cont: IMMRResult[]} => {
-    const maxLength = arr.reduce((acc: number, val: IMMRResult) => (acc > val.move.length ? acc : val.move.length), 0)
-    return arr.reduce((acc: {ended: IMMRResult[], cont: IMMRResult[]}, val: IMMRResult) => {
+    const maxLength = arr
+        .reduce((acc: number, val: IMMRResult) => (acc > val.move.length ? acc : val.move.length), 0)
+
+    const res = arr.reduce((acc: {ended: IMMRResult[], cont: IMMRResult[]}, val: IMMRResult) => {
         if(val.move.length === maxLength) {
             acc.cont.push(val)
         } else {
@@ -79,6 +59,7 @@ export const filterArrayByLength = (arr: IMMRResult[]):  {ended: IMMRResult[], c
         }
         return acc
     }, {ended: [], cont: []})
+    return res
 }
 
 export const crossDirections = (dir: string): {[key: string]: boolean} => {
@@ -89,21 +70,20 @@ export const crossDirections = (dir: string): {[key: string]: boolean} => {
 }
  
 export function checkMoveTargetCell(pos: ITowerPosition, pM: CellsMap, cellSize: number, ref: IRef<any>) {
-    const possibleCells =  pM.entries()
     const size = cellSize
     const boardRect = ref.current!.querySelector('.board__body')!.getBoundingClientRect();
-    
     const [x, y] = [pos.x - boardRect.x, pos.y - boardRect.y]
     if (x < 0 || y < 0) {
         return null
     }
-    const targetCell = [...possibleCells].filter((props) => {
-        const [cellX, cellY] = [props[1].x + size! / 4, props[1].y + size! / 4]
+    const targetCell = [...Object.keys(pM)].filter((key: string) => {
+        const value = pM[key]
+        const [cellX, cellY] = [value.x + size! / 4, value.y + size! / 4]
         const distance = Math.sqrt(Math.pow((cellX - x), 2) + Math.pow((cellY - y), 2))
         return distance < size!
     })[0]
     if (targetCell) {
-        return targetCell[0]
+        return targetCell
     }
     return null
 }
@@ -132,7 +112,8 @@ export function getCellSize(refElem: HTMLDivElement, size: number) {
 
 export function checkIfBoardFitTowers(towers: TowersMap, board: IBoardToGame): boolean {
     let res = true
-    towers.forEach((tower: TowerConstructor, key: string) => {
+    Object.keys(towers).forEach((key: string, i: number) => {
+        const tower = towers[key]
         const towerOnBoard = board[key].tower
         if (tower.onBoardPosition !== towerOnBoard?.onBoardPosition
             || tower.bPiecesQuantity !== towerOnBoard.bPiecesQuantity
@@ -154,9 +135,7 @@ const GHF = {
     checkMoveTargetCell,
     crossDirections,
     copyObj,
-    copyMap,
     oppositeColor,
-    compareMaps,
     filterArrayByLength,
 }
 

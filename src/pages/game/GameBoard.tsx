@@ -16,8 +16,8 @@ import { endGame, updateIneffectiveMoves } from '../../store/game/actions'
 import {
     checkMoveTargetCell,
     possibleOutOfMandatory,
-    compareMaps,
-    copyMap,
+    copyObj
+    ,
 } from '../../game-engine/gameplay-helper-functions'
 import { IRootState } from '../../store/rootState&Reducer'
 import {AnimationDuration} from '../../constants/gameConstants'
@@ -65,8 +65,7 @@ export class GameClass extends React.Component<GameProps, IGameBoard> {
     }
     
     shouldComponentUpdate(prevProps: GameProps, prevState: IGameBoard) {
-        const cond1 = JSON.stringify(prevProps) !== JSON.stringify(this.props) 
-        return cond1 || compareMaps(prevProps.board.towers, this.props.board.towers)
+        return JSON.stringify(prevProps) !== JSON.stringify(this.props)
     }
 
     componentDidUpdate(prevProps: GameProps) {
@@ -101,7 +100,8 @@ export class GameClass extends React.Component<GameProps, IGameBoard> {
             board: {currentPosition},
         } = this.props
         const mandatoryMoves = mmr.lookForMandatoryMoves(pieceOrder, currentPosition)
-        if (!mandatoryMoves.length && !mmr.lookForAllPossibleMoves(pieceOrder, currentPosition).length) {
+        console.log('mand moves', mandatoryMoves)
+        if (!mandatoryMoves.length && !mmr.lookForAllFreeMoves(pieceOrder, currentPosition).length) {
             console.log('no moves', this.props)
             return setTimeout(() => endGame('noMoves'), AnimationDuration)
         }
@@ -186,8 +186,8 @@ export class GameClass extends React.Component<GameProps, IGameBoard> {
         }
         const {key, startCursorPosition: SCP, startTowerPosition: STP} = towerTouched;
         const {clientX, clientY} = event.type === 'touchmove' ? event.changedTouches['0'] : event
-        const towers = copyMap(this.props.board.towers)
-        const tower = towers.get(key)! as TowerConstructor
+        const towers = copyObj(this.props.board.towers)
+        const tower = towers[key]! as TowerConstructor
         const newPosition = {x: STP.x + clientX - SCP.x, y: STP.y + clientY - SCP.y}
         const currentPosition = tower.positionInDOM!
         tower.positionInDOM = newPosition
@@ -195,7 +195,7 @@ export class GameClass extends React.Component<GameProps, IGameBoard> {
         const deltaY = Math.abs(currentPosition.y - newPosition.y)
         
         if ( deltaX + deltaY >= 6) {
-            towers.set(key, tower)
+            towers[key] = tower
             updateBoardState({towers})
         }
     }
@@ -209,8 +209,7 @@ export class GameClass extends React.Component<GameProps, IGameBoard> {
         if (!(classList.contains('checker-tower') && classList.contains(pieceOrder))) return
         
         const towerKey = (target as HTMLDivElement).getAttribute('data-indexes') as string
-        const tower = towers.get(towerKey)!
-        console.log(tower)
+        const tower = towers[towerKey]!
         if (!tower) {
             console.error(towerKey, board)
             return
@@ -223,10 +222,11 @@ export class GameClass extends React.Component<GameProps, IGameBoard> {
             ? mmr.manTowerFreeMoves(tower, currentPosition, cellsMap)
             : mmr.kingTowerFreeMoves(towerKey, currentPosition, cellsMap)
         }
-        if (!possibleMoves.size) {
-            // sound
-            return
-        }
+        console.log('mouse down', tower, possibleMoves)
+        // if (!possibleMoves) {
+        //     // sound
+        //     return
+        // }
         const towerTouched: TowerTouched = {
             key: towerKey,
             possibleMoves,
@@ -255,9 +255,10 @@ export class GameClass extends React.Component<GameProps, IGameBoard> {
         const mandatoryTowers = (mandatoryMoves || []).map(m => m.move.split(':')[mandatoryMoveStep || 0])
         const {boardSize, boardTheme} = boardOptions
         const WrapperClass = `board__wrapper ${boardTheme} h${boardSize}v${boardSize}`;
-        const Towers = Array.from(towers.values()).map((props: TowerConstructor, i: number) => {
-            const mt = gameMode === 'isPlaying' ? mandatoryTowers.includes(props.onBoardPosition) : false
-            return <TowerComponent {...props} key={props.onBoardPosition} mandatory={mt} />
+        const Towers = Array.from(Object.keys(towers)).map((key: string, i: number) => {
+            const tower = towers[key]
+            const mt = gameMode === 'isPlaying' ? mandatoryTowers.includes(tower.onBoardPosition) : false
+            return <TowerComponent {...tower} key={tower.onBoardPosition} mandatory={mt} />
         })
         return (
             <>

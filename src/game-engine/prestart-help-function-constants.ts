@@ -1,5 +1,5 @@
-import { 
-    INeighborCells, 
+import {
+    INeighborCells,
     TowersMap,
     PieceColor,
     TowerConstructor,
@@ -9,7 +9,7 @@ import {
     PartialTower,
     IBoardOptions,
     IAnalysisBoard,
-    IGameBoard,
+    IGameBoard, CellsMap, IPositionsTree,
 } from "../store/models"
 import {
     TopLegendValues,
@@ -40,8 +40,8 @@ export const createStartBoardToDraw = (props: {boardOptions: IBoardOptions}): IG
     } = props
     const {boardSize, reversedBoard} = boardOptions 
     const currentPosition = createStartBoard(boardSize)
-    const positionsTree = new Map()
-    positionsTree.set('sp', currentPosition)
+    const positionsTree = {} as IPositionsTree
+    positionsTree.sp = currentPosition
     return {
         towers: createDefaultTowers(boardSize),
         cellSize: BaseCellSize,
@@ -60,8 +60,8 @@ export const createStartBoardToDraw = (props: {boardOptions: IBoardOptions}): IG
 export const createEmptyBoardForCustomPosition = (props: {[key: string]: any}): IAnalysisBoard => {
     const {boardSize, reversedBoard} = props.boardOptions
     const currentPosition = createEmptyBoard(boardSize)
-    const positionsTree = new Map()
-    positionsTree.set('sp', currentPosition)
+    const positionsTree = {} as IPositionsTree
+    positionsTree.sp = currentPosition
     return {
         towers: createOutBoardTowers(boardSize),
         cellSize: BaseCellSize,
@@ -96,18 +96,18 @@ export const defineCellDomPosition = (key: string, cellSize: number, reversed = 
 }
 
 export const createCellsMap = (boardSize: number, cellSize = BaseCellSize, reversed = false) => {
-    const map = new Map<string, ITowerPosition>()
+    const map = {} as CellsMap
     Object.keys(createEmptyBoard(boardSize)).forEach((key: string) => {
-        map.set(key, defineCellDomPosition(key, cellSize, reversed, boardSize))
+        map[key] = defineCellDomPosition(key, cellSize, reversed, boardSize)
     })
     return map
 }
 
-export const updateCellsMap = (cellsMap: Map<string, ITowerPosition>, cellSize: number, reversed = false) => {
-    const boardSize = cellsMap.size === 50 ? 10 : 8
-    const newMap = new Map<string, ITowerPosition>()
-    cellsMap.forEach((val: ITowerPosition, key: string) => {
-        newMap.set(key, defineCellDomPosition(key, cellSize, reversed, boardSize))
+export const updateCellsMap = (cellsMap: CellsMap, cellSize: number, reversed = false) => {
+    const boardSize = Object.keys(cellsMap).length === 50 ? 10 : 8
+    const newMap = {} as CellsMap
+    Object.keys(cellsMap).forEach((key: string) => {
+        newMap[key] = defineCellDomPosition(key, cellSize, reversed, boardSize)
     })
     return newMap
 }
@@ -132,6 +132,7 @@ export function defineNeighborCells(i: number, j: number, size: number): INeighb
             neighbors.rightDown = `${topLegend[i + 1]}${sideLegend[j - 1]}`
         }
     }
+    console.warn('neighbors', i, j, size, neighbors)
     return neighbors
 }
 
@@ -161,25 +162,25 @@ const defaultTowerProps = (cell: string, color: PieceColor, ): TowerConstructor 
 })
 
 export const createDefaultTowers = (boardSize: number): TowersMap => {
-    const towers = new Map() as TowersMap
+    const towers = {} as TowersMap
     getDefaultBlackTowersCells(boardSize).forEach((key: string) => {
-        towers.set(key, new TowerConstructor(defaultTowerProps(key, PieceColor.b)))
+        towers[key] = new TowerConstructor(defaultTowerProps(key, PieceColor.b))
     })
     getDefaultWhiteTowersCells(boardSize).forEach((key: string) => {
-        towers.set(key, new TowerConstructor(defaultTowerProps(key, PieceColor.w)))
+        towers[key] = new TowerConstructor(defaultTowerProps(key, PieceColor.w))
     })
     return towers
 }
 
 export const createOutBoardTowers = (boardSize: number): TowersMap => {
-    const towers = new Map() as TowersMap
+    const towers = {} as TowersMap
     getDefaultBlackTowersCells(boardSize).forEach((key: string, i: number) => {
         const oBKey = `oB b${i}`
-        towers.set(oBKey, new TowerConstructor(defaultTowerProps(oBKey, PieceColor.b)))
+        towers[oBKey] = new TowerConstructor(defaultTowerProps(oBKey, PieceColor.b))
     })
     getDefaultWhiteTowersCells(boardSize).forEach((key: string, i: number) => {
         const oBKey = `oW w${i}`
-        towers.set(oBKey, new TowerConstructor(defaultTowerProps(oBKey, PieceColor.w)))
+        towers[oBKey] = new TowerConstructor(defaultTowerProps(oBKey, PieceColor.w))
     })
     return towers
 }

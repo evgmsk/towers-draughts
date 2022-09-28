@@ -22,7 +22,7 @@ export interface IBranch {
     pieceOrder: PieceColor,
     deepValue: IDeepValue,
     children: IChildren,
-    rivalMove: string
+    rivalMove: string,
 }
 
 export interface ISeekerProps extends IEvaluatingState{

@@ -1,7 +1,7 @@
 import { put, takeLatest, select, delay } from 'redux-saga/effects';
 
 import {BoardActionTypes, BoardActions as BA, BoardActions} from '../board/types'
-import { GameVariants, IGameBoard, IGameState, IMoveProps, TowerConstructor } from '../models';
+import {GameVariants, IGameBoard, IGameState, IMoveProps, TowerConstructor, TowersMap} from '../models';
 import { 
     createEmptyBoardForCustomPosition,
     createStartBoardToDraw,
@@ -12,8 +12,9 @@ import { GameOptionActions,  GameOptionActionTypes} from '../gameOptions/types';
 import tur from '../../game-engine/update-towers-functions'
 import { GameActions } from '../game/types';
 import { IRootState } from '../rootState&Reducer';
-import { copyMap, splitMove } from '../../game-engine/gameplay-helper-functions';
+import { copyObj, splitMove } from '../../game-engine/gameplay-helper-functions';
 import { AnimationDuration } from '../../constants/gameConstants';
+import mmr from "../../game-engine/mandatory-move-resolver";
 
  
 function* workerGameBoard(action: BoardActionTypes) {
@@ -31,6 +32,8 @@ function* workerSetupBoard() {
 function* workerBoardSize(action: GameOptionActionTypes) {
     const {boardOptions} = yield select()
     const boardSize = action.payload as GameVariants === 'international' ? 10 : 8
+    tur.setProps({GV: action.payload as GameVariants, size: boardSize})
+    mmr.setProps({GV: action.payload as GameVariants, size: boardSize})
     if (boardOptions.boardSize !== boardSize) {
         yield put({type: BA.UPDATE_BOARD_SIZE, payload: boardSize})
     }
@@ -64,19 +67,19 @@ function* animateMandatoryTowerStep(props: Partial<IMoveProps>, step = 0) {
         tur.relocateTower(from, to, board, reversedBoard)
         yield delay(AnimationDuration / totalSteps / 2)
         let state: IRootState = yield select()
-        let towers = copyMap(state.board.towers)
+        let towers = copyObj(state.board.towers) as TowersMap
         if (tower) {
             tower =  new TowerConstructor(tower)
             tower.onBoardPosition = capturedTowerKey
             tower.positionInDOM = tur.calcTowerPosition(capturedTowerKey, board.cellsMap, board.cellSize, reversedBoard)
-            towers.set(capturedTowerKey, tower)
+            towers[capturedTowerKey] = tower
         } else {
-            towers.delete(capturedTowerKey)
+            delete towers[capturedTowerKey]
         }
         yield put({type: BoardActions.UPDATE_BOARD_STATE, payload: {towers}})
         yield delay(AnimationDuration / totalSteps / 2)
         state = yield select()
-        towers = tur.finalizeMandatoryMoveStep(from, to, state.board, reversedBoard)
+        towers = tur.finalizeMandatoryMoveStep(from, to, state.board, reversedBoard) as TowersMap
         yield put({type: BoardActions.UPDATE_BOARD_STATE, payload: {towers}})
 }
 
@@ -96,9 +99,9 @@ function* animateMandatoryStep(props: Partial<IMoveProps>, step = 0) {
         yield put({type: BoardActions.UPDATE_BOARD_STATE, payload: {towers}})
         if (isLast) {
             state = yield select()
-            const towers = copyMap(state.board.towers)
+            const towers = copyObj(state.board.towers)
             takenPieces!.forEach(pKey => {
-                towers.delete(pKey)
+                delete towers[pKey]
             })
             yield put({type: BoardActions.UPDATE_BOARD_STATE, payload: {towers}})
         }
@@ -120,8 +123,8 @@ function* workerTurn(action: BoardActionTypes) {
     const {game: {history}, user: {name}, board} = yield select()
     const {moveToSave: {move, position}, moveOrder} = payload
     const key = history.length ? `${history.join('_')}_${move}` : move
-    const positionsTree = copyMap(board.positionsTree)
-    positionsTree.set(key, position)
+    const positionsTree = copyObj(board.positionsTree)
+    positionsTree[key] = position
     let lastMoveSquares = board.lastMoveSquares
     if (moveOrder.playerTurn === name) {
         if (move.includes(':')) {

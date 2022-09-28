@@ -185,7 +185,7 @@ export class BestMoveSeeker {
     bestMoveCB = () => {}
     getProps = () => {}
     evaluator = evaluator
-    moveBranchesTree = new Map()
+    moveBranchesTree = {}
     currentValue = 0
     actualHistoryString = ''
     lastPlayerMove = ''
@@ -204,7 +204,7 @@ export class BestMoveSeeker {
         this.timeout = props.timeout || 100
         this.engineColor = props.engineColor
         this.game = props.game || true
-        this.moveBranchesTree = new Map()
+        this.moveBranchesTree = {}
         this.engineColor = props.engineColor
         this.evaluator.setEvaluatingColor(props.engineColor)
         console.log('engine created', props)
@@ -267,7 +267,7 @@ export class BestMoveSeeker {
         })
     }
 
-    getAvaliableMoves = (positionKey, board) => { 
+    getAvailableMoves = (positionKey, board) => {
         let availableMoves = this.moveBranchesTree.get(positionKey)?.moves 
         if (!availableMoves) {
             availableMoves = this.mmr.lookForAllMoves(this.engineColor, board)
@@ -299,7 +299,7 @@ export class BestMoveSeeker {
         this.actualHistoryString = history.join('_')
         this.filterBranches()
         const {moveBranchesTree} = this
-        const availableMoves = this.getAvaliableMoves(positionKey, currentPosition)
+        const availableMoves = this.getAvailableMoves(positionKey, currentPosition)
         let actualBranch = moveBranchesTree.get(positionKey)
         if (!availableMoves) {
             return  console.log(history, moveBranchesTree.size, moveBranchesTree)

@@ -71,16 +71,16 @@ export const AnalizeGameMenu: React.FC<AnalysisMenuProps> = (props: AnalysisMenu
         }
         switch (et) {
             case 'remove': {
-                console.log('remove')
                 return removePiece(!analysis.removePiece)
             }
             case 'setup': {
                 return settingBoard(!settingPosition)
             }
-            case 'dowload': {
-                return //downloadGame({})
+            case 'download': {
+                console.log('upload')
+                return
             }
-            case 'startPosiotn': {
+            case 'startPosition': {
                 return setStartPosition
             }
             case 'analyze': {
@@ -113,7 +113,7 @@ export const AnalizeGameMenu: React.FC<AnalysisMenuProps> = (props: AnalysisMenu
                 </button>
             </li>
             <li className="game-analyze-menu_item" title="setup-start-board">
-                <button type="button" onClick={() => handleClick('startPositon')}>
+                <button type="button" onClick={() => handleClick('startPosition')}>
                     sb{/* <span className='material-icons'>sb</span> */}
                 </button>
             </li>
@@ -122,12 +122,13 @@ export const AnalizeGameMenu: React.FC<AnalysisMenuProps> = (props: AnalysisMenu
                     <span className='material-icons'>change_circle</span>
                 </button>
             </li>
-            <li className="game-analyze-menu_item" title="dowload game result">
-                <button type="button" onClick={() => handleClick('download')}>
-                    <span className='material-icons'>file_download</span>
-                </button>
+            <li className="game-analyze-menu_item" title="download game result" >
+                <div title='upload game'>
+                    <input type="file" onInput={() => handleClick('download')} />
+                    <span className='material-icons'>file_upload</span>
+                </div>
             </li>
-            <li className="game-analyze-menu_item" title={!settingPosition ? 'setup position' : 'analize position'} >
+            <li className="game-analyze-menu_item" title={!settingPosition ? 'setup position' : 'analyze position'} >
                 <button type="button" name="game" onClick={() => handleClick('setup')}>
                     <span className='material-icons'>{!settingPosition ? 'grid_on' : 'construction'}</span>
                 </button>
@@ -140,7 +141,7 @@ export const AnalizeGameMenu: React.FC<AnalysisMenuProps> = (props: AnalysisMenu
           
             <li 
                 className="game-analyze-menu_item gv"
-                title='Choose game variant. International: I Rusian: R Towers: T' 
+                title='Choose game variant. International: I Russian: R Towers: T'
             >
                 <select 
                     className="gv" 

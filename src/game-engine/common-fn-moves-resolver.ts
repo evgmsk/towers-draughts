@@ -17,10 +17,13 @@ import {
 } from "../store/models"
 import {  copyObj, crossDirections, oppositeColor } from "./gameplay-helper-functions";
 import { createEmptyBoard } from "./prestart-help-function-constants";
+import {IEvaluationData} from "./mandatory-move-resolver";
 
 export class BaseMoveResolver {
     GV: GameVariants = 'towers'
     size: number = BaseBoardSize
+    positionData = {} as IEvaluationData
+    parentPositionData = null as unknown as IEvaluationData
 
     setProps = (props: {GV: GameVariants, size: number}) => {
         this.GV = props.GV
@@ -102,7 +105,7 @@ export class BaseMoveResolver {
         }
     }
 
-    cuptureTower = (tower: PartialTower): PartialTower | null => {
+    captureTower = (tower: PartialTower): PartialTower | null => {
         if (this.GV !== 'towers') {
             return null as unknown as PartialTower
         }
@@ -129,16 +132,22 @@ export class BaseMoveResolver {
 
 export class MoveResolveCommons extends BaseMoveResolver {
 
-    checkNeighborsIsEmpty(key: string, board: IBoardToGame, color: PieceColor): string[] {
-        return Object.values(board[key].neighbors).filter((cellKey: string) => {
-            const condition = color === PieceColor.w
-                ? parseInt(key.slice(1)) < parseInt(cellKey.slice(1)) 
-                : parseInt(key.slice(1)) > parseInt(cellKey.slice(1))
-            return condition  && !board[cellKey]!.tower
-        }).map((fN: string) => `${key}-${fN}`)
+    cellMoveRestrictions(color: PieceColor, key: string, cellKey: string) {
+        return color === PieceColor.w
+            ? parseInt(key.slice(1)) < parseInt(cellKey.slice(1))
+            : parseInt(key.slice(1)) > parseInt(cellKey.slice(1))
     }
 
-    lookForTowerFreeMoves = (boardKey: string, board: IBoardToGame, color: PieceColor): string[] => {
+    checkNeighborsIsEmpty(key: string, board: IBoardToGame, color: PieceColor): string[] {
+        return Object.keys(board[key].neighbors).reduce((acc: string[], nKey: string) => {
+            const cellKey = board[key].neighbors[nKey]
+            return !board[cellKey]!.tower && this.cellMoveRestrictions(color, key, cellKey)
+                ? acc.concat(`${key}-${cellKey}`)
+                : acc
+        }, [])
+    }
+
+    lookForTowerMoves = (boardKey: string, board: IBoardToGame, color: PieceColor): string[] => {
         const tower = board[boardKey].tower
         if (tower!.currentType === TowerType.m) {
             return this.checkNeighborsIsEmpty(boardKey, board, color)
@@ -147,12 +156,12 @@ export class MoveResolveCommons extends BaseMoveResolver {
         }
     }
 
-    lookForAllPossibleMoves = (color: PieceColor, board: IBoardToGame): string[] => {
+    lookForAllFreeMoves = (color: PieceColor, board: IBoardToGame): string[] => {
         let result: string[] = []
         for (let key of Object.keys(board)) {
             const cell = board[key]
             if(cell.tower?.currentColor === color) {
-                const moves = this.lookForTowerFreeMoves(key, board, color)
+                const moves = this.lookForTowerMoves(key, board, color)
                 if (moves.length) {
                     result = [...result, ...moves]
                 }
@@ -208,14 +217,15 @@ export class MoveResolveCommons extends BaseMoveResolver {
             console.error('error on board', move, _board, board)
         }
         if (_board[from].tower && !_board[to].tower?.currentColor) {
-            console.error('board was updated incorrectly whithout taken', move, _board, board)
+            console.error('board was updated incorrectly without taken', move, _board, board)
         }
         return _board
     }
 
     getBoardFromTowers = (towers: TowersMap): IBoardToGame => {
         const board = createEmptyBoard(this.size)
-        towers.forEach((value: TowerConstructor, key: string) => {
+        Object.keys(towers).forEach((key: string) => {
+            const value = towers[key]
             const {wPiecesQuantity, bPiecesQuantity, currentColor, currentType} = value
             if (!key.includes(' ')) {
                  board[key].tower = {wPiecesQuantity, bPiecesQuantity, currentColor, currentType}
@@ -269,14 +279,14 @@ export class MoveResolveCommons extends BaseMoveResolver {
     manTowerFreeMoves = (tower: TowerConstructor, board: IBoardToGame, cellsMap: CellsMap) => {
         const key = tower.onBoardPosition
         const color = tower.currentColor
-        const possibleMoves =  new Map() as CellsMap
+        const possibleMoves =  {} as CellsMap
         const cellNeighbors = board![key]!.neighbors
         Object.values(cellNeighbors!).forEach((k: string) => {
             const cell = board![k] 
             const [towerLine, neighborLine] = [parseInt(key.slice(1)), parseInt(k.slice(1))]
             if ((color === PieceColor.b && !cell!.tower && towerLine > neighborLine)
                 || (color === PieceColor.w && !cell!.tower && towerLine < neighborLine)) {
-                possibleMoves.set(k, cellsMap!.get(k) as ITowerPosition)
+                possibleMoves[k] = cellsMap[k] as ITowerPosition
             }
         })
         return possibleMoves
@@ -298,11 +308,11 @@ export class MoveResolveCommons extends BaseMoveResolver {
 
     kingTowerFreeMoves = (key: string, board: IBoardToGame, cellsMap: CellsMap): CellsMap => {
         const moves = this.lookForKingFreeMoves(key, board)
-        const possibleMoves = new Map() as CellsMap
+        const possibleMoves = {} as CellsMap
         moves.forEach((m: string) => {
             const moveSteps = m.split('-')
             const cellKey = moveSteps[moveSteps.length - 1]
-            possibleMoves.set(cellKey, cellsMap.get(cellKey) as ITowerPosition)
+            possibleMoves[cellKey] = cellsMap[cellKey] as ITowerPosition
         })
         return possibleMoves
     }
@@ -335,7 +345,7 @@ export class MoveResolveCommons extends BaseMoveResolver {
         }
         const tower = copyObj(board[from])!.tower as TowerConstructor
         let middlePieceKey = this.getCapturedPieceKey(from, to, board)
-        const newMiddleTower = this.cuptureTower(newBoard[middlePieceKey].tower)
+        const newMiddleTower = this.captureTower(newBoard[middlePieceKey].tower)
         if (!tower || !middlePieceKey) {
             console.error('invalid board:', JSON.stringify(board), 'rivalMove:', move)
             return board

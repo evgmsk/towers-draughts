@@ -124,8 +124,8 @@ const Moves:React.FC<ConnectedProps<typeof historyConnector>> = (props) => {
                     moves.map((rivalMove: {black: string, white: string}, i: number) => {
                         const white = (analyzingLastGame ? index : mHistory.length - 1) === i * 2
                         const black =  (analyzingLastGame ? index : mHistory.length - 1) === i * 2 + 1
-                        const whiteClass = `white-rivalMove${white ? ' current-rivalMove': ''}`
-                        const blackClass = `black-rivalMove${black ? ' current-rivalMove': ''}`
+                        const whiteClass = `white-move${white ? ' current-move': ''}`
+                        const blackClass = `black-move${black ? ' current-move': ''}`
                         return (
                             <div className="move-wrapper" key={i}>
                                 <div className="move-number">{i + 1}</div>

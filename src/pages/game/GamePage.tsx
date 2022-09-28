@@ -21,7 +21,6 @@ import GameInfo from './GameInfo'
 
 import './game-page.scss'
 
-
 // player bar
 const PlayerGameBarMapState = (state: IRootState) => ({
     name: state.game.playerColor === PieceColor.b ? state.game.black.name : state.game.white.name

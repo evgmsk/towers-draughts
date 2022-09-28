@@ -13,6 +13,7 @@ export const InitialGameAnalysisState: IAnalysisState = {
     evaluate: false,
     removePiece: false,
     startPosition: false,
+    bestMoveLine: [] as {move: string, value: number}[]
 }
 
  export function analyzeReducer(state = InitialGameAnalysisState, action: GameAnalysisTypes): IAnalysisState {
@@ -23,6 +24,9 @@ export const InitialGameAnalysisState: IAnalysisState = {
         case(GameAnalysisActions.SAVE_GAME_RESULT): {
             const payload =  action.payload as IGameResult
             return {...state, gameResult: payload, movesMainLine: payload.movesHistory || []}
+        }
+        case(GameAnalysisActions.SET_BEST_MOVE_LINE): {
+            return {...state, bestMoveLine: action.payload as {move: string, value: number}[]}
         }
         case(GameAnalysisActions.SET_DEPTH): {        
             return {...state, depth: action.payload as number}

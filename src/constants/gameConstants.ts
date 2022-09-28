@@ -64,4 +64,6 @@ export const getDefaultWhiteTowersCells = (boardSize: number): string[] => {
     return boardSize === 8 ? defaultWhiteTowerCells8x8 : defaultWhiteTowerCells
 }
 
-export const board10x10Cells = defaultBlackTowerCells.concat(defaultWhiteTowerCells).concat(board10x10EmptyCells)
+export const board10x10Cells = defaultBlackTowerCells
+    .concat(defaultWhiteTowerCells)
+    .concat(board10x10EmptyCells)

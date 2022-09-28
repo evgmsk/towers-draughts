@@ -1,4 +1,5 @@
 import { IAnalysisState, IBoardToGame, IGameResult, IMoveProps } from "../models"
+import {constants} from "os";
 
 export const GameAnalysisActions = {
     ANALYZE_LAST_GAME: 'ANALYZE_LAST_GAME',
@@ -19,11 +20,17 @@ export const GameAnalysisActions = {
     REMOVE_PIECE: 'REMOVE_PIECE',
     START_NEW_LINE: 'START_NEW_LINE',
     MAKE_NEW_MOVE: 'MAKE_NEW_MOVE',
+    SET_BEST_MOVE_LINE: 'SET_BEST_MOVE_LINE'
 } 
 
 export interface MakeNewMoveAction {
     type: typeof GameAnalysisActions.MAKE_NEW_MOVE,
     payload: Partial<IMoveProps>
+}
+
+export interface SetBestMoveAction {
+    type: typeof GameAnalysisActions.SET_BEST_MOVE_LINE,
+    payload: {move: string, value: number}[]
 }
 
 export interface StartNewLineAction {
@@ -46,7 +53,7 @@ export interface SetDepthAction {
     payload: number
 }
 
-export interface EvaluatePositionhAction {
+export interface EvaluatePositionAction {
     type: typeof GameAnalysisActions.EVALUATE_POSITION
     payload: boolean
 }
@@ -76,7 +83,7 @@ export interface StepForwardAction {
     payload: number
 }
 
-export interface StepBackdAction {
+export interface StepBackAction {
     type: typeof GameAnalysisActions.STEP_BACK,
     payload: number
 }
@@ -118,7 +125,7 @@ export type GameAnalysisTypes = AnalyzeLastGame
 | UpdatePositionActions
 | GoToPositionAction
 | StepForwardAction
-| StepBackdAction
+| StepBackAction
 | SavePositionAction
 | CreatePositionTreeAction
 | UpdateAnalysisStateAction
@@ -126,4 +133,5 @@ export type GameAnalysisTypes = AnalyzeLastGame
 | StartNewLineAction
 | MakeNewMoveAction
 | SetStartPositionAction
+| SetBestMoveAction
 
