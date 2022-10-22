@@ -4,12 +4,13 @@ import {
     PieceColor,
     TowerConstructor,
     TowerType,
-    ITowerPosition,
     IBoardToGame,
     PartialTower,
     IBoardOptions,
     IAnalysisBoard,
-    IGameBoard, CellsMap, IPositionsTree,
+    IGameBoard,
+    CellsMap,
+    IPositionsTree, IBoard, Board,
 } from "../store/models"
 import {
     TopLegendValues,
@@ -21,6 +22,19 @@ import {
 
 export const oppositColor = (color: PieceColor) => { return color === PieceColor.w ? PieceColor.b : PieceColor.w }
 
+
+export const createBoardWithoutDraughts = (size: number = 8) => {
+    const GameBoard: Board = {}
+    for(let i = 0; i < size; i++) {
+        for(let j = 0; j < size; j++) {
+            if ((i + j + 1) % 2) {
+                const key = `${TopLegendValues[i]}${SideLegendValues[j]}`;
+                GameBoard[key] = {boardKey: key, neighbors: defineNeighborCells(i ,j, size)}
+            }
+        }
+    }
+    return GameBoard
+}
 export const createEmptyBoard = (size: number = 8) => {
     const GameBoard: IBoardToGame = {}
     for(let i = 0; i < size; i++) {
@@ -53,7 +67,8 @@ export const createStartBoardToDraw = (props: {boardOptions: IBoardOptions}): IG
         currentPosition,
         mouseDown: false,
         lastMoveSquares: [],
-        positionsTree
+        positionsTree,
+        towerView: 'face'
     }
 }
 
@@ -71,7 +86,8 @@ export const createEmptyBoardForCustomPosition = (props: {[key: string]: any}): 
         mandatoryMoves: [],
         mandatoryMoveStep: 0,
         mouseDown: false,
-        lastMoveSquares: []
+        lastMoveSquares: [],
+        towerView: 'face',
     }
 }
 
@@ -132,7 +148,6 @@ export function defineNeighborCells(i: number, j: number, size: number): INeighb
             neighbors.rightDown = `${topLegend[i + 1]}${sideLegend[j - 1]}`
         }
     }
-    console.warn('neighbors', i, j, size, neighbors)
     return neighbors
 }
 

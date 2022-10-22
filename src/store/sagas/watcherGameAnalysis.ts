@@ -1,6 +1,6 @@
 import { put, takeLatest, select, delay } from 'redux-saga/effects';
 
-import {PieceColor, IMoveProps, IAnalysisState, CellsMap, IPositionsTree} from '../models';
+import {PieceColor, IMoveProps, IAnalysisState, IPositionsTree} from '../models';
 
 import { copyObj, oppositeColor, splitMove } from '../../game-engine/gameplay-helper-functions';
 // import { Axios, setAuthorizationHeader } from '../../common/axios';
@@ -11,6 +11,8 @@ import { IRootState } from '../rootState&Reducer';
 import { BoardActions } from '../board/types';
 import tur from '../../game-engine/update-towers-functions'
 import { AnimationDuration } from '../../constants/gameConstants';
+import bms from "../../game-engine/best-move-seeker";
+import {IBranch} from "../../game-engine/engine-interfaces";
 
 // function* workerUploadGame(action: GameAnalysisTypes) {
 //     const token: string = yield select((state) => state.user.token)
@@ -67,7 +69,7 @@ function* workerUpdatePosition(action: GameAnalysisTypes) {
     }
 }
 
-function* workerStepForward(action: GameAnalysisTypes) {
+function* workerStepForward() {
     const {analyze, board: {positionsTree}} = yield select()
     const {
         movesCurrentLine,
@@ -173,7 +175,7 @@ function* workerPlayMoves(action: GameAnalysisTypes) {
     }
 }
 
-function* workerStepBack(action: GameAnalysisTypes) {
+function* workerStepBack() {
     const {analyze, board: {positionsTree}} = yield select()
     const {
         movesCurrentLine,
@@ -236,7 +238,7 @@ function* workerCurrentLine(action: GameAnalysisTypes) {
         board: {positionsTree}      
     } = yield select()
     const {moveToSave: {move, position}} = action.payload as IMoveProps
-    let payload: Partial<IAnalysisState> = {}
+    let payload: Partial<IAnalysisState>
     if (movesCurrentLine[index + 1] === move) {
         yield put({
             type: BoardActions.UPDATE_BOARD_STATE,
@@ -274,7 +276,7 @@ function* workerMainLine(action: GameAnalysisTypes) {
         board: {positionsTree}
     } = yield select()
     const {moveToSave: {move, position}} = action.payload as IMoveProps
-    let payload: Partial<IAnalysisState> = {}
+    let payload: Partial<IAnalysisState>
     yield put({
         type: BoardActions.UPDATE_BOARD_STATE,
         payload: {currentPosition: position}
@@ -319,7 +321,7 @@ function* workerNewMove(action: GameAnalysisTypes) {
         lastMove: {move, index},
         movesCurrentLine,
     } = yield select((state: IRootState) => state.analyze)
-    let payload: Partial<IAnalysisState> = {}
+    let payload: Partial<IAnalysisState>
     if (movesCurrentLine.length && movesCurrentLine[index] === move) {
         payload = yield workerCurrentLine(action)
     } else {
@@ -330,11 +332,30 @@ function* workerNewMove(action: GameAnalysisTypes) {
     }
 }
 
-function* workerStartPosition(action: GameAnalysisTypes) {
+function* workerAnalyzePosition(action: GameAnalysisTypes) {
+    if (!action.payload) {
+        return
+    }
+    const {
+        board: {
+            currentPosition
+        },
+        analyze: {
+            pieceOrder
+        },
+    }: IRootState = yield select()
+    console.warn('eval pos', currentPosition, pieceOrder)
+    delay(200)
+    bms.setState({game: false, parentBranch: {deepValue: {value: 0}} as IBranch})
+    bms.updateAfterRivalMove({history: [''], pieceOrder, cP: currentPosition})
+}
+
+function* workerStartPosition() {
+    console.warn('analyze start pos')
     const {
         boardOptions: {boardSize},
     } = yield select((state: IRootState) => state)
-    yield put({type: GameAnalysisActions.UPDATE_ANALYSIS_STATE, payload: {startPosition: false}})
+    // yield put({type: GameAnalysisActions.UPDATE_ANALYSIS_STATE, payload: {startPosition: false}})
     const currentPosition = createStartBoard(boardSize)
     const positionsTree = {} as IPositionsTree
     positionsTree.sp = currentPosition
@@ -356,7 +377,8 @@ export default function* watcherAnalysis() {
     yield takeLatest(GameAnalysisActions.STEP_FORWARD, workerStepForward)
     yield takeLatest(GameAnalysisActions.GO_TO_POSITION, workerGoToPosition)
     yield takeLatest(GameAnalysisActions.UPDATE_POSITION, workerUpdatePosition)
-    // yield takeLatest(GameAnalysisActions.DOWNLOAD_GAME, workerUploadGame)
+    // yield takeLatest(GameAnalysisActions.UPLOAD_GAME, workerUploadGame)
+    yield takeLatest(GameAnalysisActions.EVALUATE_POSITION, workerAnalyzePosition)
     yield takeLatest(GameAnalysisActions.PLAY_MOVES, workerPlayMoves)
     yield takeLatest(GameAnalysisActions.SETTING_BOARD, workerSettingBoard)
     yield takeLatest(GameAnalysisActions.ANALYZE_LAST_GAME, workerGameAnalysis)

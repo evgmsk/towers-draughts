@@ -1,12 +1,10 @@
-import {createEmptyBoard, newOnBoardTower} from './prestart-help-function-constants'
-import {IBoardToGame, PieceColor, TowerType} from '../store/models'
-// import { checkDiagonalToMandatoryMove} from './king-mandatory-rivalMove-resolver'
+import {createBoardWithoutDraughts, createEmptyBoard, newOnBoardTower} from './prestart-help-function-constants'
+import {Directions, IBoardToGame, PieceColor, TowerConstructor, TowersMap, TowerType} from '../store/models'
+import mmr from './engine-on-towers'
+
+import mmr2 from './mandatory-move-resolver'
 // import { getMiddlePieceKey, getMoveDirection, takeTower } from './common-fn-mandatory-moves-resolver'
-import {MandatoryMovesResolver} from './mandatory-move-resolver'
 import {checkIfNumberOfKingsChanged} from './gameplay-helper-functions'
-import bms from './best-move-seeker'
-import movesTree from "./moves-tree";
-import {IBranch, IMove} from "./engine-interfaces";
 
 
 // test('movesMap', () => {
@@ -22,48 +20,108 @@ import {IBranch, IMove} from "./engine-interfaces";
 //     expect(d).toBe(d)
 // })
 
-test('best move1 engine', () => {
-    const board = createEmptyBoard(8)
-    board['a3'].tower = newOnBoardTower(PieceColor.w, TowerType.k)
-    board['c3'].tower = newOnBoardTower(PieceColor.w)
-    board['a5'].tower = newOnBoardTower(PieceColor.b)
-    const props = {
-        history: ['', ''],
-        cP: board,
-        pieceOrder: PieceColor.w,
-    }
-    // console.error(JSON.stringify(board))
-    const moves = bms.getAvailableMoves(board, PieceColor.w)
-    // console.log(moves.map(m => ({move: m.move, val: m.baseValue})), moves.length)
-    const bmc = (move: any) => {
-        expect(move.move).toBe('a3-b4')
-    }
-    bms.setBestMoveCB(bmc)
-    bms.updateAfterRivalMove(props)
+// it('man mandatory moves', () => {
+//     mmr.setProps({GV: 'towers', size: 8})
+//     const towers = {} as TowersMap
+//     towers.b2 = new TowerConstructor({currentColor: PieceColor.w, onBoardPosition: 'b2', currentType: TowerType.m})
+//     towers.c3 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'c3'})
+//     towers.e5 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'e5'})
+//     towers.c5 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'c5'})
+//     // towers.g7 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'g7'})
+//     towers.g5 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'g5'})
+//     towers.e3 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'e3'})
+//     const moves = mmr.lookForManMoves('b2', towers)
+//     console.log(moves.mandatory?.map(m => m.move.join(':')))
+// })
+it('king mandatory moves', () => {
+    mmr.setProps({GV: 'towers', size: 8})
+    const board = createBoardWithoutDraughts(8)
+    const diag = mmr.getDiagonal('rightUp', 'b2')
+    // console.warn(diag.length, diag)
+    const towers = {} as TowersMap
+    towers.b2 = new TowerConstructor({currentColor: PieceColor.w, onBoardPosition: 'b2', currentType: TowerType.k})
+    towers.c3 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'c3'})
+    // towers.b2 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'b2'})
+    towers.e5 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'e5'})
+    towers.c5 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'c5'})
+    towers.g7 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'g7'})
+    towers.g5 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'g5'})
+    towers.g3 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'g3'})
+    towers.e3 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'e3'})
+    const moves = mmr.lookForKingMoves('b2', towers)
+    console.log(moves.free?.map(m => m.move.join('-')) ,moves.mandatory?.map(m => `${m.move.join(':')}/${m.minLength}/${m.completed}/${m.takenPieces.join('|')}`))
 })
+// test('king eval', () => {
+//     const d: ICheckerTower = {currentColor: PieceColor.b, currentType: TowerType.k, bPiecesQuantity: 1, onBoardPosition: 'a1'}
+//     evaluator.handlePieces(d)
+//     console.error(evaluator)
+//     expect(d).toBe(d)
+// })
 
-test('best move2 engine', async () => {
-    movesTree.addRoot({} as IBranch)
-    const board = createEmptyBoard(8)
-    board['b2'].tower = newOnBoardTower(PieceColor.w, TowerType.k)
-    board['g7'].tower = newOnBoardTower(PieceColor.w, TowerType.k)
-    board['d8'].tower = newOnBoardTower(PieceColor.b)
-    // board['d6'].tower = newOnBoardTower(PieceColor.b)
-    board['c5'].tower = newOnBoardTower(PieceColor.w, TowerType.k)
-    const props = {
-        history: ['', ''],
-        cP: board,
-        pieceOrder: PieceColor.w,
-    }
-    // console.error(JSON.stringify(board))
-    const moves = bms.getAvailableMoves(board, PieceColor.w)
-    console.log(moves.map(m => ({move: m.move, val: m.baseValue})), moves.length)
+// test('test checking diagonal for mandatory moves', () => {
+//     mmr.setProps({GV: 'towers', size: 8})
+//     const board = createEmptyBoard(8)
+//     board.a1.tower = newOnBoardTower(PieceColor.w, TowerType.k)
+//     board.b2.tower = newOnBoardTower(PieceColor.b, TowerType.m)
+//     board.e5.tower = newOnBoardTower(PieceColor.b, TowerType.m)
+//     const diagonal = mmr.getDiagonal(mmr.getMoveDirection(['a1', 'c2']),'a1')
+//     const towers = {} as TowersMap
+//     towers.a1 = new TowerConstructor({
+//         currentColor: PieceColor.w,
+//         onBoardPosition: 'a1',
+//         currentType: TowerType.k
+//     })
+//     towers.b2 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'b2'})
+//     towers.f6 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'f6'})
+//     const firstMove = {move: 'a1', endPosition: towers, takenPieces: []}
+//     const moves = mmr.checkKingMandatoryMoves(board.a1, towers)
+//     const moves2 = mmr2.lookForMandatoryMoves(PieceColor.w, board)
+//     console.log(moves, moves2)
+// })
 
-    bms.updateAfterRivalMove(props)
-    const res = await bms.updateAfterRivalMove(props)
-    expect((res as any).move ).toBe('a3-b4')
-
-})
+// test('best move1 engine', () => {
+//     const board = createEmptyBoard(8)
+//     board['a3'].tower = newOnBoardTower(PieceColor.w, TowerType.k)
+//     board['c3'].tower = newOnBoardTower(PieceColor.w)
+//     board['a5'].tower = newOnBoardTower(PieceColor.b)
+//     const props = {
+//         history: ['', ''],
+//         cP: board,
+//         pieceOrder: PieceColor.w,
+//     }
+//     // console.error(JSON.stringify(board))
+//     const moves = bms.getAvailableMoves(board, PieceColor.w)
+//     // console.log(moves.map(m => ({move: m.move, val: m.baseValue})), moves.length)
+//     const bmc = (move: any) => {
+//         expect(move.move).toBe('a3-b4')
+//     }
+//     bms.setBestMoveCB(bmc)
+//     bms.updateAfterRivalMove(props)
+// })
+//
+// test('best move2 engine', async () => {
+//     movesTree.addRoot({} as IBranch)
+//     const board = createEmptyBoard(8)
+//     board['h8'].tower = newOnBoardTower(PieceColor.b, TowerType.k)
+//     // board['g7'].tower = newOnBoardTower(PieceColor.w, TowerType.k)
+//     // board['d8'].tower = newOnBoardTower(PieceColor.b)
+//     // board['d6'].tower = newOnBoardTower(PieceColor.b)
+//     board['g1'].tower = newOnBoardTower(PieceColor.w, TowerType.k)
+//     const props = {
+//         history: ['', ''],
+//         cP: board,
+//         pieceOrder: PieceColor.b,
+//     }
+//     // console.error(JSON.stringify(board))
+//     const value = evaluator.evaluateCurrentPosition(board, props.pieceOrder)
+//     const moves = bms.getAvailableMoves(board, PieceColor.w)
+//     console.log(moves.map(m => ({move: m.move, val: m.baseValue})), moves.length, value)
+//
+//     // bms.updateAfterRivalMove(props)
+//     // const res = await bms.updateAfterRivalMove(props)
+//     // expect((res as any).move ).toBe('a3-b4')
+//
+// })
 // test('ordinary rivalMove', () => {
 //     const board = createEmptyBoard(8)
 //     board['f2').tower = newOnBoardTower({color: PieceColor.w})
@@ -98,7 +156,7 @@ test('best move2 engine', async () => {
 //     board['g5'].tower = newOnBoardTower(PieceColor.b)
 //     const dir = getMoveDirection('a3:c5')
 //     const diag = getDiagonal(dir, 'a3', board)
-//     expect(checkDiagonalToMadatoryMove(diag)).toMatchObject(['a3:c5:e7', 'a3:c5:f8'])
+//     expect(checkDiagonalToMandatoryMove(diag)).toMatchObject(['a3:c5:e7', 'a3:c5:f8'])
 //     expect(Object.keys(getDiagonals('c5', board, getMoveDirection('a3:c5'))).length).toBe(2)
 //     const direction = getMoveDirection('a3:c5')
 //     expect(direction).toBe('rightUp')
@@ -230,7 +288,6 @@ test('check kings num changed', () => {
 
 
 test('check obligated rivalMove', () => {
-    const mmr = new MandatoryMovesResolver()
     mmr.setProps({GV: 'towers', size: 8})
     const board = createEmptyBoard(8)
     board['c7'].tower = newOnBoardTower(PieceColor.b)
@@ -249,8 +306,8 @@ test('check obligated rivalMove', () => {
 })
 
 test('make obligated rivalMove', () => {
-    const mmr = new MandatoryMovesResolver()
-    mmr.setProps({GV: 'towers', size: 8})
+
+    mmr2.setProps({GV: 'towers', size: 8})
     // const board = createEmptyBoard(8)
     const bs = {
         "a1": {

@@ -74,7 +74,7 @@ export class TowerComponent extends React.Component<TowerComponentProps> {
       positionInDOM,
       currentColor,
       currentType,
-      veiw,
+      view,
       wPiecesQuantity,
       bPiecesQuantity,
       onBoardPosition,
@@ -83,11 +83,11 @@ export class TowerComponent extends React.Component<TowerComponentProps> {
     const boardSize = this.props.bs
     const towers = this.props.towers
     const {x, y} = positionInDOM!
-    const className = `checker-tower ${currentType} ${currentColor} ${veiw} board-${boardSize}${mt? ' mandatory-tower': ''}${towers ? ' towers' : ' classic'} ratio-${CellTowerRatio*10}`
+    const className = `checker-tower ${currentType} ${currentColor} ${view} board-${boardSize}${mt? ' mandatory-tower': ''}${towers ? ' towers' : ' classic'} ratio-${CellTowerRatio*10}`
     const style = {top: `${y}px`, left: `${x}px`} //  {transform: `translate(${x}px, ${y}px)`}//
     // console.log(style)
     const colorW = currentColor === PieceColor.w 
-    const towerView = (wPiecesQuantity + bPiecesQuantity > 1) && veiw !== 'face'
+    const towerView = (wPiecesQuantity + bPiecesQuantity > 1) && view !== 'face'
     const props={
       w: wPiecesQuantity, 
       b: bPiecesQuantity, 

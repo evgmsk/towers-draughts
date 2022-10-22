@@ -86,18 +86,9 @@ class ClientEngine extends React.Component<BotProps, IBestMove> {
         }
     }
 
-    passProps = () => {
-        return {
-            history: this.props.movesHistory,
-            currentPosition: this.props.currentPosition,
-            pieceOrder: this.props.moveOrder.pieceOrder
-        }
-    }
-
     completeMove(move:{move: string, position: IBoardToGame}) {
         const {moveOrder: oldOrder, turn, white, black, currentPosition} = this.props
         const moveOrder = mmr.getNewOrder({moveOrder: oldOrder, white, black})
-        // console.log('old order', moveOrder, 'new order', nMoveOrder, currentPosition)
         if (move.move.includes(':')) {
             const takenPieces = mmr.getCapturedTowers(move.move.split(':'), currentPosition)
             const moveToSave = {...move, takenPieces}

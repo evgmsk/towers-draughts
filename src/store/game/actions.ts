@@ -119,13 +119,6 @@ export function offerDraw(): GameActionTypes {
     }
 }
 
-export function setPortrait(payload: boolean): GameActionTypes {
-    return {
-        type: GameActions.SET_PORTRAIT,
-        payload
-    }
-}
-
 export function newGameVSPC(payload = null): GameActionTypes {
     return {
         type: GameActions.NEW_GAME_VS_PLAYER,

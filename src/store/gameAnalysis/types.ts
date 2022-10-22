@@ -1,9 +1,8 @@
-import { IAnalysisState, IBoardToGame, IGameResult, IMoveProps } from "../models"
-import {constants} from "os";
+import {IAnalysisState, IBoardToGame, IGameResult, IMoveProps, PieceColor} from "../models"
 
 export const GameAnalysisActions = {
     ANALYZE_LAST_GAME: 'ANALYZE_LAST_GAME',
-    DOWNLOAD_GAME: "DOWNLOAD_GAME",
+    UPLOAD_GAME: "UPLOAD_GAME",
     SAVE_GAME_RESULT: 'SAVE_GAME_RESULT',
     SETTING_BOARD: 'SETTING_BOARD',
     UPDATE_POSITION: 'UPDATE_POSITION',
@@ -20,12 +19,18 @@ export const GameAnalysisActions = {
     REMOVE_PIECE: 'REMOVE_PIECE',
     START_NEW_LINE: 'START_NEW_LINE',
     MAKE_NEW_MOVE: 'MAKE_NEW_MOVE',
+    SET_MOVE_ORDER: 'SET_MOVE_ORDER',
     SET_BEST_MOVE_LINE: 'SET_BEST_MOVE_LINE'
 } 
 
 export interface MakeNewMoveAction {
     type: typeof GameAnalysisActions.MAKE_NEW_MOVE,
     payload: Partial<IMoveProps>
+}
+
+export interface SetMoveOrder {
+    type: typeof GameAnalysisActions.SET_MOVE_ORDER
+    payload: PieceColor
 }
 
 export interface SetBestMoveAction {
@@ -103,8 +108,8 @@ export interface AnalyzeLastGame {
     payload: boolean
 }
 
-export interface DownloadGame {
-    type: typeof GameAnalysisActions.DOWNLOAD_GAME,
+export interface UploadGame {
+    type: typeof GameAnalysisActions.UPLOAD_GAME,
     payload: IGameResult
 }
 
@@ -119,7 +124,7 @@ export interface SetStartPositionAction {
 }
 
 export type GameAnalysisTypes = AnalyzeLastGame 
-| DownloadGame 
+| UploadGame
 | SaveGameResult 
 | SettingBoardAction 
 | UpdatePositionActions
@@ -134,4 +139,9 @@ export type GameAnalysisTypes = AnalyzeLastGame
 | MakeNewMoveAction
 | SetStartPositionAction
 | SetBestMoveAction
+| EvaluatePositionAction
+| PlayMovesAction
+| SetDepthAction
+| SetMoveOrder
+
 

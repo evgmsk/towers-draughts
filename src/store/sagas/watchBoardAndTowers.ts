@@ -2,7 +2,7 @@ import { put, takeLatest, select, delay } from 'redux-saga/effects';
 
 import {BoardActionTypes, BoardActions as BA, BoardActions} from '../board/types'
 import {GameVariants, IGameBoard, IGameState, IMoveProps, TowerConstructor, TowersMap} from '../models';
-import { 
+import {
     createEmptyBoardForCustomPosition,
     createStartBoardToDraw,
     createAnalysisBoard,
@@ -16,7 +16,7 @@ import { copyObj, splitMove } from '../../game-engine/gameplay-helper-functions'
 import { AnimationDuration } from '../../constants/gameConstants';
 import mmr from "../../game-engine/mandatory-move-resolver";
 
- 
+
 function* workerCreateGameBoard() {
     const {boardOptions} = yield select()
     const payload = createStartBoardToDraw({boardOptions})
@@ -61,26 +61,26 @@ function* animateMandatoryTowerStep(props: Partial<IMoveProps>, step = 0) {
     const {gameOptions: { reversedBoard}, board} = yield select()
     const {moveToSave: {move, position, takenPieces}} = props as IMoveProps
     const [from, to] = move.split(':').slice(step)
-    const totalSteps = takenPieces!.length 
+    const totalSteps = takenPieces!.length
     const capturedTowerKey = takenPieces![step]
-        let tower = position[capturedTowerKey].tower as TowerConstructor
-        tur.relocateTower(from, to, board, reversedBoard)
-        yield delay(AnimationDuration / totalSteps / 2)
-        let state: IRootState = yield select()
-        let towers = copyObj(state.board.towers) as TowersMap
-        if (tower) {
-            tower =  new TowerConstructor(tower)
-            tower.onBoardPosition = capturedTowerKey
-            tower.positionInDOM = tur.calcTowerPosition(capturedTowerKey, board.cellsMap, board.cellSize, reversedBoard)
-            towers[capturedTowerKey] = tower
-        } else {
-            delete towers[capturedTowerKey]
-        }
-        yield put({type: BoardActions.UPDATE_BOARD_STATE, payload: {towers}})
-        yield delay(AnimationDuration / totalSteps / 2)
-        state = yield select()
-        towers = tur.finalizeMandatoryMoveStep(from, to, state.board, reversedBoard) as TowersMap
-        yield put({type: BoardActions.UPDATE_BOARD_STATE, payload: {towers}})
+    let tower = position[capturedTowerKey].tower as TowerConstructor
+    tur.relocateTower(from, to, board, reversedBoard)
+    yield delay(AnimationDuration / totalSteps / 2)
+    let state: IRootState = yield select()
+    let towers = copyObj(state.board.towers) as TowersMap
+    if (tower) {
+        tower =  new TowerConstructor(tower)
+        tower.onBoardPosition = capturedTowerKey
+        tower.positionInDOM = tur.calcTowerPosition(capturedTowerKey, board.cellsMap, board.cellSize, reversedBoard)
+        towers[capturedTowerKey] = tower
+    } else {
+        delete towers[capturedTowerKey]
+    }
+    yield put({type: BoardActions.UPDATE_BOARD_STATE, payload: {towers}})
+    yield delay(AnimationDuration / totalSteps / 2)
+    state = yield select()
+    towers = tur.finalizeMandatoryMoveStep(from, to, state.board, reversedBoard) as TowersMap
+    yield put({type: BoardActions.UPDATE_BOARD_STATE, payload: {towers}})
 }
 
 function* animateMandatoryStep(props: Partial<IMoveProps>, step = 0) {
@@ -90,7 +90,7 @@ function* animateMandatoryStep(props: Partial<IMoveProps>, step = 0) {
     } else {
         const {moveToSave: {move, takenPieces}} = props as IMoveProps
         const [from, to] = move.split(':').slice(step)
-        const totalSteps = takenPieces!.length 
+        const totalSteps = takenPieces!.length
         const isLast = totalSteps === step + 1
         tur.relocateTower(from, to, board, reversedBoard)
         yield delay(AnimationDuration / totalSteps)
@@ -111,7 +111,7 @@ function* animateMandatoryStep(props: Partial<IMoveProps>, step = 0) {
 function* animateMandatoryMove(props: Partial<IMoveProps>, step = 0): any {
     const {moveToSave: {takenPieces}} = props as IMoveProps
     if (takenPieces?.length === 1 || takenPieces?.length === step + 1) {
-        yield animateMandatoryStep(props, step) 
+        yield animateMandatoryStep(props, step)
     } else {
         yield animateMandatoryStep(props, step)
         yield animateMandatoryMove(props, step + 1)

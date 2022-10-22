@@ -70,37 +70,32 @@ export class Evaluator {
         this.bMoves = 0
     }
 
-    calcAllTowerMoves(key: string, board: IBoardToGame, pieceOrder: PieceColor) {
-        const towerCell = board[key]
-        const {currentColor, currentType} = towerCell.tower!
-        const {neighbors} = towerCell
-        return Object.keys(neighbors).reduce((acc: number, nKey: string) => {
-            const nextCell = board[neighbors[nKey]]
-            if (!nextCell.tower) {
-                if (currentType === TowerType.k) {
-                    return acc + 4
-                }
-                return mmr.cellMoveRestrictions(currentColor!, key, neighbors[nKey])
-                    ? acc + 1
-                    : acc
-            }
-            if (nextCell.tower.currentColor !== currentColor && pieceOrder === currentColor) {
-                const _nextCell = board[nextCell.neighbors[nKey]]
-                return _nextCell?.tower
-                    ? acc
-                    : acc + 1
-            }
-            return acc
-        }, 0)
+    calcAllTowerMoves(key: string, board: IBoardToGame) {
+        // const towerCell = board[key]
+        // const {currentColor} = towerCell.tower!
+        // if (towerCell.tower?.currentType === TowerType.k) {
+        //     const freeMoves = mmr.lookForKingFreeMoves(key, board)
+        //     return freeMoves.length < 8
+        //         ? mmr.checkKingMandatoryMoves(towerCell, board).length + freeMoves.length
+        //         : freeMoves.length
+        // }
+        // const freeMoves = mmr.checkNeighborsIsEmpty(key, board, currentColor!)
+        // return freeMoves.length > 1
+        //     ? freeMoves.length
+        //     : mmr.checkManMandatoryMoves(towerCell, board).length + freeMoves.length
+        return 0
     }
 
     calcMoves = (key: string, board: IBoardToGame) => {
         const {wMoves, bMoves} = this
-        const color = board[key].tower?.currentColor
-        if (color === PieceColor.w) {
-            this.wMoves = wMoves + this.calcAllTowerMoves(key, board, this.pieceOrder)
-        } else if (color === PieceColor.b) {
-            this.bMoves = bMoves + this.calcAllTowerMoves(key, board, this.pieceOrder)
+        const {currentColor, currentType} = board[key].tower!
+        if (currentType === TowerType.k) {
+
+        }
+        if (currentColor === PieceColor.w) {
+            this.wMoves = wMoves + this.calcAllTowerMoves(key, board)
+        } else if (currentColor === PieceColor.b) {
+            this.bMoves = bMoves + this.calcAllTowerMoves(key, board)
         }
     }
 
@@ -137,7 +132,7 @@ export class Evaluator {
 
     advantageInKings = () => {
         const {wKings: wK, bKings: bK} = this
-        return  wK/(bK + .4)
+        return wK/(bK + .4)
     }
 
     evaluateCurrentPosition = (board: IBoardToGame, pieceOrder: PieceColor) => {
@@ -149,8 +144,10 @@ export class Evaluator {
             ? this.advantageInPieces()
             : this.advantageInTowers()
         const kingsNumberValue = this.advantageInKings()
-        // console.warn('eval', moveAdvantage, pieceNumberValue, kingsNumberValue)
-        return moveAdvantage + pieceNumberValue + kingsNumberValue
+
+        const value = moveAdvantage + pieceNumberValue + kingsNumberValue
+        console.warn('eval', this, value, moveAdvantage, pieceNumberValue, kingsNumberValue, pieceOrder, board)
+        return pieceOrder === PieceColor.w ? value : - value
     }
 }
 

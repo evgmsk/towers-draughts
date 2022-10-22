@@ -1,30 +1,10 @@
-import {IBoardCell, IBoardToGame, IMMRResult, PieceColor, TowerType} from '../store/models'
+import {IBoardCell, IBoardToGame, IMMRResult, PieceColor, TowersMap, TowerType} from '../store/models'
 import {copyObj, filterArrayByLength, oppositeColor} from './gameplay-helper-functions'
 import {KingMandatoryMoveResolver as KMMR} from './king-mandatory-move-resolver'
 import {createStartBoard} from './prestart-help-function-constants'
 import {IMove} from "./engine-interfaces";
 
-export interface IEvaluationData {
-    wMoves: IMove[]
-    bMoves: IMove[]
-    bMandatory: IMove[]
-    wMandatory: IMove[]
-    wTowers: number
-    bTowers: number
-    bKings: number
-    wKings: number
-    value?: number
-}
-
 export class MandatoryMovesResolver extends KMMR {
-    _data = {} as IEvaluationData
-    setParentPositionData(data: IEvaluationData) {
-        this.parentPositionData = data
-    }
-
-    get data() {
-        return this._data
-    }
 
     gameVariantMoveContinueRestriction() {
         if (this.GV === 'international') return false
@@ -48,29 +28,28 @@ export class MandatoryMovesResolver extends KMMR {
         return nBoard
     }
 
-    lookForAllMoves = (color: PieceColor, board: IBoardToGame): IMMRResult[] => {
-        const mandatoryMoves = this.lookForMandatoryMoves(color, board)
-        if (mandatoryMoves.length) {
-            return mandatoryMoves
-        }
-        const freeMoves = this.lookForAllFreeMoves(color, board).map((m: string) => {
-            const [from, to] = m.split('-')
-            return {move: m, position: this.makeFreeMove(from, to, board)}
-        })
-        return freeMoves.concat(mandatoryMoves) as IMove[]
-    }
+    // lookForAllMoves = (color: PieceColor, board: IBoardToGame, towers?: TowersMap): IMMRResult[] => {
+    //     const mandatoryMoves = this.lookForMandatoryMoves(color, board, towers)
+    //     if (mandatoryMoves.length) {
+    //         return mandatoryMoves
+    //     }
+    //     const freeMoves = this.lookForAllFreeMoves(color, board, towers).map((m: string) => {
+    //         const [from, to] = m.split('-')
+    //         return {move: m, endPosition: this.makeFreeMove(from, to, board)}
+    //     })
+    //     return freeMoves.concat(mandatoryMoves) as IMove[]
+    // }
 
     checkMandatoryMoveNextStep = (move: IMMRResult): IMMRResult[] => {
-        // console.log('rivalMove', rivalMove.rivalMove)
         const moveArray = move.move.split(':')
         const [from, to] = moveArray.slice(moveArray.length - 2)
         const board = move.position
         const cell = board[to]
         const neighbors = cell.neighbors
         const nextMoves: IMMRResult[] = []
-        const exludedDirection = this.getMoveDirection([to, from])
+        const excludedDirection = this.getMoveDirection([to, from])
         Object.keys(neighbors).filter((dir: string) => (
-            dir !== exludedDirection
+            dir !== excludedDirection
         )).forEach((dir: string) => {
             if (!cell.tower) {
                 console.error('checkManMoveNextStep invalid start cell', move, board, cell, dir)
@@ -88,19 +67,16 @@ export class MandatoryMovesResolver extends KMMR {
         Object.keys(cell!.neighbors).forEach((dir: string) => {
             const startProps = {move: '', position: board, takenPieces: []}
             const move = this.checkManDirection(cell, dir, startProps)
-            // console.warn('move', move, cell)
             if (move) {
                 moves.push(move)
             }
         })
-        // console.log('moves', moves)
         return moves
     }
 
     checkManMandatoryMoves(cell: IBoardCell, board: IBoardToGame): IMMRResult[] {
         let result = [] as IMMRResult[]
         result = this.checkManFirstMandatoryStep(cell, board)
-        console.warn('man moves', cell, result, result.length)
         return !result.length ? result : this.checkMandatoryMoveNextSteps(result)
     }
 
@@ -124,7 +100,6 @@ export class MandatoryMovesResolver extends KMMR {
                 }
                 const position = this.updateBoardOnMandatoryMoveStep(move.split(':'), board)
                 const takenPieces = [...preMove.takenPieces!, takenPiece]
-                // console.warn('next cell', cell, neighborCell, dir, nextCellKey, board, preMove,'res', move, takenPieces,position)
                 return {move, takenPieces, position}
             }
         }
@@ -132,6 +107,7 @@ export class MandatoryMovesResolver extends KMMR {
     }
 
     checkMandatoryMoveNextSteps = (moves: IMMRResult[], cM = [] as IMMRResult[]): IMMRResult[] => {
+        console.warn('next step', moves, cM)
         let completedMoves = cM as IMMRResult[]
         let movesToCheckContinue = [] as IMMRResult[]
         moves.forEach((move: IMMRResult) => {
@@ -170,11 +146,13 @@ export class MandatoryMovesResolver extends KMMR {
         return {...move, position}
     }
 
-    lookForMandatoryMoves = (color: PieceColor, board: IBoardToGame): IMMRResult[] => {
+    lookForMandatoryMoves = (color: PieceColor, board: IBoardToGame, towers?: TowersMap): IMMRResult[] => {
         let result = [] as IMMRResult[]
-        for (let key of Object.keys(board)) {
+        for (let key of Object.keys(towers || board)) {
             const cell = board[key]
-            if (cell.tower?.currentColor !== color) continue
+            if (cell?.tower?.currentColor !== color) {
+                continue
+            }
             if (cell.tower?.currentType === TowerType.k) {
                 const moves = this.checkKingMandatoryMoves(cell, board)
                 if (moves.length) {
@@ -185,13 +163,16 @@ export class MandatoryMovesResolver extends KMMR {
                 if (moves.length) {
                     result = result.concat(moves)
                 }
-                console.warn('before filter', cell, result, result.length)
             }
         }
         result = this.GV === 'towers'
             ? result
             : result.map((m: IMMRResult) => (this.removeTakenPieces(m)))
         return this.GV ===  'international' ? filterArrayByLength(result).cont : result
+    }
+
+    lookForAllMoves(color: PieceColor, board: IBoardToGame, towers?: TowersMap) {
+            return []
     }
 }
 

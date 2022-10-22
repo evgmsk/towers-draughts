@@ -1,4 +1,4 @@
-import { IAnalysisState, IApp, IBoardAndTowers, IBoardOptions, IGameOptionState, IGameState, IUser } from './models';
+import {IAnalysisState, IApp, IBoardOptions, IGameBoard, IGameOptionState, IGameState, IUser} from './models';
 import {InitialGameState, gameReducer} from './game/reducers'
 import {InitialGameOptionsState, gameOptionsReducer} from './gameOptions/reducers'
 import {InitialUserState, userReducer} from './user/reducer'
@@ -34,7 +34,7 @@ export interface IRootState {
   gameOptions: IGameOptionState
   clock: IClockState
   analyze: IAnalysisState
-  board: IBoardAndTowers
+  board: IGameBoard
   boardOptions: IBoardOptions
 }
 

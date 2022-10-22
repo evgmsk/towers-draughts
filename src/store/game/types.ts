@@ -16,7 +16,6 @@ export const GameActions = {
     DECLINE_DRAW: 'DECLINE_DRAW',
     RIVAL_OFFER_DRAW: 'RIVAL_OFFER_DRAW',
     SURRENDER: 'SURRENDER',
-    SET_PORTRAIT: 'SET_PORTRAIT',
     SET_GAME_MODE: 'SET_GAME_MODE',
     CANCEL_GAME: 'CANCEL_GAME',
     NEW_GAME_VS_PC: 'NEW_GAME_VS_PC',
@@ -52,11 +51,6 @@ interface CancelGameAction {
 interface SetGameModeAction {
     type: typeof GameActions.SET_GAME_MODE,
     payload: IGameMode
-}
-
-interface SetPortraitAction {
-    type: typeof GameActions.SET_PORTRAIT,
-    payload: boolean
 }
 
 interface SetGameAction {
@@ -130,7 +124,6 @@ export type GameActionTypes =
 | SetGameStartedAction
 | SetMoveOrderAction
 | UpdateGameStateAction
-| SetPortraitAction
 | SaveHistoryAction
 | SetPlayerMoveOrderAction
 | EndGameAction

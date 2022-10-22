@@ -7,7 +7,8 @@ import { createEmptyBoard} from '../../game-engine/prestart-help-function-consta
 // import { sendMessage } from '../../web-sockets/ws';
 import { GameAnalysisActions } from '../gameAnalysis/types';
 import { BoardOptionActions } from '../boardOptions/types';
-
+import mmr from '../../game-engine/mandatory-move-resolver'
+import {GameVariants} from "../models";
 
  
 function* findRival(action: FindOpponentAction) {
@@ -53,13 +54,14 @@ function* findRival(action: FindOpponentAction) {
 // }
 
 function* workerGameVariant(action: SetGameVariantAction) {
-    if (action.payload === 'international') {
-        yield put({type: BoardOptionActions.SET_BOARD_SIZE, payload: 10})
-        yield put({type: GameAnalysisActions.UPDATE_ANALYSIS_STATE, payload: {currentPosition: createEmptyBoard(10)}})
-    } else {
-        yield put({type: BoardOptionActions.SET_BOARD_SIZE, payload: 8})
-        yield put({type: GameAnalysisActions.UPDATE_ANALYSIS_STATE, payload: {currentPosition: createEmptyBoard(8)}})
-    }
+    console.warn('board size')
+    const size = action.payload === 'international' ? 10 : 8
+    mmr.setProps({GV: action.payload as GameVariants, size})
+    yield put({type: BoardOptionActions.SET_BOARD_SIZE, payload: size})
+    yield put({
+        type: GameAnalysisActions.UPDATE_ANALYSIS_STATE,
+        payload: {currentPosition: createEmptyBoard(size)}
+    })
 }
 
 export default function* watcherPreGame() {

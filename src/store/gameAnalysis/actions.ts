@@ -1,4 +1,4 @@
-import { IAnalysisState, IBoardToGame, IGameResult, IMoveProps} from "../models";
+import {IAnalysisState, IBoardToGame, IGameResult, IMoveProps, PieceColor} from "../models";
 import { GameAnalysisActions, GameAnalysisTypes } from "./types";
 
 
@@ -9,7 +9,14 @@ export function setStartPosition(payload = null) {
     }
 }
 
-export function setBestMoveLine(payload: {move: string, value: number[]}) {
+export function setMoveOrderAction(payload: PieceColor) {
+    return {
+        type: GameAnalysisActions.SET_MOVE_ORDER,
+        payload
+    }
+}
+
+export function setBestMoveLine(payload: {move: string, value: number}[]) {
     return {
         type: GameAnalysisActions.SET_BEST_MOVE_LINE,
         payload
@@ -108,14 +115,7 @@ export function updatePosition(payload: Partial<IMoveProps>): GameAnalysisTypes 
 
 export function downloadGame(payload: IGameResult): GameAnalysisTypes {
     return {
-        type: GameAnalysisActions.DOWNLOAD_GAME,
-        payload
-    }
-}
-
-export function saveGameResult(payload: IGameResult): GameAnalysisTypes {
-    return {
-        type: GameAnalysisActions.SAVE_GAME_RESULT,
+        type: GameAnalysisActions.UPLOAD_GAME,
         payload
     }
 }

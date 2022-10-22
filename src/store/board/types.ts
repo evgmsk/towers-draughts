@@ -1,4 +1,4 @@
-import { IBoardAndTowers, IMoveProps } from "../models";
+import {IGameBoard, IMoveProps} from "../models";
 
 export const BoardActions = {
     CREATE_GAME_BOARD: 'CREATE_GAME_BOARD',
@@ -24,7 +24,7 @@ interface TurnAction {
 
 interface UpdateBoardStateAction {
     type: typeof BoardActions.UPDATE_BOARD_STATE,
-    payload: Partial<IBoardAndTowers>
+    payload: Partial<IGameBoard>
 }
 
 interface CreateGameBoardAction {

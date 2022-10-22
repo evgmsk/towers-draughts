@@ -1,4 +1,4 @@
-import { IBoardAndTowers, IMoveProps } from "../models";
+import { IGameBoard, IMoveProps } from "../models";
 import { BoardActions, BoardActionTypes } from "./types";
 
 
@@ -9,7 +9,7 @@ export function updateBoardSize(payload: number) {
     }
 }
 
-export function updateBoardState(payload: Partial<IBoardAndTowers>) {
+export function updateBoardState(payload: Partial<IGameBoard>) {
     return {
         type: BoardActions.UPDATE_BOARD_STATE,
         payload

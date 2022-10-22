@@ -2,15 +2,18 @@
 
 .game-analyze-menu {
     align-self: flex-end;
-    @include menu-width();
+    @include menu-width(8, 63vw);
     height: 100%;
     @include flex(space-between, center, column);
     .game-analyze-menu_item {
         margin: 5px;
         @include flex(center, center);
-        @include item-size();
+        @include item-size(8, 63vw);
         .material-icons {
             font-size: 1.6rem;
+            &.black-move {
+                color: black;
+            }
         }
         button, div{
             position: relative;

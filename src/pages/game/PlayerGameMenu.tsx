@@ -73,9 +73,10 @@ const GameMenuComponent: React.FC<ConnectedProps<typeof gameMenuConnector>> = (p
         offerDraw()
     }
 
-    const handleAnalizeGame = (e: React.MouseEvent) => {
+    const handleAnalyzeGame = (e: React.MouseEvent) => {
         if (gameMode === 'isPlaying') {
             endGame(reason)
+
             setGameMode('isAnalyzing')
         }
         analyzeLastGame(true)
@@ -93,6 +94,7 @@ const GameMenuComponent: React.FC<ConnectedProps<typeof gameMenuConnector>> = (p
             endGame(reason)
         }
         finishGameSetup(false)
+        analyzeLastGame(true)
        
     }
 
@@ -120,7 +122,7 @@ const GameMenuComponent: React.FC<ConnectedProps<typeof gameMenuConnector>> = (p
                 >
                     <i className="material-icons">settings_applications</i>
                 </li>
-                <li title="analize game" role="button" className="game-menu__item" onClick={handleAnalizeGame}>
+                <li title="analyze game" role="button" className="game-menu__item" onClick={handleAnalyzeGame}>
                     <i className="material-icons">zoom_in</i>
                 </li>
             </ul>
@@ -150,7 +152,7 @@ const GameMenuComponent: React.FC<ConnectedProps<typeof gameMenuConnector>> = (p
                 >
                     <i className="material-icons">settings_applications</i>
                 </li>
-                <li title="analize game" role="button" className="game-menu__item" onClick={handleAnalizeGame}>
+                <li title="analyze game" role="button" className="game-menu__item" onClick={handleAnalyzeGame}>
                     <i className="material-icons">zoom_in</i>
                 </li>
             </ul>

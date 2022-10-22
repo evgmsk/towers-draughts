@@ -1,4 +1,5 @@
 import {IBranch, IChildren, IDeepValue, IMove} from "./engine-interfaces";
+import {copyObj} from "./gameplay-helper-functions";
 
 export interface ITree {[key: string]: any | {children: {[key: string]: any}}}
 
@@ -39,7 +40,12 @@ export class MovesTree extends Tree {
         const {moves, children} = branch
         let best: IMove & {deepValue: IDeepValue}
         const filterMoves = moves.filter(m => {
-            const included = children[m.move] && children[m.move].deepValue.depth >= depth
+            const deepValue = children[m.move] && children[m.move].deepValue
+            if (!deepValue) return null
+            const included = deepValue.depth >= depth
+                && (deepValue.value > 0
+                || deepValue.value > (this.getRoot() as IBranch).deepValue.value)
+            console.warn('included', included, deepValue, copyObj(m), copyObj(children[m.move]))
             if (included) {
                 const deepValue = children[m.move].deepValue
                 best = best || {...m, deepValue}
@@ -88,10 +94,9 @@ export class MovesTree extends Tree {
     }
 
     checkParentBranchUpdate(branch: IBranch) {
-        // console.warn('check branch update', branch, this.tree)
         const {moves, children, deepValue: {depth}} = branch
         if (!moves || !moves.length) {
-            return console.error('no moves', JSON.stringify(branch), this.tree)
+            return console.error('no moves', copyObj(branch), copyObj(this.tree))
         }
         let bestChild = children[moves[0].move]
         if (!bestChild || (bestChild.deepValue.depth < depth && moves.length === 1)) { return }
@@ -105,6 +110,7 @@ export class MovesTree extends Tree {
                 ? node
                 : bestChild
         }
+        console.warn('check branch update', copyObj(branch), copyObj(this.tree), bestChild)
         return bestChild.deepValue
     }
 

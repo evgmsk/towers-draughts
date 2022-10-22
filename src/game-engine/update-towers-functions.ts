@@ -23,26 +23,8 @@ export class TowersUpdateResolver extends BaseMoveResolver {
     previousPosition = createStartBoard(this.size) as IBoardToGame
     callBack: Function = () => {}
 
-    setCalBack = (cb: Function) => {
+    setCallBack = (cb: Function) => {
         this.callBack = cb
-    }
-
-    // animateRivalMove(history: string[], board: IBoardToDraw, reversed: boolean) {
-    //     this.setPositions(board.positionsTree!, history)
-    //     const rivalMove = history.slice(-1)[0]
-    //     const mandatory = rivalMove.includes(':')
-    //     if (mandatory) {
-    //         return this.animateMadatoryMove(rivalMove)
-    //     }
-    //     return this.animateSimpleMove(rivalMove, board, reversed)
-    // }
-
-    animateMadatoryMove(move: string) {
-
-    }
-
-    animateSimpleMove(move: string, board: IBoardToDraw, reversed: boolean) {
-       
     }
 
     relocateTower(from: string, to: string, board: IGameBoard, reversed: boolean) {
@@ -51,7 +33,6 @@ export class TowersUpdateResolver extends BaseMoveResolver {
         const tower = towers[from] as TowerConstructor
         tower.positionInDOM = this.calcTowerPosition(to, cellsMap, cellSize, reversed)
         towers[from] = tower
-        // console.log(tower)
         this.callBack({towers})
     }
 

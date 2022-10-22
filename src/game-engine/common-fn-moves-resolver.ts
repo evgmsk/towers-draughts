@@ -1,6 +1,7 @@
 import { BaseBoardSize } from "../constants/gameConstants";
-import { 
-    CellsMap,
+import {
+    BoardCell,
+    CellsMap, Diagonals,
     GameVariants,
     IBoardCell,
     IBoardToGame,
@@ -13,21 +14,36 @@ import {
     PieceColor,
     TowerConstructor,
     TowersMap,
-    TowerType 
+    TowerType
 } from "../store/models"
 import {  copyObj, crossDirections, oppositeColor } from "./gameplay-helper-functions";
 import { createEmptyBoard } from "./prestart-help-function-constants";
-import {IEvaluationData} from "./mandatory-move-resolver";
+import {IMove} from "./engine-interfaces";
+
+export interface IEvaluationData {
+    freeMoves: IMove[],
+    mandatoryMoves: IMove[],
+    Towers: number,
+    Kings: number,
+    value: number
+}
 
 export class BaseMoveResolver {
     GV: GameVariants = 'towers'
     size: number = BaseBoardSize
-    positionData = {} as IEvaluationData
-    parentPositionData = null as unknown as IEvaluationData
-
+    board = createEmptyBoard(this.size)
+    evData = {
+        white: {} as IEvaluationData,
+        black: {} as IEvaluationData
+    }
     setProps = (props: {GV: GameVariants, size: number}) => {
         this.GV = props.GV
         this.size = props.size
+        this.board = createEmptyBoard(props.size)
+    }
+
+    get data() {
+        return this.evData
     }
 
     checkTowerTypeChanging(to: string, boardSize: number, color: PieceColor, type: TowerType): TowerType {
@@ -62,6 +78,38 @@ export class BaseMoveResolver {
         return interval
     }
 
+    getIntervalWithDraughts(start: string, end: string, towers: TowersMap): IBoardCell[] {
+        if (towers[end]) {
+            console.error('towers', towers, start, end)
+        }
+        const dir = this.getMoveDirection([start, end])
+        let cell = this.board[start]
+        const interval = []
+        while(true) {
+            const nextCellKey = cell!.neighbors[dir]
+            if (!nextCellKey || nextCellKey === end) break
+            cell = this.board[nextCellKey]
+            interval.push(cell)
+        }
+        return interval
+    }
+
+    getDiagonalWithDraughts(direction: string, startCellKey: string, towers: TowersMap): BoardCell[] {
+        let cell = this.board[startCellKey]
+        const diagonal = [cell]
+        while (cell) {
+            const nextCellKey = cell!.neighbors[direction]
+            if (nextCellKey) {
+                const nextCell = this.board[nextCellKey]
+                diagonal.push(nextCell)
+                cell = nextCell
+            } else {
+                break
+            }
+        }
+        return diagonal;
+    }
+
     getDiagonal(direction: string, startCellKey: string, board: IBoardToGame): IBoardCell[] {
         let cell = board[startCellKey]
         const diagonal = [cell]
@@ -78,11 +126,12 @@ export class BaseMoveResolver {
         return diagonal;
     }
 
-    getDiagonals(cell: string, board:  IBoardToGame, preDirected = ''): IDiagonals {
+    getDiagonals(cell: string,
+                 board:  IBoardToGame, preDirected = ''): IDiagonals {
         const neighbors = board[cell]!.neighbors
         const diagonals = {} as IDiagonals
-        const availibleDirections = (d: string) => (!!preDirected ? crossDirections(preDirected)[d] : true)
-        Object.keys(neighbors).filter((d: string) => availibleDirections(d)).forEach((dir: string) => {
+        const availableDirections = (d: string) => (!!preDirected ? crossDirections(preDirected)[d] : true)
+        Object.keys(neighbors).filter((d: string) => availableDirections(d)).forEach((dir: string) => {
             diagonals[dir] = this.getDiagonal(dir, cell, board)
         })
         return diagonals
@@ -147,7 +196,7 @@ export class MoveResolveCommons extends BaseMoveResolver {
         }, [])
     }
 
-    lookForTowerMoves = (boardKey: string, board: IBoardToGame, color: PieceColor): string[] => {
+    lookForTowerFreeMoves = (boardKey: string, board: IBoardToGame, color: PieceColor): string[] => {
         const tower = board[boardKey].tower
         if (tower!.currentType === TowerType.m) {
             return this.checkNeighborsIsEmpty(boardKey, board, color)
@@ -156,15 +205,16 @@ export class MoveResolveCommons extends BaseMoveResolver {
         }
     }
 
-    lookForAllFreeMoves = (color: PieceColor, board: IBoardToGame): string[] => {
+    lookForAllFreeMoves = (color: PieceColor, board: IBoardToGame, towers?: TowersMap): string[] => {
         let result: string[] = []
-        for (let key of Object.keys(board)) {
+        for (let key of Object.keys(towers || board)) {
             const cell = board[key]
-            if(cell.tower?.currentColor === color) {
-                const moves = this.lookForTowerMoves(key, board, color)
-                if (moves.length) {
-                    result = [...result, ...moves]
-                }
+            if (cell.tower?.currentColor !== color) {
+                continue
+            }
+            const moves = this.lookForTowerFreeMoves(key, board, color)
+            if (moves.length) {
+                result = result.concat(moves)
             }
         }
         return result
@@ -221,18 +271,6 @@ export class MoveResolveCommons extends BaseMoveResolver {
         }
         return _board
     }
-
-    getBoardFromTowers = (towers: TowersMap): IBoardToGame => {
-        const board = createEmptyBoard(this.size)
-        Object.keys(towers).forEach((key: string) => {
-            const value = towers[key]
-            const {wPiecesQuantity, bPiecesQuantity, currentColor, currentType} = value
-            if (!key.includes(' ')) {
-                 board[key].tower = {wPiecesQuantity, bPiecesQuantity, currentColor, currentType}
-            }
-        })
-        return board
-    }
     
     getNewOrder = (props: Partial<IGameState>): IMoveOrder => {
         const newPieceOrder = oppositeColor(props.moveOrder!.pieceOrder)
@@ -281,12 +319,13 @@ export class MoveResolveCommons extends BaseMoveResolver {
         const color = tower.currentColor
         const possibleMoves =  {} as CellsMap
         const cellNeighbors = board![key]!.neighbors
-        Object.values(cellNeighbors!).forEach((k: string) => {
-            const cell = board![k] 
-            const [towerLine, neighborLine] = [parseInt(key.slice(1)), parseInt(k.slice(1))]
+        Object.keys(cellNeighbors!).forEach((k: string) => {
+            const cellKey = cellNeighbors[k]
+            const cell = board![cellKey]
+            const [towerLine, neighborLine] = [parseInt(key.slice(1)), parseInt(cellKey.slice(1))]
             if ((color === PieceColor.b && !cell!.tower && towerLine > neighborLine)
                 || (color === PieceColor.w && !cell!.tower && towerLine < neighborLine)) {
-                possibleMoves[k] = cellsMap[k] as ITowerPosition
+                possibleMoves[cellKey] = cellsMap[cellKey] as ITowerPosition
             }
         })
         return possibleMoves
@@ -300,7 +339,8 @@ export class MoveResolveCommons extends BaseMoveResolver {
     lookForKingFreeMoves(cellKey: string, board: IBoardToGame): string[] {
         const diagonals = this.getDiagonals(cellKey, board)
         let moves = [] as string[]
-        Object.values(diagonals).forEach((diag: IBoardCell[]) => {
+        Object.keys(diagonals).forEach((key: string) => {
+            const diag = diagonals[key]
             moves = moves.concat(this.checkDiagonalForKingMove(diag))
         })
         return moves

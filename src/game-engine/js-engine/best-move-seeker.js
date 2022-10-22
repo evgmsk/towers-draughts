@@ -395,13 +395,13 @@ export class BestMoveSeeker {
     lookForUnevaluatedForward = (key) => {
         const branch = this.moveBranchesTree.get(key)
         if (!branch) {
-            console.error('unevaluted position not found', )
+            console.error('unevaluted endPosition not found', )
             throw new Error('WAF')
         }
         const {moves, engineMoveLast} = branch
         const unevaluatedMoves = moves.filter(m => Math.abs(m.branchValue) === 100)
         if (unevaluatedMoves.length && !engineMoveLast) {
-            console.log('unevaluated position found', branch)
+            console.log('unevaluated endPosition found', branch)
             return key
         }
         if (moves.length) {

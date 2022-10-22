@@ -5,7 +5,7 @@ $dark-square-back: #5b5a54;
 $light-square-back: #cacfc0;
 $main-bg-color: lighten(rgb(73, 65, 39), 70%);
 $last-move-highlight: rgba(4, 71, 71, 0.5);
-$avaliable-moves-highlight: royalblue;
+$avaliable-moves-highlight: #7a83a9;
 $success-message-back-color: rgb(2, 83, 2);
 $error-message-back-color: rgb(85, 12, 3);
 $modal-win-bg: #1a3b1c;
@@ -214,9 +214,9 @@ $beforeTop: -8px;
   }
 }
 
-@mixin checkerSize($bs: 8, $m: .7) {
+@mixin checkerSize($bs: 8, $m: .7, $p: $device) {
   @media screen and  (min-aspect-ratio: 2/10) {
-    $size: $device / $bs * $m;
+    $size: $p / $bs * $m;
     width: $size;
     height: $size;
   }
@@ -237,10 +237,10 @@ $beforeTop: -8px;
   }
 }
 
-@mixin checker($bs: 8, $m: .67) {
+@mixin checker($bs: 8, $m: .67, $p: $device) {
   position: absolute;
   border-radius: 50%;
   cursor: pointer;
   transition: all .3s;
-  @include checkerSize($bs, $m); 
+  @include checkerSize($bs, $m, $p: $device);
 }

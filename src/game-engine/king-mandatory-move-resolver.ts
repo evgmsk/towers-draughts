@@ -5,21 +5,17 @@ import {MoveResolveCommons as MRC} from "./common-fn-moves-resolver"
 export class KingMandatoryMoveResolver extends MRC {
 
     checkKingMandatoryMoves(cell: IBoardCell, board: IBoardToGame): IMMRResult[] {
-        let moves = [] as IMMRResult[]
-        moves = this.checkFirstKingDiagonals(cell, board)
-        if (!moves.length) {
-            return moves
-        }
-        return this.checkKingNextSteps(moves)
+        const moves = this.checkFirstKingDiagonals(cell, board)
+        return !moves.length ? moves : this.checkKingNextSteps(moves)
     }
 
     checkFirstKingDiagonals(cell: IBoardCell, board: IBoardToGame): IMMRResult[] {
         let moves = [] as IMMRResult[]
         const diagonals = this.getDiagonals(cell!.boardKey, board)
-        Object.values(diagonals)
-        .forEach((diag: IBoardCell[]) => {
+        Object.keys(diagonals).forEach((key: string) => {
+            const diag = diagonals[key]
             const firstMove = {move: `${cell.boardKey}`, position: board, takenPieces: []}
-            const _moves = this.checkDiagonalToMadatoryMove(diag, firstMove)
+            const _moves = this.checkDiagonalToMandatoryMove(diag, firstMove)
             if (_moves.length) {
                 moves = [...moves, ..._moves]
             }
@@ -29,34 +25,33 @@ export class KingMandatoryMoveResolver extends MRC {
 
     checkKingNextSteps(moves: IMMRResult[], cM: IMMRResult[] = []): IMMRResult[] {
         let movesToCheckContinue: IMMRResult[] = []
-        let compleatedMoves = cM
+        let completedMoves = cM
         moves.forEach((m: IMMRResult) => {
             const nextStepResult = this.checkNextMoveStepDirections(m)
             if (nextStepResult.length) {
                 movesToCheckContinue = movesToCheckContinue.concat(nextStepResult)
             } else if (moves.filter(_m => _m.move.startsWith(m.move)).length === 1) {
-                compleatedMoves = compleatedMoves.concat(m)
+                completedMoves = completedMoves.concat(m)
             }
         })
-        // console.log(movesToCheckContinue)
         if (!movesToCheckContinue.length) {
-            return compleatedMoves
+            return completedMoves
         } else {
-            return this.checkKingNextSteps(movesToCheckContinue, compleatedMoves)
+            return this.checkKingNextSteps(movesToCheckContinue, completedMoves)
         }
     }
 
-    checkIfDiagonalNotFit(diag: IBoardCell[], color: PieceColor): boolean {
+    checkIfDiagonalIsSuitableToMandatoryMove(diag: IBoardCell[], color: PieceColor): boolean {
         return diag.length < 3
             || !diag.filter((cell: IBoardCell) => cell.tower?.currentColor !== color).length
             || diag[1].tower?.currentColor === color
             || diag[2].tower?.currentColor === color
     }
 
-    checkDiagonalToMadatoryMove(diag: IBoardCell[], move: IMMRResult): IMMRResult[] {
+    checkDiagonalToMandatoryMove(diag: IBoardCell[], move: IMMRResult): IMMRResult[] {
         const color = diag[0].tower!.currentColor
         let resultMoves = [] as IMMRResult[]
-        if (this.checkIfDiagonalNotFit(diag, color as PieceColor)) {
+        if (this.checkIfDiagonalIsSuitableToMandatoryMove(diag, color as PieceColor)) {
             return resultMoves
         }
         let i = 1
@@ -69,26 +64,28 @@ export class KingMandatoryMoveResolver extends MRC {
             const takenPiece = diag[i].boardKey
             const to = nextCell.boardKey
             const notTaken = !move.takenPieces?.includes(takenPiece)
+            let nMove, position, takenPieces
             if (tower && !nextCell.tower && tower.currentColor !== color && notTaken) {
                 if (!resultMoves.length) {
-                    const nMove = `${move.move}:${to}`
-                    const position = this.updateBoardOnMandatoryMoveStep(nMove.split(':'), move.position)
-                    const takenPieces = [...move.takenPieces!, takenPiece]
-                    resultMoves.push({ move: nMove, position, takenPieces})
+                    nMove = `${move.move}:${to}`
+                    const moveArr = move.move.split(':').concat(to)
+                    position = this.updateBoardOnMandatoryMoveStep(moveArr, move.position)
+                    takenPieces = move.takenPieces!.concat(takenPiece)
                 } else {
                     const last = resultMoves.slice(-1)[0]
-                    const takenPieces = [...last.takenPieces!, takenPiece]
-                    const nMove = `${last.move}:${to}`
-                    const position = this.updateBoardOnMandatoryMoveStep(nMove.split(':'), last.position)
-                    resultMoves.push({move: nMove, position, takenPieces})
+                    takenPieces = last.takenPieces!.concat(takenPiece)
+                    nMove = `${last.move}:${to}`
+                    const moveArr = last.move.split(':').concat(to)
+                    position = this.updateBoardOnMandatoryMoveStep(moveArr, last.position)
                 }
-                i += 2 
+                i += 2
+                resultMoves.push({move: nMove, position, takenPieces})
             } else {
                 if (!tower && resultMoves.length) {
                     const start = resultMoves[0].move!.split(':').slice(0, -1).join(':')
-                    const takenPieces = resultMoves[0].takenPieces
-                    const nMove = `${start}:${diag[i].boardKey}`
-                    const position = this.updateBoardOnMandatoryMoveStep(nMove.split(':'), move.position)
+                    takenPieces = resultMoves[0].takenPieces
+                    nMove = `${start}:${diag[i].boardKey}`
+                    position = this.updateBoardOnMandatoryMoveStep(nMove.split(':'), move.position)
                     resultMoves.push({move: nMove, position, takenPieces})
                 }
                 i += 1
@@ -104,7 +101,6 @@ export class KingMandatoryMoveResolver extends MRC {
                 resultMoves.push({move: nMove, position, takenPieces})
             }
         }
-       
         return resultMoves
     }
 
@@ -118,11 +114,12 @@ export class KingMandatoryMoveResolver extends MRC {
         }
         const diagonals = this.getDiagonals(cellKey, board, direction) as IDiagonals
         let result = [] as IMMRResult[]
-        Object.values(diagonals).forEach((diag: IBoardCell[]) => {
+        Object.keys(diagonals).forEach((key: string) => {
+            const diag = diagonals[key]
             if (!diag[0].tower) {
                 console.error('invalid diagonal', diag, move)
             }
-            const moves = this.checkDiagonalToMadatoryMove(diag, move)
+            const moves = this.checkDiagonalToMandatoryMove(diag, move)
             if (moves.length) {
                 result = [...result, ...moves]
             }
@@ -131,6 +128,4 @@ export class KingMandatoryMoveResolver extends MRC {
     }
 }
 
-const kmmr = new KingMandatoryMoveResolver()
-
-export default kmmr
+export default new KingMandatoryMoveResolver()

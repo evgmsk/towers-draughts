@@ -11,8 +11,7 @@ import {
 } from '../models';
 import {GameActions, GameActions as GM, GameActionTypes, GameActionTypes as GMA} from '../game/types'
 import {ClockActions} from '../clock/types'
-// import {sendMessage} from '../../web-sockets/ws'
-// import { IRootState } from '../rootState&Reducer';
+
 import { oppositeColor } from '../../game-engine/gameplay-helper-functions';
 // import { Axios, setAuthorizationHeader } from '../../common/axios';
 import { GameAnalysisActions } from '../gameAnalysis/types';
@@ -23,15 +22,12 @@ import { AppActions } from '../app/types';
 import { BoardActions } from '../board/types';
 import {GameOptionActions as GOA} from '../gameOptions/types'
 import {BoardOptionActions as BOA} from '../boardOptions/types'
-import mmr from '../../game-engine/mandatory-move-resolver'
-import tur from '../../game-engine/update-towers-functions'
 
-function* workerNewGameVSPlayer(action: GMA) {
+function* workerNewGameVSPlayer() {
     yield put({type: GOA.WAIT_RIVAL, payload: false})
     const { 
         game: {gameMode},
-        boardOptions: {boardSize},
-        gameOptions: {gameVariant, timing, playerColor}
+        gameOptions: {timing, playerColor}
     } = yield select()
     if (gameMode === 'isPlaying') {
         yield put({type: GameActions.SET_GAME, payload: InitialGameState})
@@ -71,8 +67,7 @@ function* workerNewGameVSPlayer(action: GMA) {
 
 function* workerNewGameVsPC() {
     const {
-        gameOptions: {playerColor, rivalLevel = 1, gameVariant},
-        boardOptions: {boardSize},
+        gameOptions: {playerColor, rivalLevel = 1},
         user: {name, rating},
         game: {gameMode}
     } = yield select()
@@ -204,6 +199,7 @@ function* resolveEndGame(winner: PieceColor | 'draw', reason: EndGameConditions)
         game: {history, white, black, playerColor},
     } = yield select(state => state)
     const {
+        game: {moveOrder: {pieceOrder}},
         gameOptions: {gameVariant, timing: {timeToGame, adds}}, 
         boardOptions: {boardSize}
     } = yield select()
@@ -220,8 +216,10 @@ function* resolveEndGame(winner: PieceColor | 'draw', reason: EndGameConditions)
             boardSize,
             date: new Date()
         }
-        yield put({type: GameAnalysisActions.SAVE_GAME_RESULT, payload: gameResult})
+        // yield put({type: GameAnalysisActions.SAVE_GAME_RESULT, payload: gameResult})
         const analysisPayload = {
+            gameResult,
+            pieceOrder,
             movesMainLine: history,
             lastMove: {index: history.length - 1, move: history.slice(-1)[0]}
         }

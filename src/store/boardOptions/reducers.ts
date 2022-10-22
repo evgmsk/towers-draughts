@@ -7,7 +7,7 @@ import { BoardOptionActions, BoardOptionActionTypes } from "./types"
 
 
 export const InitialBoardOptionsState: IBoardOptions = {
-    boardTheme: 'standart',
+    boardTheme: 'standard',
     withOutLegend: false,
     legendsInside: false,
     boardNotation: BoardNotation.r,

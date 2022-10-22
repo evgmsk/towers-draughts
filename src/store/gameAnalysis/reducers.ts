@@ -17,7 +17,7 @@ export const InitialGameAnalysisState: IAnalysisState = {
 }
 
  export function analyzeReducer(state = InitialGameAnalysisState, action: GameAnalysisTypes): IAnalysisState {
-    switch(action.type) {
+     switch(action.type) {
         case GameAnalysisActions.REMOVE_PIECE: {
             return {...state, removePiece: action.payload as boolean}
         }
@@ -37,13 +37,15 @@ export const InitialGameAnalysisState: IAnalysisState = {
         case(GameAnalysisActions.SETTING_BOARD): {        
             return {...state, settingPosition: action.payload as boolean}
         }
-        case(GameAnalysisActions.ANALYZE_LAST_GAME): {
-            if (action.payload) {
-                return {...state, analyzeLastGame: action.payload as boolean, settingPosition: false}
-            }    
-            return {...state, analyzeLastGame: action.payload as boolean}
+        case GameAnalysisActions.SET_MOVE_ORDER: {
+            return {...state, pieceOrder: action.payload as PieceColor}
         }
-        case(GameAnalysisActions.DOWNLOAD_GAME): {        
+        case(GameAnalysisActions.ANALYZE_LAST_GAME): {
+            return action.payload
+                ? {...state, analyzeLastGame: action.payload as boolean, settingPosition: false}
+                : {...state, analyzeLastGame: action.payload as boolean}
+        }
+        case(GameAnalysisActions.UPLOAD_GAME): {
             return {...state, gameResult: action.payload as IGameResult}
         }
         case GameAnalysisActions.UPDATE_ANALYSIS_STATE: {

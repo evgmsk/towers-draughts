@@ -1,9 +1,9 @@
 import {evaluator} from './position-evaluator';
-import {IBranch, IDeepValue, IMove, ISeekerProps} from './engine-interfaces';
-import {IBoardToGame, IMMRResult, PieceColor} from '../store/models';
+import {IBestMove, IBranch, IDeepValue, IMove, ISeekerProps} from './engine-interfaces';
+import {IBoardToGame, IMMRResult, PieceColor, TowersMap} from '../store/models';
 import mmr from './mandatory-move-resolver';
 import movesTree from './moves-tree';
-import {oppositeColor} from "./gameplay-helper-functions";
+import {copyObj, oppositeColor} from "./gameplay-helper-functions";
 
 const FirstMoves: {[key:string]: string[]} = {
     international: ['d4-e5', 'd4-e5', 'd4-e5',  'd4-c5',  'd4-c5',  'h4-g5',  'h4-i5'],
@@ -23,28 +23,31 @@ export class BestMoveSeeker implements ISeekerProps {
     maxDepth = 5
     startDepth = 5
     position = null as unknown as IBoardToGame
+    towers = null as unknown as TowersMap
     movesHistory = [] as string[]
     pieceOrder = PieceColor.w
-    game = true
+    game = false
     evaluatingLine: string[] = []
     valueIncreased?: boolean
     bestMove?: IMMRResult | null
-    parentBranch?:  IBranch
+    parentBranch = null as unknown as IBranch
     lastBranch?: IBranch
 
     setState = (props: ISeekerProps) => {
-        this.maxDepth = props.maxDepth || 5
+        this.maxDepth = props.maxDepth || props.game ? 5 : 3
         this.startDepth = props.startDepth || 3
-        this.game = props.game || true
+        this.game = props.game
         this.movesHistory = props.movesHistory || []
-        this.pieceOrder = PieceColor.w
+        this.pieceOrder = props.pieceOrder || PieceColor.w
+        this.parentBranch = props.parentBranch || {deepValue: {value: 0}} as IBranch
+        console.warn('state', copyObj(this))
     }
 
     setBestMoveCB = (cb: Function) => {
-        console.log('set cb')
         this.bestMoveCB = cb
     }
     setBestLineCB = (cb: Function) => {
+        console.warn('line cb', copyObj(this), this.bestLineCB)
         this.bestLineCB = cb
     }
 
@@ -59,7 +62,7 @@ export class BestMoveSeeker implements ISeekerProps {
     debutResolver = () => {
         const _moves = this.movesHistory.length < 1
             ? FirstMoves[mmr.GV]
-            : mmr.lookForAllFreeMoves(this.pieceOrder, this.position)
+            : mmr.lookForAllFreeMoves(this.pieceOrder, this.position, this.towers)
         const pieceOrder = oppositeColor(this.pieceOrder)
         const move = _moves[Math.floor(Math.random() * _moves.length)]
         const [from, to] = move.split('-')
@@ -89,18 +92,23 @@ export class BestMoveSeeker implements ISeekerProps {
     }
 
     updateAfterRivalMove = (props: {history: string[], cP: IBoardToGame, pieceOrder: PieceColor}) => {
-        this.updateState(props)
+        const {history, cP, pieceOrder} = props
+        this.movesHistory = history
+        this.position = cP
+        this.pieceOrder = pieceOrder
         const lastRivalMove = this.movesHistory.slice(-1)
         if (this.movesHistory.length < debutStage && this.game) {
             return this.debutResolver()
         }
         const actualBranch = this.getActualBranch(lastRivalMove)
+        // console.warn('update state', copyObj(this), actualBranch)
         const availableMovesLength = actualBranch.moves.length
+        this.parentBranch = movesTree.getRoot() as IBranch || this.parentBranch
+        movesTree.addRoot(actualBranch)
+        console.warn('update state', copyObj(movesTree.tree), this.parentBranch, actualBranch)
         if (!availableMovesLength) {
             return this.finalizeMove()
         }
-        this.parentBranch = movesTree.getRoot() as IBranch
-        movesTree.addRoot(actualBranch)
         if (availableMovesLength === 1) {
             const {move, position} = actualBranch.moves[0]
             const branch = this.getActualBranch([move], position, oppositeColor(this.pieceOrder))
@@ -110,9 +118,9 @@ export class BestMoveSeeker implements ISeekerProps {
     }
 
     startEvaluation = () => {
+        console.log('start', copyObj((movesTree.getRoot() as IBranch).moves), this)
         const root = movesTree.getRoot() as IBranch
         const {move, position, pieceOrder} = this.lookUnevaluatedForward(root)
-        console.log('start')
         if (!move || !position || !pieceOrder) {
             const move = this.getBestMove(root)
             return new Promise<IMove>(rs => {
@@ -129,6 +137,9 @@ export class BestMoveSeeker implements ISeekerProps {
     }
 
     resolveStepForwardForCurrentBranch = (branch: IBranch): any => {
+        if (!branch.moves.length) {
+            return setTimeout(this.lookUnevaluatedBackward)
+        }
         let unevalMove = this.lookUnevaluatedForward(branch)
         if (!unevalMove.move) {
             const root = movesTree.getRoot() as IBranch
@@ -162,6 +173,7 @@ export class BestMoveSeeker implements ISeekerProps {
 
     lookUnevaluatedForward = (branch: IBranch): Partial<IMove> => {
         const {moves, pieceOrder} = branch
+
         const {move, position} = moves[moves.length - 1]
         let unEval = branch.children[move]
         const newPieceOrder = oppositeColor(pieceOrder)
@@ -187,47 +199,75 @@ export class BestMoveSeeker implements ISeekerProps {
         return this.lookUnevaluatedForward(unEval)
     }
 
-    determineBestMovesLine() {
-
+    determineBestMovesLine(move?: IMMRResult) {
+        console.warn('moves line', move, this.evaluatingLine, copyObj(movesTree.tree))
+        const line1 = [] as {move: string, value: number}[]
+        // const line2 = [] as {move: string, value: number}[]
+        let i = 0
+        if (!this.evaluatingLine.length && !move?.move) {
+            console.warn('line ready no moves')
+            const value = evaluator.evaluateCurrentPosition(this.position, this.pieceOrder)
+            return this.bestLineCB([{
+                move: 'not moves',
+                value
+            }])
+        }
+        let currentNode = movesTree.getRoot() as IBranch
+        const value = currentNode.deepValue.value
+        while(currentNode && currentNode.moves.length) {
+            const bestMove = this.getBestMove(currentNode)
+            currentNode = currentNode.children[bestMove.move]
+            line1.push({move: bestMove.move, value})
+        }
+        console.warn('line ready', line1, copyObj(movesTree.tree))
+        this.bestLineCB(line1)
     }
 
     finalizeMoveWithNewRoot = (branch: IBranch, moveProps: IMMRResult) => {
         movesTree.addRoot(branch)
-        console.log('fin 1', movesTree.tree, moveProps, this)
+        console.log('fin 1', copyObj(movesTree.getRoot().children), moveProps)
         return this.game
             ? this.bestMoveCB(moveProps)
-            : this.determineBestMovesLine()
+            : this.determineBestMovesLine(moveProps)
     }
 
     finalizeMove = (moveProps?: IMMRResult) => {
         moveProps = moveProps || {move: '', position: {}}
         this.evaluatingLine.length = 0
-        if (moveProps.move) {
+        if (moveProps.move && this.game) {
             movesTree.updateRoot(moveProps.move)
         }
-        console.log('fin 2', movesTree.tree, moveProps, this)
+        console.log('fin 2', copyObj(movesTree.getRoot() || {}), moveProps, this.game)
         return this.game
             ? this.bestMoveCB(moveProps)
-            : this.determineBestMovesLine()
+            : this.determineBestMovesLine(moveProps)
 
     }
 
-    getBestMove = (props: IMove[] | IBranch) => {
+    getBestMove = (props: IMove[] | IBranch): IBestMove => {
         if (Array.isArray(props)) {
+            if (!props.length) {
+                console.error('best move invalid props', props)
+            }
             const bestMove = props.slice(0, -1).reduce((acc, move) => {
                 return acc.baseValue > move.baseValue ? acc : move
             }, props[props!.length - 1])
-            const deepValue = {depth: 0, value: bestMove.baseValue}
+            const deepValue = {depth: 0, value: bestMove?.baseValue}
             return {move: bestMove.move, position: bestMove.position, deepValue}
         }
         const {moves, children} = props
         const acc = children[moves.slice(-1)[0].move] as IBranch
+        if (!acc) {
+            return this.getBestMove(moves)
+        }
         const bestMove = moves.slice(0, -1).reduce((acc: IBranch, move) => {
-            const condition = children[move.move].deepValue.depth >= acc.deepValue.depth
-                    && acc.deepValue.value < children[move.move].deepValue.value
+            const condition = children[move.move]
+                && children[move.move].deepValue.depth >= acc.deepValue.depth
+                    && children[move.move] && acc.deepValue.value < children[move.move].deepValue.value
             acc = condition ? children[move.move] : acc
             return acc
         }, acc)
+        // console.warn('best m', bestMove, props, acc)
         return {
             move: bestMove.rivalMove,
             position: bestMove.position,
@@ -236,24 +276,21 @@ export class BestMoveSeeker implements ISeekerProps {
     }
 
     getAvailableMoves = (pos: IBoardToGame, pieceOrder: PieceColor) => {
-        console.log('avmoves', pieceOrder)
-        return mmr.lookForAllMoves(pieceOrder, pos).map((move: IMMRResult) => {
-            const posValue = evaluator.evaluateCurrentPosition(move.position, oppositeColor(this.pieceOrder))
+        return mmr.lookForAllMoves(pieceOrder, pos, this.towers).map((move: IMMRResult) => {
+            const baseValue = evaluator.evaluateCurrentPosition(move.position, pieceOrder)
             return {
                 move: move.move,
                 position: move.position,
-                baseValue: pieceOrder === PieceColor.w ? posValue : -posValue
+                baseValue
             }
         })
     }
 
     defineNewBranch = (rivalMove: string, pos: IBoardToGame, pieceOrder: PieceColor, moves: IMove[]) => {
-        let deepValue: IDeepValue
+        let deepValue: IDeepValue = { depth: this.maxDepth, value: -100 }
         if (moves.length) {
             const bestMove = this.getBestMove(moves)
-            deepValue = { ...bestMove.deepValue, value: -bestMove.deepValue.value }
-        } else {
-            deepValue = { depth: this.maxDepth, value: 50 }
+            deepValue = {...bestMove.deepValue, value: bestMove.deepValue.value}
         }
         return {
             moves,
@@ -286,9 +323,10 @@ export class BestMoveSeeker implements ISeekerProps {
 
     lookUnevaluatedBackward = (): IMove | Promise<IMove> => {
         const branch = this.determineBackwardBranch()
-        // console.warn('look backward', branch)
         if (branch.rivalMove === 'check root') {
-            return this.resolveRootCheckNeeded(movesTree.getRoot() as IBranch)
+            const root = movesTree.getRoot() as IBranch
+            console.warn('check root', copyObj(root.children), branch)
+            return this.resolveRootCheckNeeded(root)
         }
         const unevalMoves = movesTree.filterBelowOfDepth(branch)
         this.lastBranch = branch
@@ -305,18 +343,22 @@ export class BestMoveSeeker implements ISeekerProps {
             console.error('evaluation line not match last branch', this)
         }
         const lastValue = this.lastBranch!.deepValue.value
-        // console.warn('determine evolution of value', sameOrder, lastValue, this, movesTree)
         const root = movesTree.getRoot() as IBranch
         const valueIncreased = sameOrder
             ? lastValue > root.deepValue.value
             : lastValue > this.parentBranch!.deepValue.value
+        console.warn('determine evolution ',
+            sameOrder,
+            valueIncreased,
+           this.lastBranch?.rivalMove
+        )
         if ((!sameOrder && !valueIncreased) || (sameOrder && !valueIncreased)) {return 1}
         if ((!sameOrder && valueIncreased) || (sameOrder && valueIncreased)) {return 2}
     }
 
     determineBackwardBranch = (): IBranch => {
         const valueOrder = this.determineValueOrderCase()
-        // console.warn('value, order', valueOrder)
+        console.warn('value, order', valueOrder)
         switch (valueOrder) {
             case 1: {
                 this.evaluatingLine = this.evaluatingLine.slice(0, -2)
