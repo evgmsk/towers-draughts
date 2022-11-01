@@ -26,7 +26,6 @@ export const InitialBoardState: IGameBoard = {
 }
 
  export function boardReducer(state = InitialBoardState, action: BoardActionTypes) {
-     console.warn(state, action)
     switch(action.type) {
         case BoardActions.UPDATE_POSITION_TREE:
             return {...state, positionsTree: action.payload as IPositionsTree}

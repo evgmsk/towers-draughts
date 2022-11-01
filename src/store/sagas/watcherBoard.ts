@@ -6,7 +6,7 @@ import {
     createEmptyBoardForCustomPosition,
     createStartBoardToDraw,
     createAnalysisBoard,
-    oppositColor
+    oppositeColor
 } from '../../game-engine/prestart-help-function-constants';
 import { GameOptionActions,  GameOptionActionTypes} from '../gameOptions/types';
 import tur from '../../game-engine/update-towers-functions'
@@ -63,24 +63,24 @@ function* animateMandatoryTowerStep(props: Partial<IMoveProps>, step = 0) {
     const [from, to] = move.split(':').slice(step)
     const totalSteps = takenPieces!.length 
     const capturedTowerKey = takenPieces![step]
-        let tower = position[capturedTowerKey].tower as TowerConstructor
-        tur.relocateTower(from, to, board, reversedBoard)
-        yield delay(AnimationDuration / totalSteps / 2)
-        let state: IRootState = yield select()
-        let towers = copyObj(state.board.towers) as TowersMap
-        if (tower) {
-            tower =  new TowerConstructor(tower)
-            tower.onBoardPosition = capturedTowerKey
-            tower.positionInDOM = tur.calcTowerPosition(capturedTowerKey, board.cellsMap, board.cellSize, reversedBoard)
-            towers[capturedTowerKey] = tower
-        } else {
-            delete towers[capturedTowerKey]
-        }
-        yield put({type: BoardActions.UPDATE_BOARD_STATE, payload: {towers}})
-        yield delay(AnimationDuration / totalSteps / 2)
-        state = yield select()
-        towers = tur.finalizeMandatoryMoveStep(from, to, state.board, reversedBoard) as TowersMap
-        yield put({type: BoardActions.UPDATE_BOARD_STATE, payload: {towers}})
+    let tower = position[capturedTowerKey].tower as TowerConstructor
+    tur.relocateTower(from, to, board, reversedBoard)
+    yield delay(AnimationDuration / totalSteps / 2)
+    let state: IRootState = yield select()
+    let towers = copyObj(state.board.towers) as TowersMap
+    if (tower) {
+        tower =  new TowerConstructor(tower)
+        tower.onBoardPosition = capturedTowerKey
+        tower.positionInDOM = tur.calcTowerPosition(capturedTowerKey, board.cellsMap, board.cellSize, reversedBoard)
+        towers[capturedTowerKey] = tower
+    } else {
+        delete towers[capturedTowerKey]
+    }
+    yield put({type: BoardActions.UPDATE_BOARD_STATE, payload: {towers}})
+    yield delay(AnimationDuration / totalSteps / 2)
+    state = yield select()
+    towers = tur.finalizeMandatoryMoveStep(from, to, state.board, reversedBoard) as TowersMap
+    yield put({type: BoardActions.UPDATE_BOARD_STATE, payload: {towers}})
 }
 
 function* animateMandatoryStep(props: Partial<IMoveProps>, step = 0) {
@@ -165,7 +165,7 @@ function* workerUndo() {
     } else {
         gamePayload = {
             history: history.slice(0, -1),
-            moveOrder: {pieceOrder: oppositColor(pieceOrder), playerTurn: name}
+            moveOrder: {pieceOrder: oppositeColor(pieceOrder), playerTurn: name}
         }
         const currentPosition = positionsTree.get(gamePayload.history!.join('_'))
         const _towers = tur.updateTowersToBoard(currentPosition)

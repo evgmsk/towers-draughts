@@ -1,6 +1,15 @@
 import {evaluator} from './position-evaluator';
-import {IBestMove, IBranch, IDeepValue, IMove, ISeekerProps} from './engine-interfaces';
-import {IBoardToGame, IMMRResult, PieceColor, TowersMap} from '../store/models';
+import {
+    IBoardToGame,
+    IMMRResult,
+    PieceColor,
+    TowersMap,
+    IBestMove,
+    IBranch,
+    IDeepValue,
+    IMove,
+    ISeekerProps
+} from '../store/models';
 import mmr from './mandatory-move-resolver';
 import movesTree from './moves-tree';
 import {copyObj, oppositeColor} from "./gameplay-helper-functions";
@@ -203,7 +212,7 @@ export class BestMoveSeeker implements ISeekerProps {
         console.warn('moves line', move, this.evaluatingLine, copyObj(movesTree.tree))
         const line1 = [] as {move: string, value: number}[]
         // const line2 = [] as {move: string, value: number}[]
-        let i = 0
+        // let i = 0
         if (!this.evaluatingLine.length && !move?.move) {
             console.warn('line ready no moves')
             const value = evaluator.evaluateCurrentPosition(this.position, this.pieceOrder)

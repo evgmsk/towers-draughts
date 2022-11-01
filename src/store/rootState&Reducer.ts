@@ -1,4 +1,4 @@
-import {IAnalysisState, IApp, IBoardOptions, IGameBoard, IGameOptionState, IGameState, IUser} from './models';
+import {IAnalysisState, IApp, IBoard, IBoardOptions, IGameBoard, IGameOptionState, IGameState, IUser} from './models';
 import {InitialGameState, gameReducer} from './game/reducers'
 import {InitialGameOptionsState, gameOptionsReducer} from './gameOptions/reducers'
 import {InitialUserState, userReducer} from './user/reducer'
@@ -15,6 +15,8 @@ import { boardReducer, InitialBoardState } from './board/reducers';
 import { BoardActionTypes } from './board/types';
 import { boardOptionsReducer, InitialBoardOptionsState } from './boardOptions/reducers';
 import { BoardOptionActionTypes } from './boardOptions/types';
+import {InitialTowersState, towersReducer} from "./board-towers/reducers";
+import {TowersActionTypes} from "./board-towers/types";
 
 export const InitialState: IRootState = {
   user: InitialUserState,
@@ -24,6 +26,7 @@ export const InitialState: IRootState = {
   clock: InitialClockState,
   analyze: InitialGameAnalysisState,
   board: InitialBoardState,
+  boardAndTowers: InitialTowersState,
   boardOptions: InitialBoardOptionsState
 };
 
@@ -36,6 +39,7 @@ export interface IRootState {
   analyze: IAnalysisState
   board: IGameBoard
   boardOptions: IBoardOptions
+  boardAndTowers: IBoard
 }
 
 export const AppReducers = {
@@ -46,7 +50,8 @@ export const AppReducers = {
   clock: clockReducer,
   analyze: analyzeReducer,
   board: boardReducer,
-  boardOptions: boardOptionsReducer
+  boardOptions: boardOptionsReducer,
+  boardAndTowers: towersReducer
 }; 
 
 export type AppActions = GameActionTypes 
@@ -57,9 +62,10 @@ export type AppActions = GameActionTypes
   | GameAnalysisTypes
   | BoardActionTypes
   | BoardOptionActionTypes
+  | TowersActionTypes
 
 export const getUser = (state: IRootState) => state.user
 
-export const getGameOptions = (state: IRootState) => state.gameOptions
+// export const getGameOptions = (state: IRootState) => state.gameOptions
 
 export const getGame = (state: IRootState) => state.game

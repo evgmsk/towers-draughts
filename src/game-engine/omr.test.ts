@@ -1,10 +1,13 @@
-import {createBoardWithoutDraughts, createEmptyBoard, newOnBoardTower} from './prestart-help-function-constants'
-import {Directions, IBoardToGame, PieceColor, TowerConstructor, TowersMap, TowerType} from '../store/models'
+import {createBoardWithoutTowers, createEmptyBoard, newOnBoardTower} from './prestart-help-function-constants'
+import {Directions, IBoardToGame, PieceColor, StepMProps, TowerConstructor, TowersMap, TowerType} from '../store/models'
 import mmr from './engine-on-towers'
 
 import mmr2 from './mandatory-move-resolver'
 // import { getMiddlePieceKey, getMoveDirection, takeTower } from './common-fn-mandatory-moves-resolver'
 import {checkIfNumberOfKingsChanged} from './gameplay-helper-functions'
+import movesTree from "./tower-tree";
+import {Board} from "../game-components/board/Board";
+import {Branch} from "./engine-interfaces";
 
 
 // test('movesMap', () => {
@@ -13,12 +16,17 @@ import {checkIfNumberOfKingsChanged} from './gameplay-helper-functions'
 //     console.error(d)
 //     expect(d).toBe(d)
 // })
-// test('king eval', () => {
-//     const d: ICheckerTower = {currentColor: PieceColor.b, currentType: TowerType.k, bPiecesQuantity: 1, onBoardPosition: 'a1'}
-//     evaluator.handlePieces(d)
-//     console.error(evaluator)
-//     expect(d).toBe(d)
-// })
+test('moves tree get first depth data', () => {
+    const branch = movesTree.createDefaultRootBranch()
+    movesTree.getDepthData(branch, 2)
+    // const ccc = branch.children[branch.deepValue.move!]
+    console.warn(branch.deepValue,
+        (branch).moves.map(m => ({move: m.move, deepVal: branch.children[m.move].deepValue}))
+    )
+        // , branch.moves.map(m => ({1: branch.children[m.move].deepValue, 2: branch.children[m.move].pieceOrder})),
+        // ccc.moves.map(m => ({3: ccc.children[m.move].deepValue, 4: ccc.children[m.move].pieceOrder})))
+    expect(branch.deepValue.depth).toBe(2)
+})
 
 // it('man mandatory moves', () => {
 //     mmr.setProps({GV: 'towers', size: 8})
@@ -33,24 +41,27 @@ import {checkIfNumberOfKingsChanged} from './gameplay-helper-functions'
 //     const moves = mmr.lookForManMoves('b2', towers)
 //     console.log(moves.mandatory?.map(m => m.move.join(':')))
 // })
-it('king mandatory moves', () => {
-    mmr.setProps({GV: 'towers', size: 8})
-    const board = createBoardWithoutDraughts(8)
-    const diag = mmr.getDiagonal('rightUp', 'b2')
-    // console.warn(diag.length, diag)
-    const towers = {} as TowersMap
-    towers.b2 = new TowerConstructor({currentColor: PieceColor.w, onBoardPosition: 'b2', currentType: TowerType.k})
-    towers.c3 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'c3'})
-    // towers.b2 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'b2'})
-    towers.e5 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'e5'})
-    towers.c5 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'c5'})
-    towers.g7 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'g7'})
-    towers.g5 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'g5'})
-    towers.g3 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'g3'})
-    towers.e3 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'e3'})
-    const moves = mmr.lookForKingMoves('b2', towers)
-    console.log(moves.free?.map(m => m.move.join('-')) ,moves.mandatory?.map(m => `${m.move.join(':')}/${m.minLength}/${m.completed}/${m.takenPieces.join('|')}`))
-})
+// it('king mandatory moves', () => {
+//     mmr.setProps({GV: 'towers', size: 8})
+//     const board = createBoardWithoutTowers(8)
+//     const diag = mmr.getDiagonal('rightUp', 'b2')
+//     // console.warn(diag.length, diag)
+//     const towers = {} as TowersMap
+//     towers.b2 = new TowerConstructor({currentColor: PieceColor.w, onBoardPosition: 'b2', currentType: TowerType.k})
+//     towers.c3 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'c3', bPiecesQuantity: 3})
+//     towers.e1 = new TowerConstructor({currentColor: PieceColor.w, onBoardPosition: 'e1'})
+//     // towers.e5 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'e5'})
+//     towers.c5 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'c5'})
+//     towers.g7 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'g7'})
+//     towers.g5 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'g5'})
+//     towers.g3 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'g3'})
+//     towers.e3 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'e3'})
+//     const moves = mmr.lookForKingMoves('b2', towers)
+//     // const move = moves.totalMoves.mandatory![0]
+//     // const _towers = mmr.makeDraughtMandatoryMove(moves.totalMoves.mandatory![2])
+//     console.log(moves.free?.map(m => m.move.join('-')),
+//         moves.mandatory?.map(m => `${m.move.join(':')}/${m.minLength}/${m.completed}/${m.takenPieces.join('|')}`))
+// })
 // test('king eval', () => {
 //     const d: ICheckerTower = {currentColor: PieceColor.b, currentType: TowerType.k, bPiecesQuantity: 1, onBoardPosition: 'a1'}
 //     evaluator.handlePieces(d)

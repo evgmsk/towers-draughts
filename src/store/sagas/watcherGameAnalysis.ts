@@ -1,6 +1,6 @@
 import { put, takeLatest, select, delay } from 'redux-saga/effects';
 
-import {PieceColor, IMoveProps, IAnalysisState, IPositionsTree} from '../models';
+import {PieceColor, IMoveProps, IAnalysisState, IPositionsTree, IBranch} from '../models';
 
 import { copyObj, oppositeColor, splitMove } from '../../game-engine/gameplay-helper-functions';
 // import { Axios, setAuthorizationHeader } from '../../common/axios';
@@ -12,7 +12,6 @@ import { BoardActions } from '../board/types';
 import tur from '../../game-engine/update-towers-functions'
 import { AnimationDuration } from '../../constants/gameConstants';
 import bms from "../../game-engine/best-move-seeker";
-import {IBranch} from "../../game-engine/engine-interfaces";
 
 // function* workerUploadGame(action: GameAnalysisTypes) {
 //     const token: string = yield select((state) => state.user.token)
@@ -372,7 +371,7 @@ function* workerStartPosition() {
     yield put({type: GameAnalysisActions.UPDATE_ANALYSIS_STATE, payload})
 }
 
-export default function* watcherAnalysis() {    
+export default function* watcherAnalysis() {
     yield takeLatest(GameAnalysisActions.STEP_BACK, workerStepBack)
     yield takeLatest(GameAnalysisActions.STEP_FORWARD, workerStepForward)
     yield takeLatest(GameAnalysisActions.GO_TO_POSITION, workerGoToPosition)

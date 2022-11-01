@@ -1,29 +1,31 @@
 import {
+    Board,
+    CellsMap,
+    IAnalysisBoard,
+    IBoardOptions,
+    IBoardToGame,
+    IGameBoard,
     INeighborCells,
-    TowersMap,
+    IPositionsTree,
+    PartialTower,
     PieceColor,
     TowerConstructor,
+    TowersMap,
     TowerType,
-    IBoardToGame,
-    PartialTower,
-    IBoardOptions,
-    IAnalysisBoard,
-    IGameBoard,
-    CellsMap,
-    IPositionsTree, IBoard, Board,
 } from "../store/models"
 import {
-    TopLegendValues,
-    SideLegendValues,
     BaseCellSize,
     getDefaultBlackTowersCells,
-    getDefaultWhiteTowersCells
+    getDefaultWhiteTowersCells,
+    SideLegendValues,
+    TopLegendValues
 } from '../constants/gameConstants'
 
-export const oppositColor = (color: PieceColor) => { return color === PieceColor.w ? PieceColor.b : PieceColor.w }
+export const oppositeColor = (color: PieceColor) => {
+    return color === PieceColor.w ? PieceColor.b : PieceColor.w
+}
 
-
-export const createBoardWithoutDraughts = (size: number = 8) => {
+export const createBoardWithoutTowers = (size: number = 8): Board => {
     const GameBoard: Board = {}
     for(let i = 0; i < size; i++) {
         for(let j = 0; j < size; j++) {
@@ -35,6 +37,7 @@ export const createBoardWithoutDraughts = (size: number = 8) => {
     }
     return GameBoard
 }
+
 export const createEmptyBoard = (size: number = 8) => {
     const GameBoard: IBoardToGame = {}
     for(let i = 0; i < size; i++) {
@@ -103,18 +106,22 @@ export const createAnalysisBoard = (props: {boardOptions: IBoardOptions}): Parti
     }
 }
 
-export const defineCellDomPosition = (key: string, cellSize: number, reversed = false, boardSize = 8) => {
-    const topInd = reversed ? TopLegendValues.slice(0, boardSize).reverse() : TopLegendValues.slice(0, boardSize)
-    const sideInd = reversed ? SideLegendValues.slice(0, boardSize) : SideLegendValues.slice(0, boardSize).reverse()
+export function determineCellPosition(key: string, cellSize: number, reversed = false, boardSize = 8) {
+    const topInd = reversed
+        ? TopLegendValues.slice(0, boardSize).reverse()
+        : TopLegendValues.slice(0, boardSize)
+    const sideInd = reversed
+        ? SideLegendValues.slice(0, boardSize)
+        : SideLegendValues.slice(0, boardSize).reverse()
     const y = sideInd.indexOf(parseInt(key.slice(1))) * cellSize 
     const x = topInd.indexOf(key[0]) * cellSize
     return {x, y}
 }
 
-export const createCellsMap = (boardSize: number, cellSize = BaseCellSize, reversed = false) => {
+export function createCellsMap(boardSize: number, cellSize = BaseCellSize, reversed = false) {
     const map = {} as CellsMap
     Object.keys(createEmptyBoard(boardSize)).forEach((key: string) => {
-        map[key] = defineCellDomPosition(key, cellSize, reversed, boardSize)
+        map[key] = determineCellPosition(key, cellSize, reversed, boardSize)
     })
     return map
 }
@@ -123,10 +130,11 @@ export const updateCellsMap = (cellsMap: CellsMap, cellSize: number, reversed = 
     const boardSize = Object.keys(cellsMap).length === 50 ? 10 : 8
     const newMap = {} as CellsMap
     Object.keys(cellsMap).forEach((key: string) => {
-        newMap[key] = defineCellDomPosition(key, cellSize, reversed, boardSize)
+        newMap[key] = determineCellPosition(key, cellSize, reversed, boardSize)
     })
     return newMap
 }
+
 
 export function defineNeighborCells(i: number, j: number, size: number): INeighborCells {
     const topLegend = TopLegendValues.slice(0, size)

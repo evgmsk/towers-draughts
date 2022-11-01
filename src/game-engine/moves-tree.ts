@@ -1,4 +1,4 @@
-import {IBranch, IChildren, IDeepValue, IMove} from "./engine-interfaces";
+import {IBranch, IChildren, IDeepValue, IMove} from "../store/models";
 import {copyObj} from "./gameplay-helper-functions";
 
 export interface ITree {[key: string]: any | {children: {[key: string]: any}}}

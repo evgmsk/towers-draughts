@@ -54,7 +54,6 @@ function* findRival(action: FindOpponentAction) {
 // }
 
 function* workerGameVariant(action: SetGameVariantAction) {
-    console.warn('board size')
     const size = action.payload === 'international' ? 10 : 8
     mmr.setProps({GV: action.payload as GameVariants, size})
     yield put({type: BoardOptionActions.SET_BOARD_SIZE, payload: size})

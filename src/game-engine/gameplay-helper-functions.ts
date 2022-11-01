@@ -4,11 +4,17 @@ import {
     IGameBoard,
     IMMRResult,
     IRef,
-    ITowerPosition, MMRResult, MRResult,
+    ITowerPosition, MMRResult,
     PieceColor,
     TowersMap,
     TowerType,
 } from "../store/models"
+
+
+// export function setPrecision(number: number, precision = 3) {
+//     const mult = Math.pow(10, precision)
+//     return Math.round(number * mult) / mult
+// }
 
 //common functions
 export const splitMove = (move: string) => {
@@ -168,7 +174,7 @@ export function checkIfBoardFitTowers(towers: TowersMap, board: IBoardToGame): b
     return res
 }
 
-export default {
+const fun = {
     checkIfBoardFitTowers,
     getCellSize,
     convertToMovesHistory,
@@ -181,3 +187,5 @@ export default {
     possibleOutOfMandatoryTowers,
     filterArrayByLength,
 }
+
+export default fun

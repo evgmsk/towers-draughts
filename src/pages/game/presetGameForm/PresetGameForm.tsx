@@ -14,7 +14,7 @@ import {
 import { I18n } from '../../../assets/i18n'
 
 import { RivalType, PieceColor, GameVariants, GameType } from '../../../store/models'
-import { StandartTiming } from '../../../constants/gameConstants'
+import { StandardTiming } from '../../../constants/gameConstants'
 
 
 import './presetGameForm.scss'
@@ -107,7 +107,7 @@ const Timing = (props: ConnectedProps<typeof timingConnector>) => {
 
     return (
         <div className="timing-wrapper" onClick={handleSelectTime}>
-            {StandartTiming.map((t: number[], i: number) => {
+            {StandardTiming.map((t: number[], i: number) => {
                 const Class = t[0] === timeToGame && t[1] === adds ? 'timing-menu-item actual' : 'timing-menu-item'
                 return <button 
                             title={"time limit: minuts / add per rivalMove: seconds"}
@@ -311,7 +311,7 @@ export class CustomTimingPreset extends React.Component<CTP, {limit: number, add
     }
     componentDidUpdate(prev: CTP) {
         const {timeToGame, adds} = this.props
-        const ST = StandartTiming.map(t => t.join('/')).includes(`${timeToGame}/${adds}`)
+        const ST = StandardTiming.map(t => t.join('/')).includes(`${timeToGame}/${adds}`)
         if (timeToGame !== prev.timeToGame || adds !== prev.adds) {
             if (!this.state.open && !ST) {
                 this.setState({open: true})

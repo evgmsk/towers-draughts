@@ -52,17 +52,17 @@ export const Board: React.FC<IBoardProps> = (props) => {
                     className={className}
                 >
               {
-                        boardNotation === BoardNotation.i && ((i + j) % 2) 
+                        boardNotation === BoardNotation.dr && ((i + j) % 2)
                         ? <span className="board__cell-number">{k}</span> 
                         : null
                     }
                     {
-                        boardNotation === BoardNotation.r && !j 
+                        boardNotation === BoardNotation.ch && !j
                         ? <span className="board__label-value ver">{SL[i]}</span>
                         : null
                     }
                     {
-                        boardNotation === BoardNotation.r && i + 1=== SL.length 
+                        boardNotation === BoardNotation.ch && i + 1=== SL.length
                         ? <span className="board__label-value hor">{TL[j]}</span> 
                         : null
                     }

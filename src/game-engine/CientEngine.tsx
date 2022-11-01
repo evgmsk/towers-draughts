@@ -2,15 +2,13 @@ import React from 'react'
 
 import {connect, ConnectedProps} from 'react-redux'
 import {endGame, surrender} from '../store/game/actions'
-import {IBoardToGame, PieceColor} from "../store/models";
+import {IBoardToGame, PieceColor, ISeekerProps} from "../store/models";
 import {oppositeColor} from './gameplay-helper-functions';
 import {IRootState} from '../store/rootState&Reducer';
 import mmr from './mandatory-move-resolver';
 import bms from './best-move-seeker';
-
 import {turn} from '../store/board/actions';
 import {AnimationDuration} from '../constants/gameConstants';
-import {ISeekerProps} from './engine-interfaces';
 
 interface IBestMove {move: string, deep: number}
 

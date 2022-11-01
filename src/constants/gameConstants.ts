@@ -1,12 +1,11 @@
 export const TopLegendValues = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'k', 'l', 'm'];
 export const SideLegendValues = new Array(12).fill(0).map((i: undefined, j: number): number => j + 1);
-export const BoardDirections = ['leftUp', 'leftDown', 'rightUp', 'rightDown'];
 export const BaseTransform = 'translate(-50%, -50%)';
 export const DefaultTime = 300;
 export const Storage = 'chekers';
 export const BaseBoardSize = 8;
 export const InternationalBoardSize = 10;
-export const StandartTiming = [[1,0], [2,1], [3,0], [3,1], [5,0], [5,3], [10, 0], [10, 3], [15, 0]]
+export const StandardTiming = [[1,0], [2,1], [3,0], [3,1], [5,0], [5,3], [10, 0], [10, 3], [15, 0]]
 export const PrestartTimeLimit = 10
 export const Interval = 1000
 export const BaseCellSize = 50

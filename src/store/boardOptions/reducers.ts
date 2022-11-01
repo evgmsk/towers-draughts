@@ -10,7 +10,7 @@ export const InitialBoardOptionsState: IBoardOptions = {
     boardTheme: 'standard',
     withOutLegend: false,
     legendsInside: false,
-    boardNotation: BoardNotation.r,
+    boardNotation: BoardNotation.ch,
     boardSize: BaseBoardSize,
     reversedBoard: false,
 }

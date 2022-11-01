@@ -1,7 +1,7 @@
 import { BaseBoardSize } from "../constants/gameConstants";
 import {
     BoardCell,
-    CellsMap, Diagonals,
+    CellsMap,
     GameVariants,
     IBoardCell,
     IBoardToGame,
@@ -14,11 +14,11 @@ import {
     PieceColor,
     TowerConstructor,
     TowersMap,
-    TowerType
+    TowerType,
+    IMove
 } from "../store/models"
 import {  copyObj, crossDirections, oppositeColor } from "./gameplay-helper-functions";
 import { createEmptyBoard } from "./prestart-help-function-constants";
-import {IMove} from "./engine-interfaces";
 
 export interface IEvaluationData {
     freeMoves: IMove[],
@@ -94,7 +94,7 @@ export class BaseMoveResolver {
         return interval
     }
 
-    getDiagonalWithDraughts(direction: string, startCellKey: string, towers: TowersMap): BoardCell[] {
+    getDiagonalWithDraughts(direction: string, startCellKey: string): BoardCell[] {
         let cell = this.board[startCellKey]
         const diagonal = [cell]
         while (cell) {

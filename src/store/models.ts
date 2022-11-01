@@ -194,10 +194,17 @@ export interface IMoveOrder {
 
 export interface ITotalMoves {mandatory?: FullMRResult[], free?: FreeMRResult[]}
 
+export interface Move {
+    move: string
+    position: TowersMap
+    takenPieces?: string[]
+}
+
 export interface IMoveToMake {
     gameKey?: string,
-    moveToMake: MMRResult,
+    moveToMake: Move,
     moveOrder: IMoveOrder,
+    rivalMoves: Move[]
     receivedAt?: Date,
     whiteClock?: IClock,
     blackClock?: IClock
@@ -328,6 +335,7 @@ export interface INeighborCells {
 export interface IDiagonals {[key: string]: IBoardCell[]}
 export interface Diagonals {[key: string]: BoardCell[]}
 
+export interface ISortedMoves {maxLength?: number, maxLengthMoves: FullMRResult[], restMoves: FullMRResult[]}
 
 export interface IMMRResult {
     move: string
@@ -336,12 +344,10 @@ export interface IMMRResult {
 }
 
 export interface MMRResult {
-    move: string
-    position: TowersMap
+    move: string[]
+    endPosition: TowersMap
     takenPieces?: string[]
 }
-
-export interface ISortedMoves {maxLength?: number, maxLengthMoves: FullMRResult[], restMoves: FullMRResult[]}
 
 export interface MResult {
     move: string[]
@@ -374,3 +380,95 @@ export interface IUser {
     rating: number | null
     language: string
 }
+
+// evaluation
+
+export interface IDeepValue {
+    depth: number,
+    value: number,
+    move?: string
+}
+
+export interface DeepValue {
+    depth: number,
+    value: Value,
+    move: string
+}
+
+export interface IMove {
+    move: string
+    baseValue: number
+    position: IBoardToGame
+    pieceOrder?: PieceColor
+}
+
+export interface IChildren {[key: string]: IBranch}
+export interface Children {[key: string]: Branch}
+
+export interface IPositionData {
+    moves: Move[]
+    position: TowersMap
+    pieceOrder: PieceColor
+    totalMovesNumber: number
+    deepValue: DeepValue
+}
+
+export interface Branch extends IPositionData{
+    parentBranch?: Branch,
+    children: Children,
+    rivalMove: string,
+}
+
+export interface IPieces {pieceNumber: number, kingNumber: number}
+
+export interface IPiecesData {
+    white: IPieces
+    black: IPieces
+}
+
+export interface IBranch {
+    moves: IMove[]
+    parentBranch?: IBranch,
+    position: IBoardToGame,
+    pieceOrder: PieceColor,
+    deepValue: IDeepValue,
+    children: IChildren,
+    rivalMove: string,
+}
+
+export interface IBestMove {move: string, position: IBoardToGame, deepValue: IDeepValue}
+
+export interface ISeekerProps extends IEvaluatingState{
+    maxDepth?: number
+    pieceOrder?: PieceColor
+    towers?: TowersMap
+    position?: IBoardToGame
+    game: boolean
+    startDepth?: number
+    movesHistory?: string[]
+    parentBranch?: IBranch
+}
+
+export interface SeekerProps {
+    maxDepth?: number
+    pieceOrder?: PieceColor
+    towers?: TowersMap
+    game: boolean
+    startDepth?: number
+    movesHistory?: string[]
+    parentBranch?: Branch
+    lastBranch?: Branch
+    valueIncreased?: boolean
+}
+
+export interface Value {
+    white: number,
+    black: number
+}
+
+export interface IEvaluatingState {
+    valueIncreased?: boolean
+    lastBranch?: IBranch
+    evaluatingLine?: string[]
+}
+
