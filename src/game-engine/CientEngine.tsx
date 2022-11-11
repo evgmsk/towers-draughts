@@ -2,27 +2,26 @@ import React from 'react'
 
 import {connect, ConnectedProps} from 'react-redux'
 import {endGame, surrender} from '../store/game/actions'
-import {IBoardToGame, PieceColor, ISeekerProps} from "../store/models";
+import {
+    SeekerProps,
+    MoveWithRivalMoves
+} from "../store/models";
 import {oppositeColor} from './gameplay-helper-functions';
 import {IRootState} from '../store/rootState&Reducer';
-import mmr from './mandatory-move-resolver';
-import bms from './best-move-seeker';
-import {turn} from '../store/board/actions';
+import mmr from './moves-resolver';
+import bms from './best-move-seeker-towers';
+import {turn} from '../store/board-towers/actions';
 import {AnimationDuration} from '../constants/gameConstants';
 
 interface IBestMove {move: string, deep: number}
 
 
 const mapState = (state: IRootState) => ({
-    currentPosition: state.board.currentPosition,
+    towers: state.boardAndTowers.towers,
     engineColor: oppositeColor(state.game.playerColor),
     white: state.game.white,
     black: state.game.black,
     rivalLevel: state.gameOptions.rivalLevel,
-    timeToGame: state.gameOptions.timing.timeToGame,
-    time: state.game.playerColor === PieceColor.w
-        ? state.clock.blackClock.timeToGame
-        : state.clock.whiteClock.timeToGame,
     gameVariant: state.gameOptions.gameVariant,
     moveOrder: state.game.moveOrder,
     movesHistory: state.game.history,
@@ -43,15 +42,15 @@ class ClientEngine extends React.Component<BotProps, IBestMove> {
     }
 
     componentDidUpdate(prev: BotProps, prevState: IBestMove) {
-        const {moveOrder, movesHistory, currentPosition, gameMode, engineColor} = this.props
+        const {moveOrder, movesHistory, towers, gameMode, engineColor} = this.props
         const engineMove = moveOrder.pieceOrder === engineColor
-        const props = {history: movesHistory, cP: currentPosition, pieceOrder: moveOrder.pieceOrder}
+        const props = {history: movesHistory, cP: towers, pieceOrder: moveOrder.pieceOrder}
         if (gameMode === 'isPlaying' && prev.gameMode !== 'isPlaying') {
             console.log('new game', this.props)
             bms.setState(this.getSeekerProps())
             bms.setBestMoveCB(this.moveCB)
             if (engineMove) {
-                setTimeout(() => bms.updateAfterRivalMove(props), AnimationDuration)
+                setTimeout(bms.updateAfterRivalMove, AnimationDuration, props)
             }
         }
         if (prev.movesHistory.length !== movesHistory.length) {
@@ -64,36 +63,31 @@ class ClientEngine extends React.Component<BotProps, IBestMove> {
         }
     }
 
-    getSeekerProps = (): ISeekerProps => {
+    getSeekerProps = (): SeekerProps => {
+        const maxDepth = Math.min(5, this.props.rivalLevel + 2)
         return {
-            maxDepth: this.props.rivalLevel + 2,
-            position: this.props.currentPosition,
+            maxDepth: maxDepth,
+            startDepth: maxDepth,
             pieceOrder: this.props.moveOrder.pieceOrder,
             game: true,
         }
     }
 
-    moveCB = (move: {move: string, position: IBoardToGame}) => {
+    moveCB = (move: MoveWithRivalMoves) => {
         const {surrender, endGame, engineColor, gameMode} = this.props
         if (move.move === 'surrender') {
             surrender(engineColor)
         } else if (!move.move) {
             endGame('noMoves')
-        } else if (!!move && gameMode === 'isPlaying') {
+        } else if (!!move.move && gameMode === 'isPlaying') {
             this.completeMove(move)
         }
     }
 
-    completeMove(move:{move: string, position: IBoardToGame}) {
-        const {moveOrder: oldOrder, turn, white, black, currentPosition} = this.props
+    completeMove(move: MoveWithRivalMoves) {
+        const {moveOrder: oldOrder, turn, white, black} = this.props
         const moveOrder = mmr.getNewOrder({moveOrder: oldOrder, white, black})
-        if (move.move.includes(':')) {
-            const takenPieces = mmr.getCapturedTowers(move.move.split(':'), currentPosition)
-            const moveToSave = {...move, takenPieces}
-            turn({moveToSave, moveOrder: moveOrder})
-        } else {
-            turn({moveToSave: move, moveOrder: moveOrder})
-        }
+        turn({moveToSave: move, moveOrder: moveOrder})
     }
 
     render() {

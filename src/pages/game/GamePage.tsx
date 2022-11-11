@@ -123,8 +123,7 @@ class GamePage extends React.Component<GPProps, {}> {
                 </> 
             }
         </>
-        
-          
+
         return (
             <Suspense fallback={<Spinner />}>
                 <div className="game page noselect" >             

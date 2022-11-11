@@ -5,17 +5,20 @@ import {TopLegendValues, SideLegendValues} from '../../constants/gameConstants'
 
 import './board.scss';
 
-
 export const Cell: React.FC<ICell> = props  => {
-    return (<div className={props.className} data-indexes={props.indexes}>
+    return props.className.includes('dark')
+            ? <div
+                className={props.className}
+                data-indexes={props.indexes}
+            >
                 {props.children}
-            </div>)
+            </div>
+            : <div className={props.className}>
+                {props.children}
+            </div>
 }
 
-export const Board: React.FC<IBoardProps> = (props) => { 
-    // // useEffect(() => {
-    //     console.log('render board with props: ', props)
-    // })
+export const Board: React.FC<IBoardProps> = React.memo((props) => {
     const {
         boardOptions: {
             boardSize,
@@ -30,8 +33,6 @@ export const Board: React.FC<IBoardProps> = (props) => {
     const SL  = reversedBoard ? DefaultSL : DefaultSL.reverse()
     const TL = reversedBoard ? DefaultTL.reverse() : DefaultTL
     let k = reversedBoard ? 51 : 0
-
-
     const Board = SL.map((v: number, i: number) => {
         return TL.map((h: string, j: number) => {
             if(reversedBoard) {
@@ -51,7 +52,7 @@ export const Board: React.FC<IBoardProps> = (props) => {
                     indexes={index}
                     className={className}
                 >
-              {
+                    {
                         boardNotation === BoardNotation.dr && ((i + j) % 2)
                         ? <span className="board__cell-number">{k}</span> 
                         : null
@@ -62,7 +63,7 @@ export const Board: React.FC<IBoardProps> = (props) => {
                         : null
                     }
                     {
-                        boardNotation === BoardNotation.ch && i + 1=== SL.length
+                        boardNotation === BoardNotation.ch && i + 1 === SL.length
                         ? <span className="board__label-value hor">{TL[j]}</span> 
                         : null
                     }
@@ -76,4 +77,4 @@ export const Board: React.FC<IBoardProps> = (props) => {
             {Board}
         </div>
     )  
-}
+})

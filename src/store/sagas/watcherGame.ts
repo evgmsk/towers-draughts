@@ -3,11 +3,10 @@ import {
     IGameResult,
     PieceColor,
     EndGameConditions,
-    IMoveProps,
     IGameState,
     IMoveOrder,
     IPlayer,
-    IClock
+    IClock, IMoveToMake
 } from '../models';
 import {GameActions, GameActions as GM, GameActionTypes, GameActionTypes as GMA} from '../game/types'
 import {ClockActions} from '../clock/types'
@@ -15,13 +14,15 @@ import {ClockActions} from '../clock/types'
 import { oppositeColor } from '../../game-engine/gameplay-helper-functions';
 // import { Axios, setAuthorizationHeader } from '../../common/axios';
 import { GameAnalysisActions } from '../gameAnalysis/types';
-import {checkIfNumberOfKingsChanged} from '../../game-engine/gameplay-helper-functions'
 import { InitialGameState } from '../game/reducers';
-import { AnimationDuration } from '../../constants/gameConstants';
+import {AnimationDuration, DefaultMinDepth} from '../../constants/gameConstants';
 import { AppActions } from '../app/types';
-import { BoardActions } from '../board/types';
 import {GameOptionActions as GOA} from '../gameOptions/types'
 import {BoardOptionActions as BOA} from '../boardOptions/types'
+import {IRootState} from "../rootState&Reducer";
+import movesTree from "../../game-engine/tower-tree";
+import {TowersActions} from "../board-towers/types";
+import {InitialTowersState} from "../board-towers/reducers";
 
 function* workerNewGameVSPlayer() {
     yield put({type: GOA.WAIT_RIVAL, payload: false})
@@ -57,7 +58,6 @@ function* workerNewGameVSPlayer() {
         portrait: window.innerWidth / window.innerHeight < 1.3,
         ineffectiveMoves: 0,
     }
-    yield put({type: BoardActions.CREATE_GAME_BOARD})
     yield put({type: GM.SET_GAME, payload: gamePayload})
     yield put({type: ClockActions.SET_CLOCK, payload: {blackClock: clock, whiteClock: clock}})
     yield put({type: GOA.FINISH_GAME_SETUP, payload: true})
@@ -69,12 +69,13 @@ function* workerNewGameVsPC() {
     const {
         gameOptions: {playerColor, rivalLevel = 1},
         user: {name, rating},
-        game: {gameMode}
+        boardOptions
     } = yield select()
-    if (gameMode === 'isPlaying') {
-        yield put({type: GameActions.SET_GAME, payload: InitialGameState})
-    }
-    yield delay(30)
+    movesTree.createDefaultRootBranch(boardOptions.boardSize)
+    movesTree.getDepthData(movesTree.getRoot(), DefaultMinDepth)
+    console.warn('tree', movesTree.getRoot())
+    const moves = movesTree.getRivalMoves('')
+    yield put({type: TowersActions.UPDATE_BOARD_STATE, payload: {...InitialTowersState, moves}})
     let color: PieceColor = playerColor
     if (playerColor === 'random') {
         color = Math.random() < .5 ? PieceColor.w : PieceColor.b
@@ -99,23 +100,17 @@ function* workerNewGameVsPC() {
         portrait: window.innerWidth / window.innerHeight < 1.3,
         ineffectiveMoves: 0
     }
-    yield put({type: BoardActions.CREATE_GAME_BOARD})
     yield put({type: GM.SET_GAME, payload: gamePayload})
     yield put({type: AppActions.SET_PORTRAIT, payload: window.innerWidth / window.innerHeight < 1.3,})
     yield put({type: GOA.FINISH_GAME_SETUP, payload: true})
-    delay(AnimationDuration*3)
+    yield delay(AnimationDuration)
     yield put({type: GM.SET_GAME_MODE, payload: 'isPlaying'})
 }
 
-function* checkDraw (payload: IMoveProps) {
-    const {gameOptions: {gameVariant}, board: {currentPosition}, game: {ineffectiveMoves}} = yield select()
-    const numberOfKingsChanged = checkIfNumberOfKingsChanged(currentPosition, payload.moveToSave.position)
-    if (payload.moveToSave.move.includes(':') || numberOfKingsChanged) {
-        yield put({type: GM.INEFFECTIVE_MOVE, payload: 0})
-    } else if ((gameVariant !== 'international' && ineffectiveMoves < 36) 
-        || (gameVariant === 'international' && ineffectiveMoves < 50)) {
-        yield put({type: GM.INEFFECTIVE_MOVE, payload: ineffectiveMoves + 1})
-    } else {
+function* checkDraw (payload: IMoveToMake) {
+    const {gameOptions: {gameVariant}, game: {ineffectiveMoves}} = yield select()
+    if ((gameVariant !== 'international' && ineffectiveMoves > 30)
+        || (gameVariant === 'international' && ineffectiveMoves > 50)) {
         yield put({type: GM.END_GAME, payload: 'drawByRules'})
     }
 }
@@ -131,7 +126,7 @@ function* checkDraw (payload: IMoveProps) {
 //     // sendMessage({message: 'game draw rejected', payload: {gameKey}})
 // }
 
-function* workerPlayerClockAfterMove(payload: IMoveProps) {
+function* workerPlayerClockAfterMove(payload: IMoveToMake) {
     const {
         game: {gameConfirmed, history},
         clock: {whiteClock, blackClock}
@@ -165,11 +160,16 @@ function* workerPlayerClockAfterMove(payload: IMoveProps) {
 function* workerMove(action: GMA) {
     const {
         game: {gameStarted},
-    } = yield select()
-    const payload: IMoveProps = action.payload as IMoveProps
+        gameOptions: {rivalType},
+        boardAndTowers
+    } = (yield select()) as IRootState
+    console.warn('game', action, boardAndTowers)
+    const payload: IMoveToMake = action.payload as IMoveToMake
     if (!gameStarted) return
     yield checkDraw(payload)
-    workerPlayerClockAfterMove(payload)
+    if (rivalType !== 'PC') {
+        yield workerPlayerClockAfterMove(payload)
+    }
 }
 
 function* workerGameEnd(action: GMA) {
@@ -195,11 +195,8 @@ function* workerSurrender(action: GMA) {
 }
 
 function* resolveEndGame(winner: PieceColor | 'draw', reason: EndGameConditions) {
-    const { 
-        game: {history, white, black, playerColor},
-    } = yield select(state => state)
     const {
-        game: {moveOrder: {pieceOrder}},
+        game: {moveOrder: {pieceOrder}, history, white, black, playerColor},
         gameOptions: {gameVariant, timing: {timeToGame, adds}}, 
         boardOptions: {boardSize}
     } = yield select()
@@ -216,11 +213,12 @@ function* resolveEndGame(winner: PieceColor | 'draw', reason: EndGameConditions)
             boardSize,
             date: new Date()
         }
-        // yield put({type: GameAnalysisActions.SAVE_GAME_RESULT, payload: gameResult})
         const analysisPayload = {
             gameResult,
             pieceOrder,
             movesMainLine: history,
+            analyzeLastGame: true,
+            settingPosition: false,
             lastMove: {index: history.length - 1, move: history.slice(-1)[0]}
         }
         yield put({type: GameAnalysisActions.UPDATE_ANALYSIS_STATE, payload: analysisPayload})

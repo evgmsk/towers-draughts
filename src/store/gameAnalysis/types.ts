@@ -1,4 +1,4 @@
-import {IAnalysisState, IBoardToGame, IGameResult, IMoveProps, PieceColor} from "../models"
+import {IAnalysisState, IGameResult, IMoveToMake, PieceColor, PositionsTree} from "../models"
 
 export const GameAnalysisActions = {
     ANALYZE_LAST_GAME: 'ANALYZE_LAST_GAME',
@@ -20,12 +20,12 @@ export const GameAnalysisActions = {
     START_NEW_LINE: 'START_NEW_LINE',
     MAKE_NEW_MOVE: 'MAKE_NEW_MOVE',
     SET_MOVE_ORDER: 'SET_MOVE_ORDER',
-    SET_BEST_MOVE_LINE: 'SET_BEST_MOVE_LINE'
-} 
+    SET_BEST_MOVE_LINE: 'SET_BEST_MOVE_LINE',
+}
 
 export interface MakeNewMoveAction {
     type: typeof GameAnalysisActions.MAKE_NEW_MOVE,
-    payload: Partial<IMoveProps>
+    payload: Partial<IMoveToMake>
 }
 
 export interface SetMoveOrder {
@@ -40,7 +40,7 @@ export interface SetBestMoveAction {
 
 export interface StartNewLineAction {
     type: typeof GameAnalysisActions.START_NEW_LINE,
-    payload: IMoveProps
+    payload: IMoveToMake
 }
 
 export interface RemovePieceAction {
@@ -70,12 +70,12 @@ export interface UpdateAnalysisStateAction {
 
 export interface CreatePositionTreeAction {
     type: typeof GameAnalysisActions.CREATE_POSITION_TREE,
-    payload: Map<string, IBoardToGame>
+    payload: PositionsTree
 }
 
 export interface SavePositionAction {
     type: typeof GameAnalysisActions.SAVE_POSITION,
-    payload: Map<string, IBoardToGame>
+    payload: PositionsTree
 }
 
 export interface GoToPositionAction {
@@ -95,7 +95,7 @@ export interface StepBackAction {
 
 export interface UpdatePositionActions {
     type: typeof GameAnalysisActions.UPDATE_POSITION,
-    payload: Partial<IMoveProps>
+    payload: Partial<IMoveToMake>
 }
 
 export interface SettingBoardAction {

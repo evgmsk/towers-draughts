@@ -1,31 +1,76 @@
-import {createBoardWithoutTowers, createEmptyBoard, newOnBoardTower} from './prestart-help-function-constants'
-import {Directions, IBoardToGame, PieceColor, StepMProps, TowerConstructor, TowersMap, TowerType} from '../store/models'
-import mmr from './engine-on-towers'
-
-import mmr2 from './mandatory-move-resolver'
+import {createBoardWithoutTowers, createCellsMap} from './prestart-help-function'
+import {PieceColor, TowerConstructor, TowersMap, TowerType} from '../store/models'
+import mmr from './moves-resolver'
+//
+// import mmr2 from './mandatory-move-resolver'
 // import { getMiddlePieceKey, getMoveDirection, takeTower } from './common-fn-mandatory-moves-resolver'
-import {checkIfNumberOfKingsChanged} from './gameplay-helper-functions'
 import movesTree from "./tower-tree";
-import {Board} from "../game-components/board/Board";
-import {Branch} from "./engine-interfaces";
 
 
-// test('movesMap', () => {
-//     movesTree.addBranch('k', {} as IBranch)
-//     const d = movesTree.getBranch('k')
-//     console.error(d)
-//     expect(d).toBe(d)
+test('custom position', () => {
+    let towers = {} as TowersMap
+    towers.b4 = new TowerConstructor({onBoardPosition: 'b4', currentColor: PieceColor.w, wPiecesQuantity: 3, currentType: TowerType.k})
+    towers.e5 = new TowerConstructor({onBoardPosition: 'e5', currentColor: PieceColor.b, currentType: TowerType.k})
+    towers.a3 = new TowerConstructor({onBoardPosition: 'a3', currentColor: PieceColor.w, wPiecesQuantity: 3, currentType: TowerType.k})
+    const branch = movesTree.createBranchWithTowers(towers, PieceColor.w)
+    // movesTree.createDefaultRootBranch()
+    movesTree.addRoot(branch)
+    const root = movesTree.getRoot()
+    // movesTree.getNextDepthData(root)
+    // const child = root.children['d6-e5']
+    // const problemPos = child.moves.filter(m => m.move === 'e1-f2')[0]
+    // const nextM = mmr.lookForTotalMoves(problemPos.position, oppositeColor(child.pieceOrder))
+    movesTree.getDepthData(root, 3)
+    // movesTree.getNextDepthData(root)
+    // const childrenKeys = Object.keys(movesTree.getDepthData(root).children)
+    console.warn(root.deepValue, root.children[root.deepValue.move].deepValue)
+})
+// test('moves tree get first depth data', () => {
+//     const branch = movesTree.createDefaultRootBranch()
+//     movesTree.getDepthData(branch, 2)
+//     // const ccc = branch.children[branch.deepValue.move!]
+//     console.warn(branch.deepValue,
+//         (branch).moves.map(m => ({move: m.move, deepVal: branch.children[m.move].deepValue}))
+//     )
+//         // , branch.moves.map(m => ({1: branch.children[m.move].deepValue, 2: branch.children[m.move].pieceOrder})),
+//         // ccc.moves.map(m => ({3: ccc.children[m.move].deepValue, 4: ccc.children[m.move].pieceOrder})))
+//     expect(branch.deepValue.depth).toBe(2)
 // })
-test('moves tree get first depth data', () => {
-    const branch = movesTree.createDefaultRootBranch()
-    movesTree.getDepthData(branch, 2)
+
+test('digging custom position', () => {
+    const position = {} as TowersMap
+    // position['f6'] = new TowerConstructor({onBoardPosition: 'f6', currentColor: PieceColor.w, currentType: TowerType.k})
+    // position['f2'] = new TowerConstructor({onBoardPosition: 'f2', currentColor: PieceColor.b, currentType: TowerType.k})
+    // position['d2'] = new TowerConstructor({onBoardPosition: 'd2', currentColor: PieceColor.w, currentType: TowerType.m})
+    position['b4'] = new TowerConstructor({wPiecesQuantity: 4, onBoardPosition: 'b4', currentColor: PieceColor.w, currentType: TowerType.k})
+    position['a3'] = new TowerConstructor({onBoardPosition: 'a3', currentColor: PieceColor.w, currentType: TowerType.k})
+    position['f6'] = new TowerConstructor({onBoardPosition: 'f6', currentColor: PieceColor.b, currentType: TowerType.k})
+    const branch = movesTree.createBranchWithTowers(position, PieceColor.w)
+    // const moves = mmr.getMovesFromTotalMoves(mmr.lookForTotalMoves(position, PieceColor.b))
+    // movesTree.addRoot(branch)
+    // const branch: Branch = {
+    //     // moves,
+    //     position,
+    //     rivalMove: '',
+    //     children: {},
+    //     totalMovesNumber: moves.length,
+    //     deepValue: {value: {black: 0,  white: 0}, move: '', depth: 0},
+    //     pieceOrder: PieceColor.b
+    // }
+    // movesTree.addRoot(branch)
+    // movesTree.getFirstDepthData(branch)
+    // movesTree.getNextDepthData(branch)
+    // movesTree.getNextDepthData(branch)
+    const nB = movesTree.getDepthData(branch, 3)
     // const ccc = branch.children[branch.deepValue.move!]
-    console.warn(branch.deepValue,
-        (branch).moves.map(m => ({move: m.move, deepVal: branch.children[m.move].deepValue}))
-    )
-        // , branch.moves.map(m => ({1: branch.children[m.move].deepValue, 2: branch.children[m.move].pieceOrder})),
-        // ccc.moves.map(m => ({3: ccc.children[m.move].deepValue, 4: ccc.children[m.move].pieceOrder})))
-    expect(branch.deepValue.depth).toBe(2)
+    // const mov = mmr.lookForKingMoves('a3', position).mandatory
+    console.warn(branch.deepValue)
+    // console.warn(branch.deepValue, branch.pieceOrder,
+    //     (branch).moves.map(m => ({move: m.move, deepVal: JSON.stringify(branch.children[m.move].deepValue)}))
+    // )
+    // , branch.moves.map(m => ({1: branch.children[m.move].deepValue, 2: branch.children[m.move].pieceOrder})),
+    // ccc.moves.map(m => ({3: ccc.children[m.move].deepValue, 4: ccc.children[m.move].pieceOrder})))
+    // expect(branch.deepValue.depth).toBe(2)
 })
 
 // it('man mandatory moves', () => {
@@ -53,7 +98,7 @@ test('moves tree get first depth data', () => {
 //     // towers.e5 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'e5'})
 //     towers.c5 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'c5'})
 //     towers.g7 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'g7'})
-//     towers.g5 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'g5'})
+//     // towers.g5 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'g5'})
 //     towers.g3 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'g3'})
 //     towers.e3 = new TowerConstructor({currentColor: PieceColor.b, onBoardPosition: 'e3'})
 //     const moves = mmr.lookForKingMoves('b2', towers)
@@ -62,12 +107,16 @@ test('moves tree get first depth data', () => {
 //     console.log(moves.free?.map(m => m.move.join('-')),
 //         moves.mandatory?.map(m => `${m.move.join(':')}/${m.minLength}/${m.completed}/${m.takenPieces.join('|')}`))
 // })
-// test('king eval', () => {
-//     const d: ICheckerTower = {currentColor: PieceColor.b, currentType: TowerType.k, bPiecesQuantity: 1, onBoardPosition: 'a1'}
-//     evaluator.handlePieces(d)
-//     console.error(evaluator)
-//     expect(d).toBe(d)
-// })
+test('check create board', () => {
+    const board  = createBoardWithoutTowers()
+    // console.warn([1,2,3,4].at(-1))
+    // console.log('board ', board)
+})
+
+test('check create cells', () => {
+    const cells = createCellsMap(8)
+    // console.warn(cells)
+})
 
 // test('test checking diagonal for mandatory moves', () => {
 //     mmr.setProps({GV: 'towers', size: 8})
@@ -275,424 +324,13 @@ test('moves tree get first depth data', () => {
 //     // const _board = createStartBoard(8)
     
 // })
-test('check kings num changed', () => {
-    // const mmr = new MandatoryMovesResolver()
-    // mmr.setProps({GV: 'towers', size: 8})
-    const board1 = createEmptyBoard(8)
-    const board2 = createEmptyBoard(8)
-    // const board3 = createEmptyBoard(8)
-    // board['c7'].tower = newOnBoardTower(PieceColor.b)
-    board1['b6'].tower = newOnBoardTower(PieceColor.w)
-    board1['b6'].tower.currentType = TowerType.k
-    board2['d6'].tower = newOnBoardTower(PieceColor.w)
-    // board2['d6'].tower.currentType = TowerType.k
-    // board['f4'].tower = newOnBoardTower(PieceColor.w)
-    // board['b4'].tower = newOnBoardTower(PieceColor.b)
-    // board['d4'].tower.bPiecesQuantity = 1
-    // board['d6'].tower = newOnBoardTower(PieceColor.w)
-    // board['b6'].tower = newOnBoardTower(PieceColor.w)
-    // board['f2'].tower = newOnBoardTower(PieceColor.w)
-    // const expected = ["b6:d8:f6"]
-    expect(checkIfNumberOfKingsChanged(board1, board2)).toBeTruthy()
-    // expect(checkIfNumberOfKingsChanged(board1, board3)).toBeTruthy()
-})
 
 
-test('check obligated rivalMove', () => {
-    mmr.setProps({GV: 'towers', size: 8})
-    const board = createEmptyBoard(8)
-    board['c7'].tower = newOnBoardTower(PieceColor.b)
-    board['d6'].tower = newOnBoardTower(PieceColor.w)
-    // board['e5'].tower = newOnBoardTower(PieceColor.w)
-    board['f4'].tower = newOnBoardTower(PieceColor.w)
-    board['f2'].tower = newOnBoardTower(PieceColor.w)
-    board['d4'].tower = newOnBoardTower(PieceColor.w)
-    // board['b4'].tower = newOnBoardTower(PieceColor.b)
-    // board['d4'].tower.bPiecesQuantity = 1
-    // board['d6'].tower = newOnBoardTower(PieceColor.w)
-    // board['b6'].tower = newOnBoardTower(PieceColor.w)
-    // board['f2'].tower = newOnBoardTower(PieceColor.w)
-    const expected = ["b6:d8:f6"]
-    // expect(mmr.lookForMandatoryMoves(PieceColor.b, board).map(r => r.rivalMove)).toMatchObject(expected)
-})
 
 test('make obligated rivalMove', () => {
 
-    mmr2.setProps({GV: 'towers', size: 8})
-    // const board = createEmptyBoard(8)
-    const bs = {
-        "a1": {
-            "boardKey": "a1",
-            "tower": {
-                "currentColor": "white",
-                "currentType": "ordinary",
-                "wPiecesQuantity": 1,
-                "bPiecesQuantity": 0
-            },
-            "neighbors": {
-                "rightUp": "b2"
-            }
-        },
-        "a3": {
-            "boardKey": "a3",
-            "tower": null,
-            "neighbors": {
-                "rightUp": "b4",
-                "rightDown": "b2"
-            }
-        },
-        "a5": {
-            "boardKey": "a5",
-            "tower": null,
-            "neighbors": {
-                "rightUp": "b6",
-                "rightDown": "b4"
-            }
-        },
-        "a7": {
-            "boardKey": "a7",
-            "tower": {
-                "currentColor": "black",
-                "currentType": "ordinary",
-                "wPiecesQuantity": 0,
-                "bPiecesQuantity": 1
-            },
-            "neighbors": {
-                "rightUp": "b8",
-                "rightDown": "b6"
-            }
-        },
-        "b2": {
-            "boardKey": "b2",
-            "tower": {
-                "currentColor": "white",
-                "currentType": "ordinary",
-                "wPiecesQuantity": 1,
-                "bPiecesQuantity": 0
-            },
-            "neighbors": {
-                "leftUp": "a3",
-                "leftDown": "a1",
-                "rightUp": "c3",
-                "rightDown": "c1"
-            }
-        },
-        "b4": {
-            "boardKey": "b4",
-            "tower": {
-                "currentColor": "white",
-                "currentType": "ordinary",
-                "wPiecesQuantity": 1,
-                "bPiecesQuantity": 0
-            },
-            "neighbors": {
-                "leftUp": "a5",
-                "leftDown": "a3",
-                "rightUp": "c5",
-                "rightDown": "c3"
-            }
-        },
-        "b6": {
-            "boardKey": "b6",
-            "tower": null,
-            "neighbors": {
-                "leftUp": "a7",
-                "leftDown": "a5",
-                "rightUp": "c7",
-                "rightDown": "c5"
-            }
-        },
-        "b8": {
-            "boardKey": "b8",
-            "tower": null,
-            "neighbors": {
-                "leftDown": "a7",
-                "rightDown": "c7"
-            }
-        },
-        "c1": {
-            "boardKey": "c1",
-            "tower": null,
-            "neighbors": {
-                "leftUp": "b2",
-                "rightUp": "d2"
-            }
-        },
-        "c3": {
-            "boardKey": "c3",
-            "tower": null,
-            "neighbors": {
-                "leftUp": "b4",
-                "leftDown": "b2",
-                "rightUp": "d4",
-                "rightDown": "d2"
-            }
-        },
-        "c5": {
-            "boardKey": "c5",
-            "tower": {
-                "currentColor": "black",
-                "currentType": "ordinary",
-                "wPiecesQuantity": 0,
-                "bPiecesQuantity": 1
-            },
-            "neighbors": {
-                "leftUp": "b6",
-                "leftDown": "b4",
-                "rightUp": "d6",
-                "rightDown": "d4"
-            }
-        },
-        "c7": {
-            "boardKey": "c7",
-            "tower": null,
-            "neighbors": {
-                "leftUp": "b8",
-                "leftDown": "b6",
-                "rightUp": "d8",
-                "rightDown": "d6"
-            }
-        },
-        "d2": {
-            "boardKey": "d2",
-            "tower": {
-                "currentColor": "white",
-                "currentType": "ordinary",
-                "wPiecesQuantity": 1,
-                "bPiecesQuantity": 0
-            },
-            "neighbors": {
-                "leftUp": "c3",
-                "leftDown": "c1",
-                "rightUp": "e3",
-                "rightDown": "e1"
-            }
-        },
-        "d4": {
-            "boardKey": "d4",
-            "tower": {
-                "currentColor": "white",
-                "currentType": "ordinary",
-                "wPiecesQuantity": 2,
-                "bPiecesQuantity": 0
-            },
-            "neighbors": {
-                "leftUp": "c5",
-                "leftDown": "c3",
-                "rightUp": "e5",
-                "rightDown": "e3"
-            }
-        },
-        "d6": {
-            "boardKey": "d6",
-            "tower": {
-                "currentColor": "white",
-                "currentType": "ordinary",
-                "wPiecesQuantity": 1,
-                "bPiecesQuantity": 1
-            },
-            "neighbors": {
-                "leftUp": "c7",
-                "leftDown": "c5",
-                "rightUp": "e7",
-                "rightDown": "e5"
-            }
-        },
-        "d8": {
-            "boardKey": "d8",
-            "tower": {
-                "currentColor": "black",
-                "currentType": "ordinary",
-                "wPiecesQuantity": 0,
-                "bPiecesQuantity": 1
-            },
-            "neighbors": {
-                "leftDown": "c7",
-                "rightDown": "e7"
-            }
-        },
-        "e1": {
-            "boardKey": "e1",
-            "tower": {
-                "currentColor": "white",
-                "currentType": "ordinary",
-                "wPiecesQuantity": 1,
-                "bPiecesQuantity": 0
-            },
-            "neighbors": {
-                "leftUp": "d2",
-                "rightUp": "f2"
-            }
-        },
-        "e3": {
-            "boardKey": "e3",
-            "tower": null,
-            "neighbors": {
-                "leftUp": "d4",
-                "leftDown": "d2",
-                "rightUp": "f4",
-                "rightDown": "f2"
-            }
-        },
-        "e5": {
-            "boardKey": "e5",
-            "tower": null,
-            "neighbors": {
-                "leftUp": "d6",
-                "leftDown": "d4",
-                "rightUp": "f6",
-                "rightDown": "f4"
-            }
-        },
-        "e7": {
-            "boardKey": "e7",
-            "tower": null,
-            "neighbors": {
-                "leftUp": "d8",
-                "leftDown": "d6",
-                "rightUp": "f8",
-                "rightDown": "f6"
-            }
-        },
-        "f2": {
-            "boardKey": "f2",
-            "tower": null,
-            "neighbors": {
-                "leftUp": "e3",
-                "leftDown": "e1",
-                "rightUp": "g3",
-                "rightDown": "g1"
-            }
-        },
-        "f4": {
-            "boardKey": "f4",
-            "tower": null,
-            "neighbors": {
-                "leftUp": "e5",
-                "leftDown": "e3",
-                "rightUp": "g5",
-                "rightDown": "g3"
-            }
-        },
-        "f6": {
-            "boardKey": "f6",
-            "tower": {
-                "currentColor": "black",
-                "currentType": "ordinary",
-                "wPiecesQuantity": 0,
-                "bPiecesQuantity": 1
-            },
-            "neighbors": {
-                "leftUp": "e7",
-                "leftDown": "e5",
-                "rightUp": "g7",
-                "rightDown": "g5"
-            }
-        },
-        "f8": {
-            "boardKey": "f8",
-            "tower": {
-                "currentColor": "black",
-                "currentType": "ordinary",
-                "wPiecesQuantity": 0,
-                "bPiecesQuantity": 1
-            },
-            "neighbors": {
-                "leftDown": "e7",
-                "rightDown": "g7"
-            }
-        },
-        "g1": {
-            "boardKey": "g1",
-            "tower": {
-                "currentColor": "white",
-                "currentType": "ordinary",
-                "wPiecesQuantity": 1,
-                "bPiecesQuantity": 0
-            },
-            "neighbors": {
-                "leftUp": "f2",
-                "rightUp": "h2"
-            }
-        },
-        "g3": {
-            "boardKey": "g3",
-            "tower": null,
-            "neighbors": {
-                "leftUp": "f4",
-                "leftDown": "f2",
-                "rightUp": "h4",
-                "rightDown": "h2"
-            }
-        },
-        "g5": {
-            "boardKey": "g5",
-            "tower": {
-                "currentColor": "black",
-                "currentType": "ordinary",
-                "wPiecesQuantity": 0,
-                "bPiecesQuantity": 3
-            },
-            "neighbors": {
-                "leftUp": "f6",
-                "leftDown": "f4",
-                "rightUp": "h6",
-                "rightDown": "h4"
-            }
-        },
-        "g7": {
-            "boardKey": "g7",
-            "tower": null,
-            "neighbors": {
-                "leftUp": "f8",
-                "leftDown": "f6",
-                "rightUp": "h8",
-                "rightDown": "h6"
-            }
-        },
-        "h2": {
-            "boardKey": "h2",
-            "tower": null,
-            "neighbors": {
-                "leftUp": "g3",
-                "leftDown": "g1"
-            }
-        },
-        "h4": {
-            "boardKey": "h4",
-            "tower": null,
-            "neighbors": {
-                "leftUp": "g5",
-                "leftDown": "g3"
-            }
-        },
-        "h6": {
-            "boardKey": "h6",
-            "tower": {
-                "currentColor": "black",
-                "currentType": "ordinary",
-                "wPiecesQuantity": 3,
-                "bPiecesQuantity": 1
-            },
-            "neighbors": {
-                "leftUp": "g7",
-                "leftDown": "g5"
-            }
-        },
-        "h8": {
-            "boardKey": "h8",
-            "tower": {
-                "currentColor": "black",
-                "currentType": "ordinary",
-                "wPiecesQuantity": 0,
-                "bPiecesQuantity": 1
-            },
-            "neighbors": {
-                "leftDown": "g7"
-            }
-        }
-    }
-    const board = bs as IBoardToGame
+
+
     // board['a5'].tower = newOnBoardTower(PieceColor.w, TowerType.k)
     // board['c7'].tower = newOnBoardTower(PieceColor.b)
     // board['e7'].tower = newOnBoardTower(PieceColor.b)

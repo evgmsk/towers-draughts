@@ -1,16 +1,16 @@
 import React from 'react'
-import {connect, ConnectedProps} from 'react-redux'
+
 import { CellTowerRatio } from '../../constants/gameConstants';
 
 import { PieceColor, TowerConstructor, TowerType } from '../../store/models';
-import { IRootState } from '../../store/rootState&Reducer';
+
 import './checker-tower.scss';
 
-interface FaceProps {w: number, b: number, colorW: boolean, king: boolean, towers: boolean}
+interface FaceProps {w: number, b: number, colorW: boolean, king: boolean, isTowers: boolean}
 
 export const TowerFace: React.FC<FaceProps> = (props) => {
-  const {w, b, colorW, king, towers} = props
-  if (!towers) {
+  const {w, b, colorW, king, isTowers} = props
+  if (!isTowers) {
     const className = `${colorW ? 'white-checker' : 'black-checker'}${king ? ' king' : ''}`
     return <div className={className}>{king && <span className="king-mark">K</span>}</div>
   }
@@ -29,7 +29,7 @@ export const TowerFace: React.FC<FaceProps> = (props) => {
     const pieceClass = `${BlackOrWhite} ${UpOrDown}${KingAndTop}`
     return <div key={i} className={pieceClass}><span className="king-mark">{king && !i ? 'K' : null}</span></div>
   })
-  // const commonClass = `unface-tower-${colorW ? 'white' : 'black'}`
+
   return (
     <div className="tower-wrapper">
       {Tower}
@@ -48,25 +48,34 @@ export const NumsPresentation:React.FC<{w: number, b: number, colorW: boolean, k
           </div>
 }
 
-const mapState = (state: IRootState) => ({
-  towers: state.gameOptions.gameVariant === 'towers',
-  bs: state.boardOptions.boardSize
-})
+type TCProps = TowerConstructor & {isTowers: boolean, bs: number}
 
-const mapDispatch = {}
+export class TowerComponent extends React.Component<TCProps> {
 
-const connector = connect(mapState, mapDispatch)
-
-type TowerComponentProps = ConnectedProps<typeof connector> & TowerConstructor & {mandatory: boolean}
-
-
-export class TowerComponent extends React.Component<TowerComponentProps> {
-
-  shouldComponentUpdate(prevProps: TowerConstructor ) {
-    return JSON.stringify(prevProps) !== JSON.stringify(this.props)
-  }
-  componentDidUpdate() {
-    // console.log('updated', this.props.positionInDOM)
+  shouldComponentUpdate(prevProps: TCProps) {
+    const {
+      positionInDOM: {x, y},
+      onBoardPosition,
+      currentType,
+      currentColor,
+      view,
+      wPiecesQuantity,
+      bPiecesQuantity,
+      mandatory,
+      bs,
+      isTowers,
+    } = this.props
+    return x !== prevProps.positionInDOM.x
+        || y !== prevProps.positionInDOM.y
+        || onBoardPosition !== prevProps.onBoardPosition
+        || currentType !== prevProps.currentType
+        || currentColor !== prevProps.currentColor
+        || view !== prevProps.view
+        || wPiecesQuantity !== prevProps.wPiecesQuantity
+        || bPiecesQuantity !== prevProps.bPiecesQuantity
+        || mandatory !== prevProps.mandatory
+        || bs !== prevProps.bs
+        || isTowers !== prevProps.isTowers
   }
 
   render() {
@@ -81,11 +90,11 @@ export class TowerComponent extends React.Component<TowerComponentProps> {
     } = this.props as TowerConstructor
     const mt = this.props.mandatory
     const boardSize = this.props.bs
-    const towers = this.props.towers
+    const {isTowers} = this.props
     const {x, y} = positionInDOM!
-    const className = `checker-tower ${currentType} ${currentColor} ${view} board-${boardSize}${mt? ' mandatory-tower': ''}${towers ? ' towers' : ' classic'} ratio-${CellTowerRatio*10}`
+    const className = `checker-tower ${currentType} ${currentColor} ${view} board-${boardSize}${mt? ' mandatory-tower': ''}${isTowers ? ' towers' : ' classic'} ratio-${CellTowerRatio*10}`
     const style = {top: `${y}px`, left: `${x}px`} //  {transform: `translate(${x}px, ${y}px)`}//
-    // console.log(style)
+
     const colorW = currentColor === PieceColor.w 
     const towerView = (wPiecesQuantity + bPiecesQuantity > 1) && view !== 'face'
     const props={
@@ -93,12 +102,10 @@ export class TowerComponent extends React.Component<TowerComponentProps> {
       b: bPiecesQuantity, 
       colorW, 
       king: currentType === TowerType.k, 
-      towers,
+      isTowers,
     }
     return <div className={className} data-indexes={onBoardPosition} style={style}>
               {towerView ? <NumsPresentation {...props} /> : <TowerFace {...props}/>}
             </div>
   }
 }
-
-export default connector(TowerComponent)

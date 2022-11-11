@@ -1,9 +1,9 @@
-import React from 'react'
+import React, {useState} from 'react'
 import { connect, ConnectedProps} from 'react-redux' 
 
 import { IRootState } from "../../store/rootState&Reducer"
 import {
-    downloadGame,
+    uploadGame,
     settingBoard,
     setDepth,
     setMoveOrderAction,
@@ -22,14 +22,14 @@ import {oppositeColor} from "../../game-engine/gameplay-helper-functions";
 
 const stateMap = (state: IRootState) => ({
     analysis: state.analyze,
-    towerTouched: state.board.towerTouched,
+    towerTouched: state.boardAndTowers.towerTouched,
     reversedBoard: state.boardOptions.reversedBoard,
     history: state.analyze.gameResult.movesHistory || [],
     GV: state.gameOptions.gameVariant
 })
 
 const dispatchMap = {
-    downloadGame,
+    uploadGame,
     settingBoard,
     reverseBoard,
     setGameVariant,
@@ -59,10 +59,10 @@ export const AnalyzeGameMenu: React.FC<AnalysisMenuProps> = (props: AnalysisMenu
         analyzeLastGame,
         removePiece,
         GV,
-
         setStartPosition,
         towerTouched
     } = props
+    const [startPos, setStartPos] = useState(true)
     const {settingPosition, analyzeLastGame: ALG} = analysis
     const whiteMove = analysis.pieceOrder === PieceColor.w
     const handleGameVariantSelect = (e: any) => {
@@ -80,12 +80,12 @@ export const AnalyzeGameMenu: React.FC<AnalysisMenuProps> = (props: AnalysisMenu
             case 'setup': {
                 return settingBoard(!settingPosition)
             }
-            case 'download': {
-                console.log('upload')
+            case 'upload': {
                 return
             }
             case 'startPosition': {
-                return setStartPosition
+                setStartPos(!startPos)
+                return setStartPosition(startPos)
             }
             case 'analyze': {
                 return analyzeLastGame(true)
@@ -119,9 +119,9 @@ export const AnalyzeGameMenu: React.FC<AnalysisMenuProps> = (props: AnalysisMenu
                     <span className='material-icons'>{analysis.removePiece ? 'pan_tool' : 'delete'}</span>
                 </button>
             </li>
-            <li className="game-analyze-menu_item" title="setup-start-board">
+            <li className="game-analyze-menu_item" title="setup start board">
                 <button type="button" onClick={() => handleClick('startPosition')}>
-                    sb{/* <span className='material-icons'>sb</span> */}
+                    {!startPos ? 'clear board' : 'start pos'}
                 </button>
             </li>
             <li className="game-analyze-menu_item" title="reverse board">
@@ -129,13 +129,13 @@ export const AnalyzeGameMenu: React.FC<AnalysisMenuProps> = (props: AnalysisMenu
                     <span className='material-icons'>change_circle</span>
                 </button>
             </li>
-            <li className="game-analyze-menu_item" title="download game result" >
+            <li className="game-analyze-menu_item" title="upload game" >
                 <div title='upload game'>
-                    <input type="file" onInput={() => handleClick('download')} />
+                    <input type="file" onInput={() => handleClick('upload')} />
                     <span className='material-icons'>file_upload</span>
                 </div>
             </li>
-            <li className="game-analyze-menu_item" title={!settingPosition ? 'setup endPosition' : 'analyze endPosition'} >
+            <li className="game-analyze-menu_item" title={!settingPosition ? 'setup position' : 'analyze position'} >
                 <button type="button" name="game" onClick={() => handleClick('setup')}>
                     <span className='material-icons'>{!settingPosition ? 'grid_on' : 'construction'}</span>
                 </button>

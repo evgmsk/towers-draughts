@@ -9,7 +9,7 @@ import { MovesHistory } from '../../game-components/moves-history/MovesHistory'
 import AnalysisBoard from './AnalysisBoard'
 
 import './analyze-page.scss'
-import EvaluationResult from "./evaluation-result";
+import EvaluationResult from "./Evaluation-result";
 
 
 export const AnalysisPage: React.FC<{}> = (props) => {

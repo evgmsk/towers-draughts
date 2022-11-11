@@ -1,13 +1,9 @@
 import {put, takeLatest, select } from 'redux-saga/effects';
 
 import {FindOpponentAction, SetGameVariantAction, GameOptionActions as GOA} from '../gameOptions/types'
-// import { BoardOptionActions as BOA } from '../boardOptions/types';
 import {GameActions as GA} from '../game/types'
-import { createEmptyBoard} from '../../game-engine/prestart-help-function-constants';
-// import { sendMessage } from '../../web-sockets/ws';
-import { GameAnalysisActions } from '../gameAnalysis/types';
 import { BoardOptionActions } from '../boardOptions/types';
-import mmr from '../../game-engine/mandatory-move-resolver'
+import mmr from '../../game-engine/moves-resolver'
 import {GameVariants} from "../models";
 
  
@@ -57,10 +53,6 @@ function* workerGameVariant(action: SetGameVariantAction) {
     const size = action.payload === 'international' ? 10 : 8
     mmr.setProps({GV: action.payload as GameVariants, size})
     yield put({type: BoardOptionActions.SET_BOARD_SIZE, payload: size})
-    yield put({
-        type: GameAnalysisActions.UPDATE_ANALYSIS_STATE,
-        payload: {currentPosition: createEmptyBoard(size)}
-    })
 }
 
 export default function* watcherPreGame() {

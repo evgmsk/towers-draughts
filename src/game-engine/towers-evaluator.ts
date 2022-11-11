@@ -2,21 +2,20 @@ import {
     FreeMRResult,
     FullMRResult,
     ICheckerTower,
+    IPiecesData,
+    IPositionData,
     PieceColor,
     TowerConstructor,
     TowersMap,
     TowerType,
-    IPiecesData,
-    IPositionData,
     Value
 } from "../store/models"
-import mmr from './engine-on-towers'
+import mmr from './moves-resolver'
 import {copyObj, oppositeColor} from "./gameplay-helper-functions";
 
 const DefaultPieces = {pieceNumber: 0, kingNumber: 0}
 
 export class Evaluator {
-    GV = mmr.GV
     piecesData = {
         white: copyObj(DefaultPieces),
         black: copyObj(DefaultPieces)
@@ -35,42 +34,19 @@ export class Evaluator {
         const towerKeys = Object.keys(towers)
         let mandatory = [] as FullMRResult[]
         let free = [] as FreeMRResult[]
+        // console.log('get data', Object.keys(towers).map(m => towers[m].shortData()))
         for (let key of towerKeys) {
-            const {currentType, currentColor} = towers[key]
             this.savePieceData(towers[key])
-            if (currentColor !== pieceOrder) {
+            if (towers[key].currentColor !== pieceOrder) {
                 continue
             }
-            if (currentType === TowerType.k) {
-                const moves = mmr.lookForKingMoves(key, towers)
-                if (moves.mandatory?.length) {
-                    mandatory = mandatory.concat(moves.mandatory)
-                }
-                if (moves.free?.length) {
-                    free = free.concat(moves.free)
-                }
-            } else {
-                const moves = mmr.lookForManMoves(key, towers)
-                if (moves.mandatory?.length) {
-                    mandatory = mandatory.concat(moves.mandatory)
-                }
-                if (moves.free?.length) {
-                    free = free.concat(moves.free)
-                }
-            }
+            const {mandatory: mm = [], free: fm = []} = mmr.getTowerMove(towers, key)
+            mandatory = mandatory.concat(mm)
+            free = free.concat(fm)
         }
         const totalMovesNumber = mandatory.length + free.length
         return {
-            moves: mandatory.length
-                ? mandatory.map(m => ({
-                    move: m.move.join(':'),
-                    position: m.endPosition,
-                    takenPieces: m.takenPieces
-                }))
-                : free.map(m => ({
-                    move: m.move.join('-'),
-                    position: mmr.makeMove(m)
-                })),
+            moves: mmr.getMovesFromTotalMoves({mandatory, free}),
             totalMovesNumber,
             pieceOrder,
             deepValue: {
@@ -122,7 +98,7 @@ export class Evaluator {
     }
 
     savePieceData(tower: TowerConstructor) {
-        if (this.GV === 'towers' && tower.wPiecesQuantity + tower.bPiecesQuantity > 1) {
+        if (mmr.GV === 'towers' && tower.wPiecesQuantity + tower.bPiecesQuantity > 1) {
             this.handleTower(tower)
         } else {
             this.handlePieces(tower)
@@ -130,7 +106,7 @@ export class Evaluator {
     }
 
     advantageInNumberOfMoves = (wM: number, bM: number) => {
-        return 8 / (bM + .1) - 8 / (wM + .1)
+        return 1 / (bM + .1) - 1 / (wM + .1)
     }
 
     advantageInTowers = (whitePieceNumber: number, blackPieceNumber: number) => {

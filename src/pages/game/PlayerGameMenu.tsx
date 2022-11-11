@@ -1,20 +1,21 @@
 import { ConnectedProps, connect} from "react-redux"
+import React from 'react'
+
 import { Logo } from "../../common/LogoIcon"
 import { 
     endGame,
     declineDraw,
     offerDraw,
     cancelGame,
-    confirmStartGame,
     setGameMode,
     surrender
 } from "../../store/game/actions"
-import {undoLastMove} from '../../store/board/actions'
+import {undoLastMove} from '../../store/board-towers/actions'
 import { findRival, finishGameSetup } from "../../store/gameOptions/actions"
 import { IRootState } from "../../store/rootState&Reducer"
-import { PieceColor } from "../../game-engine/js-engine/gameplay-helper-fuctions"
 import { analyzeLastGame } from "../../store/gameAnalysis/actions"
 import { useHistory } from "react-router"
+import {PieceColor} from "../../store/models";
 
 const gameMenuMapState = (state: IRootState) => ({
     drawOffered: state.game.rivalOfferedDraw,
@@ -30,7 +31,6 @@ const gameMenuMapDispatch = {
     declineDraw,
     offerDraw,
     cancelGame,
-    confirmStartGame,
     findRival,
     finishGameSetup,
     setGameMode,
@@ -65,6 +65,7 @@ const GameMenuComponent: React.FC<ConnectedProps<typeof gameMenuConnector>> = (p
     const reason = playerColor === PieceColor.w ? `abandonedByWhite` : 'abandonedByBlack'
 
     const handleCancelGame = (e: React.MouseEvent) => {
+        e.preventDefault()
         cancelGame()
     }
    
@@ -74,9 +75,9 @@ const GameMenuComponent: React.FC<ConnectedProps<typeof gameMenuConnector>> = (p
     }
 
     const handleAnalyzeGame = (e: React.MouseEvent) => {
+        e.preventDefault()
         if (gameMode === 'isPlaying') {
             endGame(reason)
-
             setGameMode('isAnalyzing')
         }
         analyzeLastGame(true)

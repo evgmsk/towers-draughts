@@ -1,8 +1,8 @@
-import {IAnalysisState, IBoardToGame, IGameResult, IMoveProps, PieceColor} from "../models";
+import {IAnalysisState, IGameResult, IMoveToMake, PieceColor, TowersMap} from "../models";
 import { GameAnalysisActions, GameAnalysisTypes } from "./types";
 
 
-export function setStartPosition(payload = null) {
+export function setStartPosition(payload = true) {
     return {
         type: GameAnalysisActions.SET_START_POSITION,
         payload
@@ -23,14 +23,14 @@ export function setBestMoveLine(payload: {move: string, value: number}[]) {
     }
 }
 
-export function makeNewMove(payload: Partial<IMoveProps>) {
+export function makeNewMove(payload: Partial<IMoveToMake>) {
     return {
         type: GameAnalysisActions.MAKE_NEW_MOVE,
         payload
     }
 }
 
-export function startNewLine(payload:IMoveProps) {
+export function startNewLine(payload:Partial<IMoveToMake>) {
     return {
         type: GameAnalysisActions.START_NEW_LINE,
         payload
@@ -53,13 +53,6 @@ export function evaluatePosition(payload: boolean) {
 export function setDepth(payload:number) {
     return {
         type: GameAnalysisActions.SET_DEPTH,
-        payload
-    }
-}
-
-export function createPositionTree(payload: Map<string, IBoardToGame>): GameAnalysisTypes {
-    return {
-        type: GameAnalysisActions.CREATE_POSITION_TREE,
         payload
     }
 }
@@ -99,21 +92,21 @@ export function goToPosition(payload: {index: number, move: string}): GameAnalys
     }
 }
 
-export function savePosition(payload: Map<string, IBoardToGame>): GameAnalysisTypes {
+export function savePosition(payload: TowersMap): GameAnalysisTypes {
     return {
         type: GameAnalysisActions.SAVE_POSITION,
         payload
     }
 }
 
-export function updatePosition(payload: Partial<IMoveProps>): GameAnalysisTypes {
+export function updatePosition(payload: Partial<IMoveToMake>): GameAnalysisTypes {
     return {
         type: GameAnalysisActions.UPDATE_POSITION,
         payload
     }
 }
 
-export function downloadGame(payload: IGameResult): GameAnalysisTypes {
+export function uploadGame(payload: IGameResult): GameAnalysisTypes {
     return {
         type: GameAnalysisActions.UPLOAD_GAME,
         payload

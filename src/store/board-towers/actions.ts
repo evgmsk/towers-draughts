@@ -1,5 +1,6 @@
-import {IMoveToMake, TowersMap, TowerTouched} from "../models";
+import {IBoard, IMoveToMake, MMRResult, TowersMap, TowerTouched} from "../models";
 import { TowersActions, TowersActionTypes } from "./types";
+
 
 export function updatePositionTree(payload: { key: string, value: TowersMap }) {
     return {
@@ -8,12 +9,12 @@ export function updatePositionTree(payload: { key: string, value: TowersMap }) {
     }
 }
 
-export function updateBoardSize(payload: number) {
-    return {
-        type: TowersActions.DOM_BOARD_NEED_UPDATE,
-        payload
-    }
-}
+// export function updateBoardSize(payload: number) {
+//     return {
+//         type: TowersActions.DOM_BOARD_NEED_UPDATE,
+//         payload
+//     }
+// }
 
 export function turn(payload: Partial<IMoveToMake>) {
     return {
@@ -29,27 +30,65 @@ export function undoLastMove(payload = null): TowersActionTypes {
     }
 }
 
-export function updateTouchedTower(payload: TowerTouched) {
+export function updateMoves(payload: {moves: MMRResult[]}): TowersActionTypes {
+    return {
+        type: TowersActions.UPDATE_MOVES,
+        payload
+    }
+}
+
+export function setTouchedTower(payload: { key: string, clientX: number, clientY: number }): TowersActionTypes {
+    return {
+        type: TowersActions.SET_TOUCHED_TOWER,
+        payload
+    }
+}
+
+export function updateTouchedTower(payload: TowerTouched): TowersActionTypes {
     return {
         type: TowersActions.UPDATE_TOUCHED_TOWER,
         payload
     }
 }
 
-export function createAnalysisTowers() {
+export function boardNeedUpdate(payload: DOMRect): TowersActionTypes {
     return {
-        type: TowersActions.CREATE_ANALYSIS_TOWERS
+        type: TowersActions.DOM_BOARD_NEED_UPDATE,
+        payload
     }
 }
 
-export function createOutboardTowers() {
+
+export function cancelTowerTransition(payload = null) {
     return {
-        type: TowersActions.CREATE_OUTBOARD_TOWERS
+        type: TowersActions.CANCEL_TOWER_TRANSITION,
+        payload
     }
 }
 
-export function createGameTowers() {
+export function updateTowers(payload: TowersMap): TowersActionTypes {
     return {
-        type: TowersActions.CREATE_GAME_TOWERS
+        type: TowersActions.UPDATE_TOWERS,
+        payload
     }
 }
+
+export function updateBoardState(payload: Partial<IBoard>): TowersActionTypes {
+    return {
+        type: TowersActions.UPDATE_BOARD_STATE,
+        payload
+    }
+}
+
+
+// export function createOutboardTowers() {
+//     return {
+//         type: TowersActions.CREATE_OUTBOARD_TOWERS
+//     }
+// }
+//
+// export function createGameTowers() {
+//     return {
+//         type: TowersActions.CREATE_GAME_TOWERS
+//     }
+// }

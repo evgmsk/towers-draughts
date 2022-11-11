@@ -1,4 +1,13 @@
-import {EndGameConditions, IBoardToGame, INewGameProps, IGameMode, IGameState, IMoveOrder, IMoveProps, PieceColor} from "../models";
+import {
+    EndGameConditions,
+    INewGameProps,
+    IGameMode,
+    IGameState,
+    IMoveOrder,
+    PieceColor,
+    TowersMap,
+    IMoveToMake
+} from "../models";
 // import { GameOptionActions } from "../gameOptions/types";
 
 export const GameActions = {
@@ -90,7 +99,7 @@ interface SetMoveOrderAction {
 
 interface UpdateGameStateAction {
     type: typeof GameActions.UPDATE_GAME_STATE,
-    payload: IBoardToGame
+    payload: TowersMap
 }
 
 interface SetGameStartedAction {
@@ -105,7 +114,7 @@ interface OfferDrawAction {
 
 interface MakeMoveAction {
     type: typeof GameActions.MAKE_MOVE,
-    payload: IMoveProps
+    payload: IMoveToMake
 }
 
 interface ConfirmStartGameAction {
@@ -137,5 +146,4 @@ export type GameActionTypes =
 | SetGameModeAction
 | NewGameVSPCAction
 | NewGameVSPlayerAction
-| CancelGameAction
 | ClearHistoryAction

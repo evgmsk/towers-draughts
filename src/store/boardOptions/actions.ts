@@ -2,7 +2,8 @@ import { BoardNotation, IBoardOptions } from "../models";
 import { BoardOptionActions, BoardOptionActionTypes } from "./types";
 
 
-export function setBaordTheme(payload: string): BoardOptionActionTypes {
+
+export function setBoardTheme(payload: string): BoardOptionActionTypes {
     return {
         type: BoardOptionActions.SET_GAME_BOARD_OPTIONS,
         payload

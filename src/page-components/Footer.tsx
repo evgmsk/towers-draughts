@@ -8,14 +8,18 @@ import { IRootState } from '../store/rootState&Reducer'
 import {setPortrait, setWindowSize, close} from '../store/app/actions'
 
 import './footer.scss'
+import {updateBoardState} from "../store/board-towers/actions";
+import tur from "../game-engine/towers-updater";
 
 const mapState = (state: IRootState) => ({
     token: state.user.token,
     windowSize: state.app.windowSize,
     portrait: state.app.portrait,
-    game: state.game.gameMode === 'isPlaying'
+    gameMode: state.game.gameMode,
+    boardAndTowers: state.boardAndTowers,
+    boardOptions: state.boardOptions
 })
-const mapDispatch = {close, setWindowSize, setPortrait}
+const mapDispatch = {close, setWindowSize, setPortrait, updateBoardState}
 
 const connector = connect(mapState, mapDispatch)
 
@@ -34,7 +38,16 @@ class Footer extends React.Component<ConnectedProps<typeof connector>> {
 
     handleResize = () => {
         if (!window) return
-        const {windowSize, setPortrait, setWindowSize, portrait} = this.props
+        const {
+            windowSize,
+            setPortrait,
+            setWindowSize,
+            portrait,
+            gameMode,
+            updateBoardState,
+            boardOptions,
+            boardAndTowers
+        } = this.props
         const {width, height} = windowSize
         const {innerHeight, innerWidth} = window
         if ((Math.abs(width - innerWidth) > BaseBoardSize / 2 || Math.abs(height - innerHeight) > BaseBoardSize / 2)) {
@@ -43,6 +56,10 @@ class Footer extends React.Component<ConnectedProps<typeof connector>> {
                 setPortrait(false)
             } else if (!portrait && innerWidth / innerHeight <= 1.3) {
                 setPortrait(true)
+            }
+            if (gameMode  === 'isPlaying' || gameMode === 'isAnalyzing') {
+                const boardRect = document.querySelector('.board__body')?.getBoundingClientRect()
+                updateBoardState(tur.updateCellsAndTowersPosition(boardAndTowers, boardOptions, boardRect))
             }
         }
     }

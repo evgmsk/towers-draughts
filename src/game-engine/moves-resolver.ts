@@ -1,72 +1,81 @@
-import {BaseBoardSize, CellTowerRatio} from "../constants/gameConstants";
+import {BaseBoardSize} from "../constants/gameConstants";
 import {
     Board,
-    BoardCell,
-    CellsMap,
-    Diagonals,
+    BoardCell, CellsMap,
     FreeMRResult,
     FullMRResult,
     GameVariants,
     IBoard,
-    IBoardBase,
-    IBoardOptions,
     IGameState,
     IMoveOrder,
     ISortedMoves,
     ITotalMoves,
-    ITowerPosition,
+    MMRResult,
+    Move,
     PieceColor,
     StepMProps,
     TowerConstructor,
     TowersMap,
-    TowerTouched,
     TowerType
 } from "../store/models"
-import {copyObj, crossDirections, getCellSize, oppositeColor, oppositeDirection} from "./gameplay-helper-functions";
-import {createBoardWithoutTowers, updateCellsMap} from "./prestart-help-function-constants";
+import {copyObj, oppositeColor, oppositeDirection} from "./gameplay-helper-functions";
+import {createBoardWithoutTowers, determineCellPosition} from "./prestart-help-function";
+
+
+export class KingDiagsRes {
+    preMove: FullMRResult
+    minMoveLength: number
+    _result = [] as FullMRResult[]
+    constructor(move?: FullMRResult) {
+        this.minMoveLength = move?.move?.length || 2
+        this.preMove = move || null as unknown as FullMRResult
+    }
+
+    size() {
+        return this._result.length
+    }
+
+    add(moves: FullMRResult[]) {
+        if (this._result.length && moves[0].move.length === this.minMoveLength) {
+            return
+        }
+        if (this._result.length
+            && this._result[0].move.length === this.minMoveLength
+            && moves[0].move.length > this.minMoveLength) {
+            this._result.shift()
+        }
+        this._result = this._result.concat(moves)
+    }
+
+    get(): FullMRResult[] {
+        return this._result
+    }
+}
 
 export class BaseMoveResolver {
     GV: GameVariants = 'towers'
     size: number = BaseBoardSize
-    board = createBoardWithoutTowers(this.size) as Board
+    board = createBoardWithoutTowers(BaseBoardSize) as Board
     setProps = (props: {GV: GameVariants, size: number}) => {
         this.GV = props.GV
         this.size = props.size
         this.board = createBoardWithoutTowers(props.size)
     }
 
-    checkTowerTypeChanging(to: string, boardSize: number, color: PieceColor, type: TowerType): TowerType {
-        if ((parseInt(to.slice(1)) === boardSize && color === PieceColor.w)
+    updateCellsMap = (cellsMap: CellsMap, cellSize: number, reversed = false) => {
+        const newMap = {} as CellsMap
+        Object.keys(cellsMap).forEach((key: string) => {
+            newMap[key] = determineCellPosition(key, cellSize, reversed, this.size)
+        })
+        return newMap
+    }
+
+    checkTowerTypeChanging(to: string, color: PieceColor, type: TowerType): TowerType {
+        if ((parseInt(to.slice(1)) === this.size && color === PieceColor.w)
             || (parseInt(to.slice(1)) === 1 && color === PieceColor.b)) {
             return TowerType.k
         }
         return type
-    }
-
-    getDiagonal(direction: string, startCellKey: string): BoardCell[] {
-        let cell = this.board[startCellKey]
-        const diagonal = [cell]
-        while (cell) {
-            const nextCellKey = cell.neighbors[direction]
-            if (nextCellKey) {
-                const nextCell = this.board[nextCellKey]
-                diagonal.push(nextCell)
-                cell = nextCell
-            } else {
-                return diagonal
-            }
-        }
-        return diagonal;
-    }
-
-    getDiagonals(cell: string, preDirected = ''): Diagonals {
-        const neighbors = this.board[cell]!.neighbors
-        const diagonals = {} as Diagonals
-        const availableDirections = (d: string) => (!!preDirected ? crossDirections(preDirected)[d] : true)
-        Object.keys(neighbors).filter((d: string) => availableDirections(d)).forEach((dir: string) => {
-            diagonals[dir] = this.getDiagonal(dir, cell)
-        })
-        return diagonals
     }
 
     captureTower = (tower: TowerConstructor): TowerConstructor | null => {
@@ -95,43 +104,26 @@ export class BaseMoveResolver {
 
 export class MoveResolveCommons extends BaseMoveResolver {
 
+    getDiagonal(direction: string, startCellKey: string): BoardCell[] {
+        let cell = this.board[startCellKey]
+        const diagonal = [cell]
+        while (cell) {
+            const nextCellKey = cell.neighbors[direction]
+            if (nextCellKey) {
+                const nextCell = this.board[nextCellKey]
+                diagonal.push(nextCell)
+                cell = nextCell
+            } else {
+                return diagonal
+            }
+        }
+        return diagonal;
+    }
+
     noManMoveRestrictions(color: PieceColor, key: string, targetKey: string) {
         return color === PieceColor.w
             ? parseInt(key.slice(1)) < parseInt(targetKey.slice(1))
             : parseInt(key.slice(1)) > parseInt(targetKey.slice(1))
-    }
-
-    checkNeighborsIsEmpty(key: string, towers: TowersMap, color: PieceColor): string[] {
-        return Object.keys(this.board[key].neighbors).reduce((acc: string[], nKey: string) => {
-            const targetCellKey = this.board[key].neighbors[nKey]
-            return !towers[targetCellKey] && this.noManMoveRestrictions(color, key, targetCellKey)
-                ? acc.concat(`${key}-${targetCellKey}`)
-                : acc
-        }, [])
-    }
-
-    lookForTowerFreeMoves = (boardKey: string, towers: TowersMap, color: PieceColor): string[] => {
-        const tower = towers[boardKey]
-        if (tower!.currentType === TowerType.m) {
-            return this.checkNeighborsIsEmpty(boardKey, towers, color)
-        } else {
-            return this.lookForKingFreeMoves(boardKey, towers)
-        }
-    }
-
-    lookForAllFreeMoves = (color: PieceColor, towers: TowersMap): string[] => {
-        let result: string[] = []
-        for (let key of Object.keys(towers)) {
-            const tower = towers[key]
-            if (tower.currentColor !== color) {
-                continue
-            }
-            const moves = this.lookForTowerFreeMoves(key, towers, color)
-            if (moves.length) {
-                result = result.concat(moves)
-            }
-        }
-        return result
     }
 
     getNewOrder = (props: Partial<IGameState>): IMoveOrder => {
@@ -147,49 +139,18 @@ export class MoveResolveCommons extends BaseMoveResolver {
         if (!towers[from]) {
             console.error('makeFreeMove invalid props', from, to, towers)
         }
-        const tower = towers[from]
-        const boardSize = this.GV === 'international' ? 10 : 8
-        tower.currentType = this.checkTowerTypeChanging(to, boardSize, tower.currentColor, tower.currentType)
+        const tower = copyObj(towers[from])
+        tower.currentType = this.checkTowerTypeChanging(to, tower.currentColor, tower.currentType)
         tower.onBoardPosition = to
         towers[to] = tower
         delete towers[from]
         return towers
     }
 
-    checkDiagonalForFreeKingMove(diag: BoardCell[], towers: TowersMap) {
-        const startCellKey = diag[0].boardKey
-        const moves = [] as string[]
-        for (let cell of diag.slice(1)) {
-            if (towers[cell.boardKey]) return moves
-            moves.push(`${startCellKey}-${cell.boardKey}`)
-        }
-        return moves
-    }
 
     checkLastLine(to: string, whiteMove: boolean): boolean {
         const currentLine = parseInt(to.slice(1))
         return (whiteMove && currentLine === this.size) || (!whiteMove && currentLine === 0)
-    }
-
-    lookForKingFreeMoves(cellKey: string, towers: TowersMap): string[] {
-        const diagonals = this.getDiagonals(cellKey)
-        let moves = [] as string[]
-        Object.keys(diagonals).forEach((key: string) => {
-            const diag = diagonals[key]
-            moves = moves.concat(this.checkDiagonalForFreeKingMove(diag, towers))
-        })
-        return moves
-    }
-
-    kingTowerAvailableMoves = (key: string, towers: TowersMap, cellsMap: CellsMap): CellsMap => {
-        const moves = this.lookForKingFreeMoves(key, towers)
-        const possibleMoves = {} as CellsMap
-        moves.forEach((m: string) => {
-            const moveSteps = m.split('-')
-            const cellKey = moveSteps[moveSteps.length - 1]
-            possibleMoves[cellKey] = cellsMap[cellKey] as ITowerPosition
-        })
-        return possibleMoves
     }
 
     makeDraughtMandatoryMove = (move: StepMProps): TowersMap => {
@@ -226,7 +187,7 @@ export class MoveResolveCommons extends BaseMoveResolver {
         }
         const _towers = copyObj(move.startPosition!)
         const [from, to] = [move.move[0], move.move[1]]
-        const tower = copyObj(_towers[from]) as TowerConstructor
+        const tower = _towers[from]
         tower.onBoardPosition = to
         const takenPiece = move.takenPieces![0]
         const newMiddleTower = this.captureTower(_towers[takenPiece])
@@ -243,7 +204,7 @@ export class MoveResolveCommons extends BaseMoveResolver {
         } else {
             _towers[takenPiece] = newMiddleTower
         }
-        tower.currentType = this.checkTowerTypeChanging(to, this.size, tower.currentColor, tower.currentType)
+        tower.currentType = this.checkTowerTypeChanging(to, tower.currentColor, tower.currentType)
         _towers[to] = tower as TowerConstructor
         return _towers
     }
@@ -257,7 +218,7 @@ export class MoveResolveCommons extends BaseMoveResolver {
         delete _towers[from]
         delete _towers[takenPiece]
         if (this.GV !== 'international' || last) {
-            tower.currentType = this.checkTowerTypeChanging(to, this.size, tower.currentColor, tower.currentType)
+            tower.currentType = this.checkTowerTypeChanging(to, tower.currentColor, tower.currentType)
         }
         _towers[to] = tower
         return _towers
@@ -289,30 +250,30 @@ export class KingMandatoryMoveResolver extends MoveResolveCommons {
             }
         }
         if (mandatory.length) {
-            console.warn('first moves', mandatory.map(m => m.move.join(':')))
             mandatory = this.lookForKingMandatoryMoves(mandatory)
         }
         return {mandatory, free}
     }
 
     lookForKingMandatoryMoves(props: FullMRResult[]): FullMRResult[] {
-        // console.warn('move cont', props, props.map(m => m.move.join(':')))
-        let result = new Set<FullMRResult>()
+        let completed = [] as FullMRResult[]
+        const minLength = props.slice(-1)[0].move.length
+        let extraMove = false
         for (let move of props) {
             if (move.completed) { continue }
             const moves = this.separateCompleted(this.lookForKingMandatoryDiagonals(move))
-            // console.warn('move cont2', unsepMoves.map(m => m.move.join(':')))
-            if (moves.completed.length) {
-                moves.completed.forEach(m => result.add(m))
-            }
+            completed = completed.concat(moves.completed)
             if (moves.toCheck.length) {
-                this.lookForKingMandatoryMoves(moves.toCheck).forEach(m => result.add(m))
+                extraMove = true
+                completed = completed.concat(this.lookForKingMandatoryMoves(moves.toCheck))
             }
         }
-        if (this.separateCompleted([...result]).toCheck.length) {
+        if (this.separateCompleted(completed).toCheck.length) {
             console.error('incorrect result')
         }
-        return [...result]
+        return !extraMove
+            ? completed
+            : completed.filter(m => m.move.length >= minLength + 1)
     }
 
     checkFirstKingDiagonal(dir: string, diag: BoardCell[], towers: TowersMap): ITotalMoves {
@@ -336,16 +297,15 @@ export class KingMandatoryMoveResolver extends MoveResolveCommons {
                 return {free, mandatory}
             }
             if (prevTower && (prevTower?.currentColor !== color) && !nextTower) {
-                free.length = 0
                 mandatory = mandatory.length
                     ? this.addKingMandatoryStepToResult(mandatory, nextCellKey, dir, cellKey)
                     : this.addFirstMandatoryStep(firstMoveProps, dir, cellKey, nextCellKey)
             }
+            if (i === 2 && !prevTower) {
+                free.push({move: [startCellKey, cellKey], startPosition: towers})
+            }
             if (!prevTower && !nextTower) {
-                if (i === 2) {
-                    free.push({move: [startCellKey, cellKey], startPosition: towers})
-                }
-                if (!mandatory.length) {
+                if (!mandatory.length ) {
                     free.push({move: [startCellKey, nextCellKey], startPosition: towers})
                 } else {
                     mandatory = this.addKingMandatoryStepToResult(mandatory, nextCellKey, dir)
@@ -354,30 +314,42 @@ export class KingMandatoryMoveResolver extends MoveResolveCommons {
             i++
             cellKey = nextCellKey
         }
-        return free.length ? {free} : {mandatory}
+        return {free, mandatory}
+    }
+
+    looKForNewBornKingMoves(props: FullMRResult) {
+        let result = new KingDiagsRes(props)
+        const {move, lastStepDirection} = props
+        const cellKey = move.slice(-1)[0]
+        const neighbors = this.board[cellKey].neighbors
+        const dir = Object.keys(neighbors).filter(k => k !== oppositeDirection(lastStepDirection))[0]
+        const diag = this.getDiagonal(dir, cellKey)
+        const moves = this.separateCompleted(this.checkKingDiagonal(diag, props, dir))
+        result.add(moves.completed)
+        if (moves.toCheck.length) {
+            result.add(this.lookForKingMandatoryMoves(moves.toCheck))
+        }
+        return result.get()
     }
 
     lookForKingMandatoryDiagonals(props: FullMRResult, excludeDirection = true): FullMRResult[] {
-        let result = new Set<FullMRResult>()
+        let result = new KingDiagsRes(props)
         const {move, lastStepDirection} = props
         const cellKey = move[move.length - 1]
         const neighbors = this.board[cellKey].neighbors
         const neighborKeys = Object.keys(neighbors)
+        if (neighborKeys.length === 1) {
+            result.add(this.checkIfMoveValidlyCompleted(props))
+        }
         for (let dir of neighborKeys) {
             if (dir === oppositeDirection(lastStepDirection!)
                 || (excludeDirection && dir === lastStepDirection)) { continue }
             const diag = this.getDiagonal(dir, cellKey)
             const moves = this.checkKingDiagonal(diag, props, dir)
             if (!moves.length) { continue }
-            if (moves[0].completed) {
-                result.add(moves[0])
-            } else {
-                result.clear()
-                props.minLength = moves[0].move.length
-                this.lookForKingMandatoryMoves(moves).forEach(m => result.add(m))
-            }
+            result.add(moves)
         }
-        return result.size ? Array.from(new Set(result)) : this.checkIfMoveValidlyCompleted(props)
+        return result.get()
     }
 
     changeTowerPosition(from: string, to: string, towers: TowersMap): TowersMap {
@@ -425,15 +397,13 @@ export class KingMandatoryMoveResolver extends MoveResolveCommons {
             const prevTower = towers![secondCellKey]
             const nextCelKey  = diag[i].boardKey
             const tower = towers![nextCelKey]
-            if (prevTower?.currentColor === color || (prevTower && tower)) {
+            if (prevTower?.currentColor === color
+                || (prevTower && tower)
+                || takenPieces.includes(secondCellKey)
+                || takenPieces.includes(nextCelKey)) {
                 return result.length ? result : this.checkIfMoveValidlyCompleted(prevMove)
             }
-            const conditionForMoveWithTakeTower = prevTower
-                && prevTower?.currentColor !== color
-                && !tower
-                && !takenPieces.includes(secondCellKey)
-                && !takenPieces.includes(nextCelKey)
-            if (conditionForMoveWithTakeTower) {
+            if (prevTower && prevTower?.currentColor !== color && !tower) {
                 result = result.length
                     ? this.addKingMandatoryStepToResult(result, nextCelKey, dir, secondCellKey)
                     : this.addFirstMandatoryStep(prevMove, dir, secondCellKey, nextCelKey)
@@ -443,7 +413,6 @@ export class KingMandatoryMoveResolver extends MoveResolveCommons {
             i++
             secondCellKey = nextCelKey
         }
-        // console.warn('check diag', dir, diag, prevMove.move, copyObj(result))
         return result.length ? result : this.checkIfMoveValidlyCompleted(prevMove)
     }
 
@@ -514,7 +483,6 @@ export class KingMandatoryMoveResolver extends MoveResolveCommons {
                 startPosition: m.startPosition
             })
         })
-        // console.warn('add', maxLengthMoves, nextStep, takenPiece, restMoves)
         return  restMoves
     }
 
@@ -548,7 +516,61 @@ export class KingMandatoryMoveResolver extends MoveResolveCommons {
     }
 }
 
-export class MandatoryMovesResolver extends KingMandatoryMoveResolver {
+export class MovesResolver extends KingMandatoryMoveResolver {
+
+    getTowerMove(towers: TowersMap, key: string): ITotalMoves {
+        return towers[key].currentType === TowerType.k
+            ? this.lookForKingMoves(key, towers)
+            : this.lookForManMoves(key, towers)
+    }
+
+    getMovesResultFromTotalMoves(props: ITotalMoves): MMRResult[] {
+        const {mandatory = [], free = []} = props
+            return mandatory.length
+            ? mandatory.map(m => ({
+                move: m.move,
+                endPosition: m.endPosition,
+                takenPieces: m.takenPieces
+            }))
+            : free.map(m => ({
+                move: m.move,
+                endPosition: this.makeMove(m)
+            }))
+    }
+
+    getPositionMoves(towers: TowersMap, pieceOrder: PieceColor): ITotalMoves {
+        let mandatory = [] as FullMRResult[], free = [] as FreeMRResult[]
+        const towerKeys = Object.keys(towers)
+        for (let key of towerKeys) {
+            if (towers[key].currentColor !== pieceOrder) {
+                continue
+            }
+            const {mandatory: mm = [], free: fm = []} = this.getTowerMove(towers, key)
+            mandatory = mandatory.concat(mm)
+            free = free.concat(fm)
+        }
+        return {free, mandatory}
+    }
+
+    getPositionDataWithoutValue(towers: TowersMap, pieceOrder: PieceColor): Partial<IBoard> {
+        return {
+            moves: this.getMovesResultFromTotalMoves(this.getPositionMoves(towers, pieceOrder)),
+            towers
+        }
+    }
+
+    getMovesFromTotalMoves(props: ITotalMoves): Move[] {
+        return props.mandatory?.length
+            ? props.mandatory.map(m => ({
+                move: m.move.join(':'),
+                position: m.endPosition,
+                takenPieces: m.takenPieces
+            }))
+            : props.free!.map(m => ({
+                move: m.move.join('-'),
+                position: this.makeMove(m)
+            }))
+    }
 
     lookForTotalMoves(towers: TowersMap, color: PieceColor): ITotalMoves {
         let mandatory = [] as FullMRResult[], free = [] as FreeMRResult[], moves = {} as ITotalMoves
@@ -620,7 +642,7 @@ export class MandatoryMovesResolver extends KingMandatoryMoveResolver {
         const cellKey = move[move.length - 1]
         const tower = towers![cellKey]
         if (tower.currentType === TowerType.k) {
-            return this.lookForKingMandatoryDiagonals({...props, minLength: props.move.length})
+            return this.looKForNewBornKingMoves({...props, minLength: props.move.length})
         }
         const color = tower.currentColor
         const cell = this.board[cellKey]
@@ -662,10 +684,10 @@ export class MandatoryMovesResolver extends KingMandatoryMoveResolver {
                 result.push(move)
                 continue
             }
-            const moves = this.lookForManMandatoryDirections(move)
-            if (moves.length === 1 && moves[0].completed) {
-                result = result.concat(moves)
-            } else {
+            // console.warn('pros2', move)
+            const moves = this.separateCompleted(this.lookForManMandatoryDirections(move))
+            result = result.concat(moves.completed)
+            if (moves.toCheck.length) {
                 result = result.concat(this.lookForManMandatoryNextStep([move]))
             }
         }
@@ -673,180 +695,4 @@ export class MandatoryMovesResolver extends KingMandatoryMoveResolver {
     }
 }
 
-export default new MandatoryMovesResolver()
-
-export class TowersUpdateResolver extends BaseMoveResolver {
-    callBack: Function = () => {}
-
-    setCallBack = (cb: Function) => {
-        this.callBack = cb
-    }
-
-    animateTowerRelocation(from: string, to: string, board: IBoardBase, reversed: boolean) {
-        const {cellSize, cellsMap} = board
-        const towers = copyObj(board.towers!) as TowersMap
-        const tower = towers[from] as TowerConstructor
-        tower.positionInDOM = this.calcTowerPosition(to, cellsMap!, cellSize!, reversed)
-        towers[from] = tower
-        this.callBack({towers})
-    }
-
-    finalizeSimpleMove(from: string, to: string, board: IBoardBase, reversed = false) {
-        const {cellSize, cellsMap} = board
-        const towers = copyObj(board.towers!) as TowersMap
-        const tower = towers[from] as TowerConstructor
-        tower.onBoardPosition = to
-        tower.currentType = this.checkTowerTypeChanging(to, this.size, tower.currentColor, tower.currentType)
-        tower.positionInDOM = this.calcTowerPosition(to, cellsMap!, cellSize!, reversed)
-        towers[to] = tower
-        delete towers[from]
-        const towerTouched = null as unknown as TowerTouched
-        const lastMoveSquares = [from, to]
-        this.callBack({towers, towerTouched, lastMoveSquares, mouseDown: false, moveDone: true})
-    }
-
-    finalizeMandatoryMoveStep(from: string, to: string, board: IBoardBase, reversed = false, last = false) {
-        const towers = copyObj(board.towers) as TowersMap
-        const {cellSize, cellsMap} = board
-        const tower = towers[from] as TowerConstructor
-        tower.onBoardPosition = to
-        if (this.GV === 'towers') {
-            if (tower!.currentColor === PieceColor.w) {
-                tower.bPiecesQuantity = (tower.bPiecesQuantity as number) + 1
-            } else {
-                tower.wPiecesQuantity = (tower.wPiecesQuantity as number) + 1
-            }
-        }
-        if (this.GV !== 'international' || last) {
-            tower.currentType = this.checkTowerTypeChanging(to, this.size, tower.currentColor, tower.currentType)
-        }
-        tower.positionInDOM = this.calcTowerPosition(to, cellsMap!, cellSize!, reversed)
-        towers[to] = tower
-        delete towers[from]
-        // console.log(tower)
-        return towers
-    }
-
-    updateTowersOnMandatoryMoveStep(from: string, to: string, state: IBoard, tP: string[], last=false) {
-        const isTowers = this.GV === 'towers'
-        const towers = this.updateTowersAfterMoveAnimation(from, to, state, isTowers, last)
-        if (isTowers) {
-            const middlePieceKey = tP[0]
-            const middlePiece = towers[middlePieceKey] as TowerConstructor
-            const takenTower = this.captureTower(middlePiece) as TowerConstructor
-            if (!takenTower) {
-                delete towers[middlePieceKey]
-            } else {
-                towers[middlePieceKey] = takenTower
-            }
-            return towers
-        } else if (last) {
-            tP.forEach((key: string) => {
-                delete towers[key]
-            })
-            return towers
-        }
-        return towers
-    }
-
-    updateMiddleTowerOnOpponentMove(key: string, state: IBoard, _towers: TowersMap) {
-        const towers = copyObj(state.towers) as TowersMap
-        const takenTower = _towers[key] as TowerConstructor
-        if (takenTower) {
-            towers[key] = takenTower
-        } else {
-            delete towers[key]
-        }
-        // console.log('middle update', key, towers, board, takenTower)
-        return towers
-    }
-
-    updateTowersAfterMoveAnimation(from: string, to: string, board: IBoard, wT= false, last= false): TowersMap {
-        const {cellSize, cellsMap} = board
-        const towers = copyObj(board.towers!) as TowersMap
-        const tower = towers[from] as TowerConstructor
-        if (wT) {
-            if (tower!.currentColor === PieceColor.w) {
-                tower.bPiecesQuantity = (tower.bPiecesQuantity as number) + 1
-            } else {
-                tower.wPiecesQuantity = (tower.wPiecesQuantity as number) + 1
-            }
-        }
-        tower!.onBoardPosition = to
-        tower!.positionInDOM = this.calcTowerPosition(to, cellsMap!, cellSize!)
-        if (this.GV !== 'international' || last) {
-            tower.currentType = this.checkTowerTypeChanging(to, this.size, tower.currentColor, tower.currentType)
-        }
-        towers[to] = tower
-        delete towers[from]
-        return towers
-    }
-
-    animateRivalTowerMove(from: string, to: string, state: IBoard) {
-        const {cellsMap, cellSize} = state
-        const towers = copyObj(state.towers)
-        const opponentTower = towers.get(from) as TowerConstructor
-        opponentTower.positionInDOM = this.calcTowerPosition(to, cellsMap, cellSize)
-        return {...state, towers}
-    }
-
-    calcPositionOutboardTowers = (key: string, cellSize: number, reversed: boolean) => {
-        const boardElem = document.querySelector('.board__body')
-        const boardHeight = Math.round(boardElem!.getBoundingClientRect().height)
-        const towerWidth = CellTowerRatio * cellSize
-        const dY = Math.round(cellSize / 2 - towerWidth / 2)
-        const bottom = Math.round(boardHeight - cellSize / 2 - towerWidth / 2)
-        const x = Math.round(-5 - cellSize + dY)
-        return (reversed && key.includes('oB')) || (!reversed && key.includes('oW'))
-            ? {x, y: bottom}
-            : {x, y: dY}
-    }
-
-    calcTowerPosition = (key: string, map: CellsMap, cellSize: number, reversed = false): ITowerPosition => {
-        if (key.includes('oB') || key.includes('oW')) {
-            return this.calcPositionOutboardTowers(key, cellSize, reversed) as ITowerPosition
-        }
-        const cellPosition = map[key] as ITowerPosition
-        if (!cellPosition) return  {x: 0, y: 0}
-        const {x, y} = cellPosition
-        const towerElem = document.querySelector('.checker-tower')
-        if (!towerElem) {
-            console.error(towerElem)
-        }
-        const {width} = towerElem!.getBoundingClientRect()
-        return {x: Math.round(x - width / 2 + cellSize / 2), y: Math.round(y - width / 2  + cellSize/2)}
-    }
-
-    // cancelTowerTransition(props: IBoard & {reversed?: boolean}) {
-    //     const {key} = props.towerTouched as TowerTouched
-    //     const {cellSize, cellsMap, reversed = false} = props
-    //     const towers = copyObj(props.towers) as TowersMap
-    //     const tower = towers[key] as TowerConstructor
-    //     tower.positionInDOM = this.calcTowerPosition(key, cellsMap, cellSize, reversed)
-    //     towers[key] = tower
-    //     this.callBack({...props, towers, towerTouched: null as unknown as TowerTouched, mouseDown: false})
-    // }
-
-    updateTowersPosition = (cellSize: number, towers: TowersMap, map: CellsMap, reversed = false): TowersMap => {
-        const _towers = copyObj(towers) as TowersMap
-        Object.keys(towers).forEach((key: string) => {
-            const _tower = Object.assign({}, towers[key])
-            const positionInDOM = this.calcTowerPosition(key, map, cellSize, reversed)
-            _towers[key] = Object.assign(_tower, positionInDOM)
-        })
-        return _towers
-    }
-
-    updateCellsPosition = (board: IBoard, boardOptions: IBoardOptions, boardRef: HTMLDivElement) => {
-        const {cellsMap, cellSize, towers} = board
-        const {reversedBoard, boardSize} = boardOptions
-        const newCellSize = getCellSize(boardRef, boardSize);
-        if (cellSize === newCellSize) return
-        const newCellMap = updateCellsMap(cellsMap as CellsMap, newCellSize, reversedBoard)
-        const newTowers = this.updateTowersPosition(newCellSize, towers, newCellMap, reversedBoard)
-        // console.log(newTowers, towers)
-        this.callBack({towers: newTowers, cellsMap: newCellMap, cellSize: newCellSize})
-    }
-}
-
-export const tur = new TowersUpdateResolver()
+export default new MovesResolver()

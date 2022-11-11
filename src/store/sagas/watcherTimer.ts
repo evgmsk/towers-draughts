@@ -36,7 +36,9 @@ function* workerGameClock() {
 
 function* workerStartClock(action: GameActionTypes) {
     const {gameOptions: {rivalType}, game: {gameConfirmed}} = yield select()
+    console.warn(rivalType, action.payload === 'isPlaying' && rivalType !== 'PC')
     if (action.payload === 'isPlaying' && rivalType !== 'PC') {
+        console.warn('oops')
         yield gameConfirmed
             ? put({type: ClockActions.WHITE_TICK})
             : put({type: ClockActions.WHITE_PRESTART_TICK})

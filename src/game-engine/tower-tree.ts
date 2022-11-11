@@ -1,9 +1,9 @@
-import {Branch, Children, DeepValue, Move} from "../store/models";
-import {copyObj} from "./gameplay-helper-functions";
+import {Branch, Children, DeepValue, MMRResult, Move, TowersMap} from "../store/models";
+import {copyObj, oppositeColor} from "./gameplay-helper-functions";
 import evaluator from "./towers-evaluator";
-import mmr from './engine-on-towers'
+import mmr from './moves-resolver'
 import {PieceColor} from "../store/models";
-import {createDefaultTowers} from "./prestart-help-function-constants";
+import {createDefaultTowers} from "./prestart-help-function";
 import {BaseBoardSize} from "../constants/gameConstants";
 
 export interface ITree {[key: string]: any | {children: {[key: string]: any}}}
@@ -34,8 +34,21 @@ export class PositionsTree extends Tree {
         }
     }
 
+    createBranchWithTowers(towers: TowersMap, pieceOrder = PieceColor.w): Branch {
+        const moves = mmr.getMovesFromTotalMoves(mmr.getPositionMoves(towers, pieceOrder))
+        return {
+            moves,
+            position: towers,
+            deepValue: {value: {black: 0, white: 0}, depth: 0, move: ''},
+            totalMovesNumber: moves.length,
+            pieceOrder,
+            children: {},
+            rivalMove: ''
+        }
+    }
+
     createDefaultRootBranch(gameBoardSize = BaseBoardSize): Branch {
-        const position = createDefaultTowers(8)
+        const position = createDefaultTowers(gameBoardSize)
         const moves = mmr.lookForTotalMoves(position, PieceColor.w).free!.map(m => ({
                 move: m.move.join('-'),
                 position: mmr.makeMove(m)
@@ -54,16 +67,16 @@ export class PositionsTree extends Tree {
     }
 
     getRoot() {
-        return this.tree.root
+        return this.tree.root as Branch
     }
 
-    filterBelowOfDepth = (branch = this.getRoot() as Branch, depth = 0) => {
+    filterBelowOfDepth = (branch = this.getRoot(), depth = 0) => {
         const {moves, children} = branch
         return moves.filter(m =>
             !children[m.move] || children[m.move].deepValue!.depth < depth)
     }
 
-    filterEqualOrGreaterThanDepth = (depth = 1, branch = this.getRoot() as Branch)  => {
+    filterEqualOrGreaterThanDepth = (depth = 1, branch = this.getRoot())  => {
         const {moves, children, pieceOrder} = branch
         let best: Move & {deepValue: DeepValue}
         const filterMoves = moves.filter(m => {
@@ -71,7 +84,7 @@ export class PositionsTree extends Tree {
             if (!deepValue) return null
             const included = deepValue.depth >= depth
                 && (deepValue.value[pieceOrder] > 0
-                    || deepValue.value > (this.getRoot() as Branch).deepValue.value)
+                    || deepValue.value > this.getRoot().deepValue.value)
             if (included) {
                 const deepValue = children[m.move].deepValue
                 best = best || {...m, deepValue}
@@ -87,7 +100,7 @@ export class PositionsTree extends Tree {
     updateRoot(move: string): Branch {
         const children = this.tree.root.children as unknown as Children
         const newRoot = children[move]
-        console.warn('root update', newRoot, move, children)
+        // console.warn('root update', newRoot, move, children)
         this.tree.root = newRoot
         return newRoot
     }
@@ -98,22 +111,24 @@ export class PositionsTree extends Tree {
         // console.warn('root added', this.tree.root)
     }
 
-    getPathFromRoot(branch: Branch): string[] {
-        let br = branch
-        const path = [] as string[]
-        while (br.parentBranch) {
-            path.unshift(br.rivalMove)
-            br = br.parentBranch
-        }
-        return path
-    }
+    // getPathFromRoot(branch: Branch): string[] {
+    //     let br = branch
+    //     const path = [] as string[]
+    //     while (br.parentBranch) {
+    //         path.unshift(br.rivalMove)
+    //         br = br.parentBranch
+    //     }
+    //     return path
+    // }
 
     getFirstDepthData(branch: Branch): Branch {
-        const {pieceOrder, totalMovesNumber} = branch
-        const childDeepValue = branch.moves.reduce((acc, m) => {
+        const {pieceOrder, totalMovesNumber, moves} = branch
+        if (!moves.length) {
+            return Object.assign({}, branch)
+        }
+        const childDeepValue = moves.reduce((acc, m) => {
             const positionData = evaluator.getPositionData(m.position, pieceOrder, totalMovesNumber)
-            const newBranch = {...positionData, parentBranch: branch, children: {}, rivalMove: m.move}
-            branch.children[m.move] = newBranch
+            branch.children[m.move] = {...positionData, parentBranch: branch, children: {}, rivalMove: m.move}
             if (positionData.deepValue.value[pieceOrder] > acc.value[pieceOrder]) {
                 acc.value = positionData.deepValue.value
                 acc.move = m.move
@@ -121,7 +136,6 @@ export class PositionsTree extends Tree {
             return acc
         }, {value: {white: -100, black: -100}, move: '', depth: 1})
         branch.deepValue = Object.assign({}, childDeepValue)
-        // console.warn('first', branch.children, branch.moves)
         return branch
     }
 
@@ -144,10 +158,12 @@ export class PositionsTree extends Tree {
         }
         const childDeepValue = branch.moves.reduce((acc, m) => {
             let child = branch.children[m.move]
+            const color = oppositeColor(child.pieceOrder)
             child = !child.deepValue.depth
                 ? this.getFirstDepthData(child)
                 : this.getNextDepthData(child)
-            if (child.deepValue.value[child.pieceOrder] > acc.value[child.pieceOrder]) {
+
+            if (child.deepValue.value[color] > acc.value[color]) {
                 acc.value = child.deepValue.value
                 acc.move = this.determineMove(child, branch)
             }
@@ -157,49 +173,63 @@ export class PositionsTree extends Tree {
         return branch
     }
 
+    getRivalMoves(move: string): MMRResult[] {
+        const moves = this.getRoot().children[move]
+            ? this.getRoot().children[move].moves
+            : this.getRoot().moves
+        return moves.map(m => ({
+                ...m,
+                move: m.move.split(m.takenPieces ? ':' : '-'),
+                endPosition: m.position
+            }))
+    }
+
     getDepthData(branch: Branch, depth = 1): Branch {
         let br = branch
-        // console.warn(copyObj(br.deepValue), depth)
+        console.warn(1, copyObj(branch.deepValue), branch)
         while (br.deepValue.depth < depth) {
-            br = this.getNextDepthData(br)
+            this.getNextDepthData(br)
+            // const child = br.children[br.deepValue.move]
+            // const cchild = (child.deepValue.move && child.children[child.deepValue.move]) as Branch
+            // console.warn(2, br.deepValue, (cchild?.moves || []).map(m => m?.move))
         }
-        // console.warn(2, copyObj(br.deepValue), depth, br.children)
+
         return br
     }
 
-    getBranch(mL: string[], branch?: Branch): Branch {
-        branch = branch || this.tree.root as Branch
-        if (!branch || !branch.children) {return null as unknown as Branch}
-        if (!mL[0]) { return branch }
-        switch (mL.length) {
-            case 0: return branch as Branch
-            case 1: {
-                return branch.children[mL[0]]
-            }
-            case 2: {
-                return branch.children[mL[0]].children[mL[1]]
-            }
-            case 3: {
-                return branch.children[mL[0]].children[mL[1]].children[mL[2]]
-            }
-            case 4: {
-                return branch.children[mL[0]].children[mL[1]].children[mL[2]].children[mL[3]]
-            }
-            case 5: {
-                return branch.children[mL[0]].children[mL[1]]
-                    .children[mL[2]].children[mL[3]].children[mL[4]]
-            }
-            case 6: {
-                return branch.children[mL[0]].children[mL[1]].children[mL[2]]
-                    .children[mL[3]].children[mL[4]].children[mL[5]]
-            }
-            default: {
-                const lastBranch = branch.children[mL[0]].children[mL[1]].children[mL[2]]
-                    .children[mL[3]].children[mL[4]].children[mL[5]] as Branch
-                return this.getBranch(mL.slice(6), lastBranch)
-            }
-        }
-    }
+    // getBranch(mL: string[], branch?: Branch): Branch {
+    //     branch = branch || this.tree.root as Branch
+    //     if (!branch || !branch.children) {return null as unknown as Branch}
+    //     if (!mL[0]) { return branch }
+    //     switch (mL.length) {
+    //         case 0: return branch
+    //         case 1: {
+    //             return branch.children[mL[0]]
+    //         }
+    //         case 2: {
+    //             return branch.children[mL[0]].children[mL[1]]
+    //         }
+    //         case 3: {
+    //             return branch.children[mL[0]].children[mL[1]].children[mL[2]]
+    //         }
+    //         case 4: {
+    //             return branch.children[mL[0]].children[mL[1]].children[mL[2]].children[mL[3]]
+    //         }
+    //         case 5: {
+    //             return branch.children[mL[0]].children[mL[1]]
+    //                 .children[mL[2]].children[mL[3]].children[mL[4]]
+    //         }
+    //         case 6: {
+    //             return branch.children[mL[0]].children[mL[1]].children[mL[2]]
+    //                 .children[mL[3]].children[mL[4]].children[mL[5]]
+    //         }
+    //         default: {
+    //             const lastBranch = branch.children[mL[0]].children[mL[1]].children[mL[2]]
+    //                 .children[mL[3]].children[mL[4]].children[mL[5]]
+    //             return this.getBranch(mL.slice(6), lastBranch)
+    //         }
+    //     }
+    // }
 }
 
 export default new PositionsTree()

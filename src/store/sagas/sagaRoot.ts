@@ -4,9 +4,9 @@ import watcherTowers from "./watchBoardAndTowers";
 // import watcherUser from './watcherUser';
 import watcherPreGame from './watcherGamePresets';
 import watcherTimer from './watcherTimer';
-import watcherApp from './watcherApp';
+// import watcherApp from './watcherApp';
 import watcherAnalysis from './watcherGameAnalysis'
-import watcherBoard from './watcherBoard';
+// import watcherBoard from './watcherBoard';
 
 export default function* sagaRoot() {
     yield all([
@@ -17,6 +17,6 @@ export default function* sagaRoot() {
         // watcherApp(),
         watcherTowers(),
         watcherAnalysis(),
-        watcherBoard(),
+        // watcherBoard(),
     ]);
 }

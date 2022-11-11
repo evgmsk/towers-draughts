@@ -8,6 +8,11 @@ export interface IApp {
     gameChat: IMessage[]
 }
 
+export interface EventPosition {
+    clientX: number
+    clientY: number
+}
+
 export interface IMessage {content: string, from: string, to: string, date: Date, emoji: number, }
 
 // export interface IUserState extends IUser {
@@ -55,7 +60,7 @@ export enum BoardNotation {
     ch = 'chess',
     dr = 'draughts'
 }
-export interface IPositionsTree {[key: string]: IBoardToGame}
+// export interface IPositionsTree {[key: string]: IBoardToGame}
 export interface PositionsTree {[key: string]: TowersMap}
 
 export interface CellsMap {[key: string]: ITowerPosition}
@@ -69,40 +74,36 @@ export interface IBoardBase {
 }
 
 export interface IBoardToDraw extends IBoardBase {
-    mouseDown: boolean
     lastMoveSquares?: string[]
     towerView: string,
     towerTouched?: TowerTouched
 }
 
-export interface IGameBoard extends IBoardToDraw {
-    mandatoryMoves?: IMMRResult[]
-    freeMoves?: IMMRResult
-    positionsTree?: IPositionsTree
-    currentPosition: IBoardToGame
-    mandatoryMoveStep: number
-    animationStarted: boolean;
-    moveDone: boolean;
-}
+// export interface IGameBoard extends IBoardToDraw {
+//     mandatoryMoves?: IMMRResult[]
+//     freeMoves?: IMMRResult
+//     positionsTree?: IPositionsTree
+//     currentPosition: IBoardToGame
+//     mandatoryMoveStep: number
+//     animationStarted: boolean;
+//     moveDone: boolean;
+// }
 
 export interface IBoard  extends IBoardToDraw {
-    mouseDown: boolean
-    mandatoryMoves?: MMRResult[]
-    freeMoves?: MMRResult[]
+    moves: MMRResult[]
     positionsTree: PositionsTree
     mandatoryMoveStep: number
-    animationStarted: boolean
     moveDone: boolean
 }
 
-export interface IAnalysisBoard extends IBoardToDraw{
-    mandatoryMoves?: IMMRResult[]
-    freeMoves?: IMMRResult
-    positionsTree?: IPositionsTree
-    currentPosition: IBoardToGame
-    mandatoryMoveStep?: number;
-    moveDone?: boolean    
-}
+// export interface IAnalysisBoard extends IBoardToDraw{
+//     mandatoryMoves?: IMMRResult[]
+//     freeMoves?: IMMRResult
+//     positionsTree?: IPositionsTree
+//     currentPosition: IBoardToGame
+//     mandatoryMoveStep?: number;
+//     moveDone?: boolean
+// }
 
 export interface ICell {
     type?: 'light' | 'dark';
@@ -168,10 +169,10 @@ export class TowerConstructor implements ICheckerTower {
     currentColor: PieceColor;
     wPiecesQuantity: number;
     bPiecesQuantity: number;
-    positionInDOM?: ITowerPosition;
+    positionInDOM: ITowerPosition;
     currentType: TowerType;
-    view?: string;
-    mandatoryMove?: boolean;
+    view: string;
+    mandatory?: boolean;
     constructor(props: ICheckerTower ) {
         this.currentType = props.currentType || TowerType.m;
         this.currentColor = props.currentColor;
@@ -180,8 +181,11 @@ export class TowerConstructor implements ICheckerTower {
         this.positionInDOM = props.positionInDOM || {x: 0, y: 0};
         this.onBoardPosition = props.onBoardPosition
         this.view = props.view || 'face'
-        this.mandatoryMove = props.mandatoryMove || false
+        this.mandatory = props.mandatoryMove || false
+        this.shortData = this.shortData.bind(this)
     }
+
+    shortData = () =>`${this.onBoardPosition}|${this.wPiecesQuantity}/${this.bPiecesQuantity}|${this.currentType}|${this.currentColor}`
 }
 
 export type PartialTower = Partial<TowerConstructor>
@@ -200,24 +204,28 @@ export interface Move {
     takenPieces?: string[]
 }
 
+export interface MoveWithRivalMoves extends Move {
+    rivalMoves: MMRResult[]
+}
+
 export interface IMoveToMake {
     gameKey?: string,
-    moveToMake: Move,
+    moveToSave: MoveWithRivalMoves,
     moveOrder: IMoveOrder,
-    rivalMoves: Move[]
+    rivalMoves?: Move[]
     receivedAt?: Date,
     whiteClock?: IClock,
     blackClock?: IClock
 }
 
-export interface IMoveProps {
-    gameKey?: string,
-    moveToSave: IMMRResult,
-    moveOrder: IMoveOrder,
-    receivedAt?: Date,
-    whiteClock?: IClock,
-    blackClock?: IClock
-}
+// export interface IMoveProps {
+//     gameKey?: string,
+//     moveToSave: IMMRResult,
+//     moveOrder: IMoveOrder,
+//     receivedAt?: Date,
+//     whiteClock?: IClock,
+//     blackClock?: IClock
+// }
 
 export type IGameMode = 'isPlaying' | 'isOver' | 'isAnalyzing' | 'isPreparing'
 
@@ -231,7 +239,7 @@ export interface IGameState {
     white: IPlayer
     black: IPlayer
     lastGameResult?: IGameResult | null
-    ineffectiveMoves?: number
+    ineffectiveMoves: number
     portrait?: boolean
     gameMode: IGameMode
     rivalOfferedDraw: boolean,
@@ -261,9 +269,9 @@ export interface TowerTouched {
 
 export type GameVariants = 'towers' | 'russian' | 'international'
 
-export interface IBoardToGame {
-    [key: string]: IBoardCell
-}
+// export interface IBoardToGame {
+//     [key: string]: IBoardCell
+// }
 
 export interface Board {
     [key: string]: BoardCell
@@ -321,27 +329,27 @@ export interface BoardCell {
     boardKey: string
 }
 
-export interface IBoardCell {
-    pos?: ITowerPosition;
-    tower: PartialTower | null
-    neighbors: INeighborCells;
-    boardKey: string
-}
+// export interface IBoardCell {
+//     pos?: ITowerPosition;
+//     tower: PartialTower | null
+//     neighbors: INeighborCells;
+//     boardKey: string
+// }
 
 export interface INeighborCells {
     [key: string]: string
 }
 
-export interface IDiagonals {[key: string]: IBoardCell[]}
+// export interface IDiagonals {[key: string]: IBoardCell[]}
 export interface Diagonals {[key: string]: BoardCell[]}
 
 export interface ISortedMoves {maxLength?: number, maxLengthMoves: FullMRResult[], restMoves: FullMRResult[]}
 
-export interface IMMRResult {
-    move: string
-    position: IBoardToGame
-    takenPieces?: string[]
-}
+// export interface IMMRResult {
+//     move: string
+//     position: IBoardToGame
+//     takenPieces?: string[]
+// }
 
 export interface MMRResult {
     move: string[]
@@ -395,14 +403,7 @@ export interface DeepValue {
     move: string
 }
 
-export interface IMove {
-    move: string
-    baseValue: number
-    position: IBoardToGame
-    pieceOrder?: PieceColor
-}
-
-export interface IChildren {[key: string]: IBranch}
+// export interface IChildren {[key: string]: IBranch}
 export interface Children {[key: string]: Branch}
 
 export interface IPositionData {
@@ -426,28 +427,28 @@ export interface IPiecesData {
     black: IPieces
 }
 
-export interface IBranch {
-    moves: IMove[]
-    parentBranch?: IBranch,
-    position: IBoardToGame,
-    pieceOrder: PieceColor,
-    deepValue: IDeepValue,
-    children: IChildren,
-    rivalMove: string,
-}
+// export interface IBranch {
+//     moves: Move[]
+//     parentBranch?: IBranch,
+//     position: IBoardToGame,
+//     pieceOrder: PieceColor,
+//     deepValue: IDeepValue,
+//     children: IChildren,
+//     rivalMove: string,
+// }
 
-export interface IBestMove {move: string, position: IBoardToGame, deepValue: IDeepValue}
+// export interface IBestMove {move: string, position: IBoardToGame, deepValue: IDeepValue}
 
-export interface ISeekerProps extends IEvaluatingState{
-    maxDepth?: number
-    pieceOrder?: PieceColor
-    towers?: TowersMap
-    position?: IBoardToGame
-    game: boolean
-    startDepth?: number
-    movesHistory?: string[]
-    parentBranch?: IBranch
-}
+// export interface ISeekerProps extends IEvaluatingState{
+//     maxDepth?: number
+//     pieceOrder?: PieceColor
+//     towers?: TowersMap
+//     position?: IBoardToGame
+//     game: boolean
+//     startDepth?: number
+//     movesHistory?: string[]
+//     parentBranch?: IBranch
+// }
 
 export interface SeekerProps {
     maxDepth?: number
@@ -466,9 +467,9 @@ export interface Value {
     black: number
 }
 
-export interface IEvaluatingState {
-    valueIncreased?: boolean
-    lastBranch?: IBranch
-    evaluatingLine?: string[]
-}
+// export interface IEvaluatingState {
+//     valueIncreased?: boolean
+//     lastBranch?: IBranch
+//     evaluatingLine?: string[]
+// }
 
