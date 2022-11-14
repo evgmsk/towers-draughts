@@ -7,7 +7,7 @@ import sagaRoot from './sagas/sagaRoot';
 
 const sagaMiddleware = createSagaMiddleware();
 
-const storeFactory = (data = InitialState) => {
+const storeFactory = (data = InitialState!) => {
     const middleware = composeWithDevTools(applyMiddleware(sagaMiddleware));
     const rootReducer = combineReducers(AppReducers)
     const store = createStore(rootReducer, data, middleware)

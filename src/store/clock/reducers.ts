@@ -1,5 +1,5 @@
 import { PrestartTimeLimit, DefaultTime } from "../../constants/gameConstants"
-import {  IClock } from "../app-interface"
+import {  IClock } from "../models"
 import { ClockActionTypes, ClockActions } from "../clock/types"
 
 export interface IClockState  {whiteClock: IClock, blackClock: IClock}

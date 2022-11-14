@@ -1,4 +1,4 @@
-import { GameVariants, PieceColor, Online, IPlayer, Timing, RivalType, GameType } from "../app-interface";
+import { GameVariants, PieceColor, Online, IPlayer, Timing, RivalType, GameType } from "../models";
 
 export const GameOptionActions = {
     CHOOSE_COLOR: 'CHOOSE_COLOR',

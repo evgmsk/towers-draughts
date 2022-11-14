@@ -1,4 +1,4 @@
-import { IUser } from '../app-interface';
+import { IUser } from '../models';
 import {UserActions, UserActionTypes} from './types';
 
 export  function loginSucceed(payload: IUser): UserActionTypes{

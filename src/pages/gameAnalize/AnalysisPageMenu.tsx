@@ -1,11 +1,12 @@
-import React from 'react'
+import React, {useState} from 'react'
 import { connect, ConnectedProps} from 'react-redux' 
 
 import { IRootState } from "../../store/rootState&Reducer"
 import {
-    downloadGame,
+    uploadGame,
     settingBoard,
     setDepth,
+    setMoveOrderAction,
     evaluatePosition,
     analyzeLastGame,
     removePiece,
@@ -15,22 +16,25 @@ import {setGameVariant} from '../../store/gameOptions/actions'
 import {reverseBoard} from '../../store/boardOptions/actions'
 
 import './analysis-page-menu.scss'
+import {PieceColor} from "../../store/models";
+import {oppositeColor} from "../../game-engine/gameplay-helper-functions";
 
 
 const stateMap = (state: IRootState) => ({
     analysis: state.analyze,
-    towerTouched: state.board.towerTouched,
+    towerTouched: state.boardAndTowers.towerTouched,
     reversedBoard: state.boardOptions.reversedBoard,
     history: state.analyze.gameResult.movesHistory || [],
     GV: state.gameOptions.gameVariant
 })
 
 const dispatchMap = {
-    downloadGame,
+    uploadGame,
     settingBoard,
     reverseBoard,
     setGameVariant,
     setDepth,
+    setMoveOrderAction,
     evaluatePosition,
     analyzeLastGame,
     removePiece,
@@ -41,7 +45,7 @@ const analysisMenuConnector = connect(stateMap, dispatchMap)
 
 type AnalysisMenuProps = ConnectedProps<typeof analysisMenuConnector>
 
-export const AnalizeGameMenu: React.FC<AnalysisMenuProps> = (props: AnalysisMenuProps) => {
+export const AnalyzeGameMenu: React.FC<AnalysisMenuProps> = (props: AnalysisMenuProps) => {
     const { 
         // downloadGame, 
         setGameVariant, 
@@ -50,6 +54,7 @@ export const AnalizeGameMenu: React.FC<AnalysisMenuProps> = (props: AnalysisMenu
         reversedBoard, 
         evaluatePosition,
         analysis,
+        setMoveOrderAction,
         history,
         analyzeLastGame,
         removePiece,
@@ -57,31 +62,30 @@ export const AnalizeGameMenu: React.FC<AnalysisMenuProps> = (props: AnalysisMenu
         setStartPosition,
         towerTouched
     } = props
+    const [startPos, setStartPos] = useState(true)
     const {settingPosition, analyzeLastGame: ALG} = analysis
-
+    const whiteMove = analysis.pieceOrder === PieceColor.w
     const handleGameVariantSelect = (e: any) => {
         const value = e.target.value
-        
         setGameVariant(value)
     }
-
     const handleClick = (et: string) => {
         if (towerTouched) {
             return
         }
         switch (et) {
             case 'remove': {
-                console.log('remove')
                 return removePiece(!analysis.removePiece)
             }
             case 'setup': {
                 return settingBoard(!settingPosition)
             }
-            case 'dowload': {
-                return //downloadGame({})
+            case 'upload': {
+                return
             }
-            case 'startPosiotn': {
-                return setStartPosition
+            case 'startPosition': {
+                setStartPos(!startPos)
+                return setStartPosition(startPos)
             }
             case 'analyze': {
                 return analyzeLastGame(true)
@@ -90,7 +94,10 @@ export const AnalizeGameMenu: React.FC<AnalysisMenuProps> = (props: AnalysisMenu
                 return reverseBoard(!reversedBoard)
             }
             case 'eval': {
-                return evaluatePosition(true)
+                return evaluatePosition(!analysis.evaluate)
+            }
+            case 'move-order': {
+                return setMoveOrderAction(oppositeColor(analysis.pieceOrder))
             }
             default:
                 break
@@ -112,9 +119,9 @@ export const AnalizeGameMenu: React.FC<AnalysisMenuProps> = (props: AnalysisMenu
                     <span className='material-icons'>{analysis.removePiece ? 'pan_tool' : 'delete'}</span>
                 </button>
             </li>
-            <li className="game-analyze-menu_item" title="setup-start-board">
-                <button type="button" onClick={() => handleClick('startPositon')}>
-                    sb{/* <span className='material-icons'>sb</span> */}
+            <li className="game-analyze-menu_item" title="setup start board">
+                <button type="button" onClick={() => handleClick('startPosition')}>
+                    {!startPos ? 'clear board' : 'start pos'}
                 </button>
             </li>
             <li className="game-analyze-menu_item" title="reverse board">
@@ -122,25 +129,26 @@ export const AnalizeGameMenu: React.FC<AnalysisMenuProps> = (props: AnalysisMenu
                     <span className='material-icons'>change_circle</span>
                 </button>
             </li>
-            <li className="game-analyze-menu_item" title="dowload game result">
-                <button type="button" onClick={() => handleClick('download')}>
-                    <span className='material-icons'>file_download</span>
-                </button>
+            <li className="game-analyze-menu_item" title="upload game" >
+                <div title='upload game'>
+                    <input type="file" onInput={() => handleClick('upload')} />
+                    <span className='material-icons'>file_upload</span>
+                </div>
             </li>
-            <li className="game-analyze-menu_item" title={!settingPosition ? 'setup position' : 'analize position'} >
+            <li className="game-analyze-menu_item" title={!settingPosition ? 'setup position' : 'analyze position'} >
                 <button type="button" name="game" onClick={() => handleClick('setup')}>
                     <span className='material-icons'>{!settingPosition ? 'grid_on' : 'construction'}</span>
                 </button>
             </li>
-            <li className="game-analyze-menu_item" title="evaluate position" >
+            <li className="game-analyze-menu_item" title="evaluate endPosition" >
                 <button type="button" name="evaluate" onClick={() => handleClick('eval')}>
-                    <span className='material-icons'>calculate</span>
+                    <span className='material-icons' >{!analysis.evaluate ? 'calculate' : 'stop'}</span>
                 </button>
             </li>
           
             <li 
                 className="game-analyze-menu_item gv"
-                title='Choose game variant. International: I Rusian: R Towers: T' 
+                title='Choose game variant. International: I Russian: R Towers: T'
             >
                 <select 
                     className="gv" 
@@ -154,11 +162,19 @@ export const AnalizeGameMenu: React.FC<AnalysisMenuProps> = (props: AnalysisMenu
                     <option value="towers">T</option>
                 </select>
             </li>
+            <li className="game-analyze-menu_item"
+                title={whiteMove ? 'black move' : 'white move'} >
+                <button type="button" name="piece-order" onClick={() => handleClick('move-order')}>
+                    <span
+                        className={whiteMove ? 'material-icons white-move' : 'material-icons black-move'}
+                    >circle</span>
+                </button>
+            </li>
         </ul>
     )
 }
 
-export default analysisMenuConnector(AnalizeGameMenu)
+export default analysisMenuConnector(AnalyzeGameMenu)
 
   /* <li className="game-analyze-menu_item depth-range_container" title="set evaluation depth" >
     <label className="label-for-depth-range">

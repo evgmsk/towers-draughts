@@ -2,15 +2,15 @@ import { BaseBoardSize } from "../../constants/gameConstants"
 import {  
     BoardNotation, 
     IBoardOptions,
-} from "../app-interface"
+} from "../models"
 import { BoardOptionActions, BoardOptionActionTypes } from "./types"
 
 
 export const InitialBoardOptionsState: IBoardOptions = {
-    boardTheme: 'standart',
+    boardTheme: 'standard',
     withOutLegend: false,
-    lengendsInside: false,
-    boardNotation: BoardNotation.r,
+    legendsInside: false,
+    boardNotation: BoardNotation.ch,
     boardSize: BaseBoardSize,
     reversedBoard: false,
 }

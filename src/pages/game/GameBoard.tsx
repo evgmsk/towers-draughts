@@ -1,263 +1,198 @@
 import React from 'react'
 import {connect, ConnectedProps} from 'react-redux'
 
-import { 
+import {
     TowerConstructor,
-    TowerType,
     IRef,
     TowerTouched,
-    CellsMap,
-    TowersMap,
     IBoardProps,
-    IGameBoard,
-    IMMRResult,
-} from '../../store/app-interface'
-import { endGame, updateIneffectiveMoves } from '../../store/game/actions'
+    IBoard,
+} from '../../store/models'
+import { endGame } from '../../store/game/actions'
 import {
     checkMoveTargetCell,
-    possibleOutOfMandatory,
-    compareMaps,
-    copyMap,
-} from '../../game-engine/gameplay-helper-fuctions'
+    copyObj,
+} from '../../game-engine/gameplay-helper-functions'
 import { IRootState } from '../../store/rootState&Reducer'
 import {AnimationDuration} from '../../constants/gameConstants'
-import tur from '../../game-engine/update-towers-functions'
-import mmr from '../../game-engine/mandatory-move-resolver'
-import  TowerComponent from '../../game-components/tower/CheckerTower'
+import mmr from '../../game-engine/moves-resolver'
+import  {TowerComponent} from '../../game-components/tower/CheckerTower'
 import { ClientBotEngine } from '../../game-engine/CientEngine'
 import { Board } from '../../game-components/board/Board'
-import { turn, updateBoardState } from '../../store/board/actions'
+import { turn, updateBoardState, updateTowers, setTouchedTower } from '../../store/board-towers/actions'
 import {finishGameSetup} from '../../store/gameOptions/actions'
+import tur from '../../game-engine/towers-updater'
 
 
 const mapState = (state: IRootState) => ({
     gameOptions: state.gameOptions,
     game: state.game,
     name: state.user.name,
-    positionsTree: state.board.positionsTree,
-    windowSize: state.app.windowSize,
-    board: state.board,
+    board: state.boardAndTowers,
     boardOptions: state.boardOptions,
 })
 
-const mapDispatch = {endGame, turn, updateIneffectiveMoves, updateBoardState, finishGameSetup}
+const mapDispatch = {
+    endGame,
+    turn,
+    updateBoardState,
+    finishGameSetup,
+    updateTowers,
+    setTouchedTower
+}
 
 const gameConnector = connect(mapState, mapDispatch)
 type GameProps = ConnectedProps<typeof gameConnector>
 
-export class GameClass extends React.Component<GameProps, IGameBoard> {
+export class GameClass extends React.Component<GameProps, IBoard> {
     private boardRef: IRef<HTMLDivElement> = React.createRef();
     componentDidMount() {
         if (!window) return
-        const {game: {history}, board, boardOptions, updateBoardState} = this.props
-        console.log('created with state:', this.props.board)
-        tur.setCalBack(updateBoardState)
-        if (history.length) {
-            const towers = tur.updateTowersToBoard(board.currentPosition) as TowersMap
-            const _board = {...board, towers}
-            tur.updateCellsPosition(_board, boardOptions, this.boardRef.current!);
-        } else {
-            tur.updateCellsPosition(board, boardOptions, this.boardRef.current!);
-        }
+        console.log('created with state:', this.props)
+        this.updateTowers()
     }
+
     componentWillUnmount() {
         // this.props.finishGameSetup(false)
     }
     
-    shouldComponentUpdate(prevProps: GameProps, prevState: IGameBoard) {
-        const cond1 = JSON.stringify(prevProps) !== JSON.stringify(this.props) 
-        return cond1 || compareMaps(prevProps.board.towers, this.props.board.towers)
+    shouldComponentUpdate(prevProps: GameProps, prevState: IBoard) {
+        return JSON.stringify(prevProps) !== JSON.stringify(this.props)
     }
 
     componentDidUpdate(prevProps: GameProps) {
         const {
             game: {history, gameMode, moveOrder: {pieceOrder}, playerColor},
             gameOptions: {rivalType},
-            board,
-            windowSize,
-            boardOptions,
         } = this.props
-        const histLength = history.length 
-        // console.log(this.props)
-        if (prevProps.game.history.length !== histLength 
+        if (prevProps.game.history.length !== history.length
             && ((pieceOrder === playerColor && rivalType === "PC") || rivalType === 'player')) {
             console.log('updated', this.props.board, this.props.game)
-            this.makePremoveAction(history[history.length - 1])  
+            this.makePremoveAction()
         }
         if (prevProps.game.gameMode !== 'isPlaying' && gameMode === 'isPlaying') {
             console.log('new game started', this.props)
-            tur.updateCellsPosition(board, boardOptions, this.boardRef.current!)
-        }
-        if (JSON.stringify(windowSize) !== JSON.stringify(prevProps.windowSize)) {
-            tur.updateCellsPosition(board, boardOptions, this.boardRef.current!)
+            this.updateTowers()
         }
     }
 
-    makePremoveAction = (opponentMove: string) => {
+    updateTowers() {
+        const { board, boardOptions, updateBoardState } = this.props
+        const boardRect = this.boardRef.current?.getBoundingClientRect()
+        if (boardRect) {
+            const boardProps = tur.updateCellsAndTowersPosition(board, boardOptions, boardRect)
+            updateBoardState(boardProps)
+        }
+    }
+
+    makePremoveAction = () => {
         const {
-            game: {moveOrder: {pieceOrder}},
             endGame,
-            updateBoardState,
-            board: {currentPosition},
+            board: {moves},
         } = this.props
-        const mandatoryMoves = mmr.lookForMandatoryMoves(pieceOrder, currentPosition)
-        if (!mandatoryMoves.length && !mmr.lookForAllPosibleMoves(pieceOrder, currentPosition).length) {
-            console.log('no moves', this.props)
-            return setTimeout(() => endGame('noMoves'), AnimationDuration)
-        }
-        updateBoardState({
-            mandatoryMoves,
-            mandatoryMoveStep: 0,
-            mouseDown: false,
-            moveDone: false
-        })
-    }
 
-    makePlayerMandatoryMoveStep = (to: string) => {
-        const {mandatoryMoves, mandatoryMoveStep, towerTouched} = this.props.board
-        const {game, turn, board, updateBoardState, gameOptions: {gameVariant}} = this.props
-        const from = towerTouched!.key
-        const fitMoves = mandatoryMoves!.filter((m: IMMRResult) => m.move.includes(`${from}:${to}`))
-        if (fitMoves[0].move.split(':').length === 2 + (mandatoryMoveStep as number)) {
-            const moveProps = {moveToSave: fitMoves[0], moveOrder: mmr.getNewOrder(game)}
-            const takenPieces = fitMoves[0].takenPieces!
-            const tP = gameVariant === 'towers' ? [takenPieces![mandatoryMoveStep]] : takenPieces
-            let towers = tur.updateTowersOnMandatoryMoveStep(from, to, board, tP, true)
-            console.log('towers;', towers)
-            updateBoardState({
-                mandatoryMoves: [] as unknown as IMMRResult[],
-                mandatoryMoveStep: 0,
-                towerTouched: null as unknown as TowerTouched,
-                towers,
-                lastMoveSquares: moveProps.moveToSave.move.split(':'),
-                currentPosition: moveProps.moveToSave.position,
-                mouseDown: false,
-                moveDone: true,
-            })
-            turn(moveProps)
-        } else {
-            const tP = fitMoves[0].takenPieces![mandatoryMoveStep]
-            updateBoardState({
-                mandatoryMoves: fitMoves,
-                mandatoryMoveStep: mandatoryMoveStep as number + 1,
-                towerTouched: null as unknown as TowerTouched,
-                towers: tur.updateTowersOnMandatoryMoveStep(from, to, board, [tP]),
-                lastMoveSquares: fitMoves[0].move.slice(mandatoryMoveStep as number + 1).split(':'),
-                mouseDown: false,
-            })
+        if (!moves.length) {
+            return setTimeout(() => endGame('noMoves'), AnimationDuration)
         }
     }
 
     handleMouseUp = (event: any) => {
         const {
-            towerTouched,
-            cellSize,
-            moveDone,
-            mandatoryMoves,
-            currentPosition
-        } = this.props.board as IGameBoard
-        const { board, game: {moveOrder, white, black}, turn} = this.props
+            board: {towerTouched, moveDone, cellSize},
+            board,
+            game: {moveOrder: oldOrder, white, black},
+            updateBoardState,
+            turn
+        } = this.props
         if (!towerTouched || moveDone) {
             return
         }
-        const reversed = this.props.boardOptions.reversedBoard
-        const {clientX, clientY} = event.type === 'touchend' ? event.changedTouches['0'] : event
-        const to = checkMoveTargetCell({x: clientX, y: clientY}, towerTouched.posibleMoves, cellSize, this.boardRef)
-        const cancelProps = {...board, reversed}
-        if (!to) {
-            tur.cancelTowerTransition(cancelProps)
-        } else {
-            const from = towerTouched.key
-            if (mandatoryMoves?.length) {
-                this.makePlayerMandatoryMoveStep(to)
-            } else {
-                tur.finalizeSimpleMove(from, to, board, reversed)
-                const props =  {moveOrder, white, black, currentPosition}
-                const moveProps = mmr.getPropsToMakeFreeMove(from, to, props)
-                turn(moveProps)
-            }
+        const {clientX, clientY} = event.type === 'touchend' ? event.changedTouches['0'] : event,
+            boardRect = this.boardRef.current?.getBoundingClientRect()!,
+            possMoves = towerTouched.possibleMoves,
+            targetKey = checkMoveTargetCell({x: clientX, y: clientY}, possMoves, cellSize, boardRect)
+        if (!targetKey) {
+            const towers = tur.cancelTowerTransition(board)
+            updateBoardState({towers, towerTouched: null as unknown as TowerTouched})
+            return
         }
+        const {boardProps, moveToSave} = tur.handleUpToMove(targetKey, board)
+        console.warn(moveToSave, boardProps)
+        if (moveToSave) {
+            const moveOrder = mmr.getNewOrder({moveOrder: oldOrder, white, black})
+            turn({moveToSave, moveOrder})
+        }
+        boardProps && updateBoardState(boardProps)
     }
     
     handleMouseMove = (event: any) => {
-        const {board: {towerTouched, moveDone, mouseDown}, updateBoardState} = this.props
-        if (!towerTouched || moveDone || !mouseDown) {
+        const {board: {towerTouched, moveDone}, updateTowers} = this.props
+        if (!towerTouched || moveDone) {
             return
         }
         const {key, startCursorPosition: SCP, startTowerPosition: STP} = towerTouched;
         const {clientX, clientY} = event.type === 'touchmove' ? event.changedTouches['0'] : event
-        const towers = copyMap(this.props.board.towers)
-        const tower = towers.get(key)! as TowerConstructor
+        const towers = copyObj(this.props.board.towers)
+        const tower = towers[key]! as TowerConstructor
         const newPosition = {x: STP.x + clientX - SCP.x, y: STP.y + clientY - SCP.y}
-        const currentPosition = tower.positionInDOM!
+        const currentPosition = tower.positionInDOM
         tower.positionInDOM = newPosition
         const deltaX = Math.abs(currentPosition.x - newPosition.x)
         const deltaY = Math.abs(currentPosition.y - newPosition.y)
-        
         if ( deltaX + deltaY >= 6) {
-            towers.set(key, tower)
-            updateBoardState({towers})
+            towers[key] = tower
+            updateTowers(towers)
         }
     }
 
     handleMouseDown = (event: any) => {
-        const {game: {moveOrder: {pieceOrder}}, board, updateBoardState} = this.props
-        const {mandatoryMoves, cellsMap, towers, currentPosition} = board
-        
+        const {
+            board: {towerTouched, moveDone},
+            board,
+            game: {moveOrder: {pieceOrder}},
+            updateBoardState,
+            setTouchedTower
+        } = this.props
         const {target, clientX, clientY} = event.type === 'touchstart' ? event.changedTouches['0'] : event
         const classList = (target as HTMLDivElement).classList
-        if (!(classList.contains('checker-tower') && classList.contains(pieceOrder))) return
-        
-        const towerKey = (target as HTMLDivElement).getAttribute('data-indexes') as string
-        const tower = towers.get(towerKey)!
-        console.log(tower)
-        if (!tower) {
-            console.error(towerKey, board)
+        const targetKey = (target as HTMLDivElement).getAttribute('data-indexes') as string
+        if (!classList.contains('checker-tower')
+            || moveDone
+            || !classList.contains(pieceOrder)) {
             return
         }
-        let posibleMoves: CellsMap
-        if (mandatoryMoves?.length) {
-           posibleMoves = possibleOutOfMandatory(this.props.board, towerKey)
-        } else {
-            posibleMoves = tower.currentType === TowerType.m 
-            ? mmr.manTowerFreeMoves(tower, currentPosition, cellsMap)
-            : mmr.kingTowerFreeMoves(towerKey, currentPosition, cellsMap)
+        if (!towerTouched) {
+            return setTouchedTower({key: targetKey, clientX, clientY})
         }
-        if (!posibleMoves.size) {
-            // sound
-            return
+        if (towerTouched && !targetKey) {
+            const towers = tur.cancelTowerTransition(board)
+            updateBoardState({
+                towers,
+                towerTouched: null as unknown as TowerTouched,
+            })
         }
-        const towerTouched: TowerTouched = {
-            key: towerKey,
-            posibleMoves,
-            startCursorPosition: {x: clientX, y: clientY},
-            startTowerPosition: tower.positionInDOM!,
-            towerColor: tower.currentColor,
-            towerType: tower.currentType as TowerType
-        }
-        updateBoardState({towerTouched, mouseDown: true})
-    }
-
-    modeRestrictions = (): boolean => {
-        const {game: {moveOrder: {playerTurn}, gameMode}, name, board: {moveDone, animationStarted}} = this.props
-        if (gameMode === 'isPlaying') {
-            return playerTurn !== name || moveDone || animationStarted
-        }
-        return true
     }
 
     render() {
-        const {towers, towerTouched, mandatoryMoves, mandatoryMoveStep, lastMoveSquares} = this.props.board
-        const {boardOptions, game: {gameMode}} = this.props
-        // console.log(towers)
-        const posibleMoves = towerTouched?.posibleMoves
-        const BoardProps = {boardOptions, posibleMoves, lastMove: lastMoveSquares} as IBoardProps
-        const mandatoryTowers = (mandatoryMoves || []).map(m => m.move.split(':')[mandatoryMoveStep || 0])
-        const {boardSize, boardTheme} = boardOptions
-        const WrapperClass = `board__wrapper ${boardTheme} h${boardSize}v${boardSize}`;
-        const Towers = Array.from(towers.values()).map((props: TowerConstructor, i: number) => {
-            const mt = gameMode === 'isPlaying' ? mandatoryTowers.includes(props.onBoardPosition) : false
-            return <TowerComponent {...props} key={props.onBoardPosition} mandatory={mt} />
+        const {
+            board: {towers, towerTouched, moves, mandatoryMoveStep, lastMoveSquares},
+            boardOptions
+        } = this.props,
+            mandatory = moves.filter(m => m.takenPieces),
+            possibleMoves = towerTouched?.possibleMoves,
+            BoardProps = {boardOptions, possibleMoves, lastMove: lastMoveSquares} as IBoardProps,
+            mandatoryTowers = mandatory.map(m => m.move[mandatoryMoveStep || 0]),
+            {boardSize, boardTheme} = boardOptions,
+            WrapperClass = `board__wrapper ${boardTheme} h${boardSize}v${boardSize}`
+        const Towers = Array.from(Object.keys(towers)).map((key: string) => {
+            const tower = towers[key]
+            tower.mandatory = mandatoryTowers.includes(tower.onBoardPosition)
+            return <TowerComponent
+                {...tower}
+                key={tower.onBoardPosition}
+                isTowers={mmr.GV === 'towers'}
+                bs={boardSize}
+            />
         })
         return (
             <>

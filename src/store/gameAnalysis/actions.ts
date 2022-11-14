@@ -1,22 +1,36 @@
-import { IAnalysisState, IBoardToGame, IGameResult, IMoveProps} from "../app-interface"; 
+import {IAnalysisState, IGameResult, IMoveToMake, PieceColor, TowersMap} from "../models";
 import { GameAnalysisActions, GameAnalysisTypes } from "./types";
 
 
-export function setStartPosition(payload = null) {
+export function setStartPosition(payload = true) {
     return {
         type: GameAnalysisActions.SET_START_POSITION,
         payload
     }
 }
 
-export function makeNewMove(payload: Partial<IMoveProps>) {
+export function setMoveOrderAction(payload: PieceColor) {
+    return {
+        type: GameAnalysisActions.SET_MOVE_ORDER,
+        payload
+    }
+}
+
+export function setBestMoveLine(payload: {move: string, value: number}[]) {
+    return {
+        type: GameAnalysisActions.SET_BEST_MOVE_LINE,
+        payload
+    }
+}
+
+export function makeNewMove(payload: Partial<IMoveToMake>) {
     return {
         type: GameAnalysisActions.MAKE_NEW_MOVE,
         payload
     }
 }
 
-export function startNewLine(payload:IMoveProps) {
+export function startNewLine(payload:Partial<IMoveToMake>) {
     return {
         type: GameAnalysisActions.START_NEW_LINE,
         payload
@@ -30,22 +44,15 @@ export function updateAnalysisState(payload: Partial<IAnalysisState>) {
     }
 }
 
-export function evaluatePosition(paylaod: boolean) {
+export function evaluatePosition(payload: boolean) {
     return {
         type: GameAnalysisActions.EVALUATE_POSITION,
-        paylaod
+        payload
     }
 }
-export function setDepth(paylaod:number) {
+export function setDepth(payload:number) {
     return {
         type: GameAnalysisActions.SET_DEPTH,
-        paylaod
-    }
-}
-
-export function createPositionTree(payload: Map<string, IBoardToGame>): GameAnalysisTypes {
-    return {
-        type: GameAnalysisActions.CREATE_POSITION_TREE,
         payload
     }
 }
@@ -85,30 +92,23 @@ export function goToPosition(payload: {index: number, move: string}): GameAnalys
     }
 }
 
-export function savePosition(payload: Map<string, IBoardToGame>): GameAnalysisTypes {
+export function savePosition(payload: TowersMap): GameAnalysisTypes {
     return {
         type: GameAnalysisActions.SAVE_POSITION,
         payload
     }
 }
 
-export function updatePosition(payload: Partial<IMoveProps>): GameAnalysisTypes {
+export function updatePosition(payload: Partial<IMoveToMake>): GameAnalysisTypes {
     return {
         type: GameAnalysisActions.UPDATE_POSITION,
         payload
     }
 }
 
-export function downloadGame(payload: IGameResult): GameAnalysisTypes {
+export function uploadGame(payload: IGameResult): GameAnalysisTypes {
     return {
-        type: GameAnalysisActions.DOWNLOAD_GAME,
-        payload
-    }
-}
-
-export function saveGameResult(payload: IGameResult): GameAnalysisTypes {
-    return {
-        type: GameAnalysisActions.SAVE_GAME_RESULT,
+        type: GameAnalysisActions.UPLOAD_GAME,
         payload
     }
 }

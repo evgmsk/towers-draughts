@@ -1,11 +1,12 @@
 import { all } from 'redux-saga/effects';
 import watcherGame from './watcherGame';
+import watcherTowers from "./watchBoardAndTowers";
 // import watcherUser from './watcherUser';
 import watcherPreGame from './watcherGamePresets';
 import watcherTimer from './watcherTimer';
 // import watcherApp from './watcherApp';
-import watcherAnalsis from './watcherGameAnalysis'
-import watcherBoard from './watcherBoard';
+import watcherAnalysis from './watcherGameAnalysis'
+// import watcherBoard from './watcherBoard';
 
 export default function* sagaRoot() {
     yield all([
@@ -14,7 +15,8 @@ export default function* sagaRoot() {
         watcherGame(),
         watcherTimer(),
         // watcherApp(),
-        watcherAnalsis(),
-        watcherBoard(),
+        watcherTowers(),
+        watcherAnalysis(),
+        // watcherBoard(),
     ]);
 }

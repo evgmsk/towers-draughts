@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 
 import { RoutesPath, RoutesTitle } from '../constants/gameConstants'
-import { IRef } from '../store/app-interface'
+import { IRef } from '../store/models'
 
 
 export const MobileMenu = () => {

@@ -2,7 +2,7 @@ import { call, put, takeLatest, select} from 'redux-saga/effects';
 
 // import { Axios, setAuthorizationHeader } from '../../common/axios';
 import {storageName} from '../../constants/gameConstants'
-import { IUser } from '../app-interface';
+import { IUser } from '../models';
 import {UserActions, UserActionTypes} from '../user/types'
 // import {sendMessage} from '../../web-sockets/ws'
 import { IRootState } from '../rootState&Reducer';

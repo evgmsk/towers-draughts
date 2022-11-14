@@ -1,4 +1,4 @@
-import {PieceColor, IGameState, IMoveOrder, IMoveProps, IBoardToGame, IPlayer, IGameMode} from '../app-interface'
+import {PieceColor, IGameState, IMoveOrder, IPlayer, IGameMode, TowersMap, IMoveToMake} from '../models'
 import { GameActions, GameActions as GM, GameActionTypes} from "./types";
 
 export const InitialGameState: IGameState = {
@@ -22,13 +22,13 @@ export function gameReducer(state: IGameState = InitialGameState, action: GameAc
         case(GM.SET_GAME_STARTED):
             return {...state, gameStarted: action.payload as boolean}
         case(GM.UPDATE_GAME_STATE):
-            return {...state, ...action.payload as IBoardToGame}  
+            return {...state, ...action.payload as TowersMap}
         case(GM.SAVE_MOVE_TO_HISTORY):
             return {...state, history: state.history.concat(action.payload as unknown as string)}
         case(GM.SET_MOVE_ORDER):
             return {...state, moveOrder: action.payload as IMoveOrder}
         case(GM.MAKE_MOVE): {
-            const {moveToSave, moveOrder} = action.payload as IMoveProps
+            const {moveToSave, moveOrder} = action.payload as IMoveToMake
             const history = state.history.concat(moveToSave.move)
             return {...state, moveOrder, history}
         }

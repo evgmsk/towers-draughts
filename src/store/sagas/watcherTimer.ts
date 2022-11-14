@@ -1,7 +1,7 @@
 import { put, takeLatest, delay, select} from 'redux-saga/effects';
 
 import { Interval} from '../../constants/gameConstants';
-import { PieceColor } from '../app-interface';
+import { PieceColor } from '../models';
 import { ClockActions, ClockActionTypes } from '../clock/types';
 import { GameActions, GameActionTypes} from '../game/types'
 import { GameAnalysisActions } from '../gameAnalysis/types';
@@ -36,12 +36,12 @@ function* workerGameClock() {
 
 function* workerStartClock(action: GameActionTypes) {
     const {gameOptions: {rivalType}, game: {gameConfirmed}} = yield select()
+    console.warn(rivalType, action.payload === 'isPlaying' && rivalType !== 'PC')
     if (action.payload === 'isPlaying' && rivalType !== 'PC') {
-        if (gameConfirmed) {
-            yield put({type: ClockActions.WHITE_TICK})
-        } else {
-            yield put({type: ClockActions.WHITE_PRESTART_TICK})
-        } 
+        console.warn('oops')
+        yield gameConfirmed
+            ? put({type: ClockActions.WHITE_TICK})
+            : put({type: ClockActions.WHITE_PRESTART_TICK})
     }
 }
 
@@ -54,7 +54,6 @@ function* workerPreTicks(action: ClockActionTypes) {
         game: {
             gameMode,
             gameConfirmed,
-           
         },
     } = yield select()
     if (gameMode !== 'isPlaying' || gameConfirmed) {

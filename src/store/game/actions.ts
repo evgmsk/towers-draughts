@@ -1,13 +1,10 @@
-import { 
-    IBoardToGame,
-    IMoveProps,
-    IMoveOrder,
+import {
     IGameState,
     EndGameConditions,
     IGameMode,
     PieceColor,
-    INewGameProps
-} from '../app-interface'
+    INewGameProps, TowersMap, IMoveToMake
+} from '../models'
 import {GameActionTypes, GameActions} from './types'
 
 export function clearHistory(payload = null): GameActionTypes {
@@ -38,25 +35,11 @@ export function setGame(payload: Partial<IGameState>): GameActionTypes {
     }
 }
 
-export function updateGameState(payload: IBoardToGame): GameActionTypes {
+export function updateGameState(payload: TowersMap): GameActionTypes {
     return {
         type: GameActions.UPDATE_GAME_STATE,
         payload
     }
-}
-
-export function confirmStartGame(payload: boolean): GameActionTypes {
-    return {
-        type: GameActions.CONFIRM_START_GAME,
-        payload
-    }
-}
-
-export function setMoveOrder(payload: IMoveOrder): GameActionTypes {
-    return ({
-        type: GameActions.SET_MOVE_ORDER,
-        payload 
-    })
 }
 
 export function setGameStarted(payload: boolean): GameActionTypes {
@@ -66,13 +49,6 @@ export function setGameStarted(payload: boolean): GameActionTypes {
     })   
 }
 
-export function updateIneffectiveMoves(payload: number): GameActionTypes {
-    return {
-        type:GameActions.INEFFECTIVE_MOVE,
-        payload
-    }   
-}
-
 export function endGame(payload: EndGameConditions): GameActionTypes {
     return {
         type: GameActions.END_GAME,
@@ -80,7 +56,7 @@ export function endGame(payload: EndGameConditions): GameActionTypes {
     }
 }
 
-export function makeMove(payload: IMoveProps): GameActionTypes {
+export function makeMove(payload: IMoveToMake): GameActionTypes {
     return {
         type: GameActions.MAKE_MOVE,
         payload
@@ -106,23 +82,9 @@ export function opponentOfferDraw(): GameActionTypes {
     }
 }
 
-export function setGameEnded(payload: boolean): GameActionTypes {
-    return {
-        type: GameActions.SET_GAME_MODE,
-        payload
-    }
-}
-
 export function offerDraw(): GameActionTypes {
     return {
         type: GameActions.OFFER_DRAW
-    }
-}
-
-export function setPortrait(payload: boolean): GameActionTypes {
-    return {
-        type: GameActions.SET_PORTRAIT,
-        payload
     }
 }
 

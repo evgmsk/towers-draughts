@@ -1,8 +1,8 @@
-import { IAnalysisState, IBoardToGame, IGameResult, IMoveProps } from "../app-interface"
+import {IAnalysisState, IGameResult, IMoveToMake, PieceColor, PositionsTree} from "../models"
 
 export const GameAnalysisActions = {
     ANALYZE_LAST_GAME: 'ANALYZE_LAST_GAME',
-    DOWNLOAD_GAME: "DOWNLOAD_GAME",
+    UPLOAD_GAME: "UPLOAD_GAME",
     SAVE_GAME_RESULT: 'SAVE_GAME_RESULT',
     SETTING_BOARD: 'SETTING_BOARD',
     UPDATE_POSITION: 'UPDATE_POSITION',
@@ -19,16 +19,28 @@ export const GameAnalysisActions = {
     REMOVE_PIECE: 'REMOVE_PIECE',
     START_NEW_LINE: 'START_NEW_LINE',
     MAKE_NEW_MOVE: 'MAKE_NEW_MOVE',
-} 
+    SET_MOVE_ORDER: 'SET_MOVE_ORDER',
+    SET_BEST_MOVE_LINE: 'SET_BEST_MOVE_LINE',
+}
 
 export interface MakeNewMoveAction {
     type: typeof GameAnalysisActions.MAKE_NEW_MOVE,
-    payload: Partial<IMoveProps>
+    payload: Partial<IMoveToMake>
+}
+
+export interface SetMoveOrder {
+    type: typeof GameAnalysisActions.SET_MOVE_ORDER
+    payload: PieceColor
+}
+
+export interface SetBestMoveAction {
+    type: typeof GameAnalysisActions.SET_BEST_MOVE_LINE,
+    payload: {move: string, value: number}[]
 }
 
 export interface StartNewLineAction {
     type: typeof GameAnalysisActions.START_NEW_LINE,
-    payload: IMoveProps
+    payload: IMoveToMake
 }
 
 export interface RemovePieceAction {
@@ -46,7 +58,7 @@ export interface SetDepthAction {
     payload: number
 }
 
-export interface EvaluatePositionhAction {
+export interface EvaluatePositionAction {
     type: typeof GameAnalysisActions.EVALUATE_POSITION
     payload: boolean
 }
@@ -58,12 +70,12 @@ export interface UpdateAnalysisStateAction {
 
 export interface CreatePositionTreeAction {
     type: typeof GameAnalysisActions.CREATE_POSITION_TREE,
-    payload: Map<string, IBoardToGame>
+    payload: PositionsTree
 }
 
 export interface SavePositionAction {
     type: typeof GameAnalysisActions.SAVE_POSITION,
-    payload: Map<string, IBoardToGame>
+    payload: PositionsTree
 }
 
 export interface GoToPositionAction {
@@ -76,14 +88,14 @@ export interface StepForwardAction {
     payload: number
 }
 
-export interface StepBackdAction {
+export interface StepBackAction {
     type: typeof GameAnalysisActions.STEP_BACK,
     payload: number
 }
 
 export interface UpdatePositionActions {
     type: typeof GameAnalysisActions.UPDATE_POSITION,
-    payload: Partial<IMoveProps>
+    payload: Partial<IMoveToMake>
 }
 
 export interface SettingBoardAction {
@@ -96,8 +108,8 @@ export interface AnalyzeLastGame {
     payload: boolean
 }
 
-export interface DownloadGame {
-    type: typeof GameAnalysisActions.DOWNLOAD_GAME,
+export interface UploadGame {
+    type: typeof GameAnalysisActions.UPLOAD_GAME,
     payload: IGameResult
 }
 
@@ -112,13 +124,13 @@ export interface SetStartPositionAction {
 }
 
 export type GameAnalysisTypes = AnalyzeLastGame 
-| DownloadGame 
+| UploadGame
 | SaveGameResult 
 | SettingBoardAction 
 | UpdatePositionActions
 | GoToPositionAction
 | StepForwardAction
-| StepBackdAction
+| StepBackAction
 | SavePositionAction
 | CreatePositionTreeAction
 | UpdateAnalysisStateAction
@@ -126,4 +138,10 @@ export type GameAnalysisTypes = AnalyzeLastGame
 | StartNewLineAction
 | MakeNewMoveAction
 | SetStartPositionAction
+| SetBestMoveAction
+| EvaluatePositionAction
+| PlayMovesAction
+| SetDepthAction
+| SetMoveOrder
+
 

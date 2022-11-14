@@ -1,4 +1,4 @@
-import { IAnalysisState, IApp, IBoardAndTowers, IBoardOptions, IGameOptionState, IGameState, IUser } from './app-interface';
+import {IAnalysisState, IApp, IBoard, IBoardOptions, IGameOptionState, IGameState, IUser} from './models';
 import {InitialGameState, gameReducer} from './game/reducers'
 import {InitialGameOptionsState, gameOptionsReducer} from './gameOptions/reducers'
 import {InitialUserState, userReducer} from './user/reducer'
@@ -11,10 +11,10 @@ import { InitialClockState, clockReducer, IClockState } from './clock/reducers';
 import {ClockActionTypes} from './clock/types'
 import { analyzeReducer, InitialGameAnalysisState } from './gameAnalysis/reducers';
 import { GameAnalysisTypes } from './gameAnalysis/types';
-import { boardReducer, InitialBoardState } from './board/reducers';
-import { BoardActionTypes } from './board/types';
 import { boardOptionsReducer, InitialBoardOptionsState } from './boardOptions/reducers';
 import { BoardOptionActionTypes } from './boardOptions/types';
+import {InitialTowersState, towersReducer} from "./board-towers/reducers";
+import {TowersActionTypes} from "./board-towers/types";
 
 export const InitialState: IRootState = {
   user: InitialUserState,
@@ -23,7 +23,7 @@ export const InitialState: IRootState = {
   app: AppDefaultState,
   clock: InitialClockState,
   analyze: InitialGameAnalysisState,
-  board: InitialBoardState,
+  boardAndTowers: InitialTowersState,
   boardOptions: InitialBoardOptionsState
 };
 
@@ -34,8 +34,8 @@ export interface IRootState {
   gameOptions: IGameOptionState
   clock: IClockState
   analyze: IAnalysisState
-  board: IBoardAndTowers
   boardOptions: IBoardOptions
+  boardAndTowers: IBoard
 }
 
 export const AppReducers = {
@@ -45,8 +45,8 @@ export const AppReducers = {
   app: appReducer,
   clock: clockReducer,
   analyze: analyzeReducer,
-  board: boardReducer,
-  boardOptions: boardOptionsReducer
+  boardOptions: boardOptionsReducer,
+  boardAndTowers: towersReducer
 }; 
 
 export type AppActions = GameActionTypes 
@@ -55,11 +55,11 @@ export type AppActions = GameActionTypes
   | AppActionTypes 
   | ClockActionTypes
   | GameAnalysisTypes
-  | BoardActionTypes
   | BoardOptionActionTypes
+  | TowersActionTypes
 
 export const getUser = (state: IRootState) => state.user
 
-export const getGameOptions = (state: IRootState) => state.gameOptions
+// export const getGameOptions = (state: IRootState) => state.gameOptions
 
 export const getGame = (state: IRootState) => state.game

@@ -1,4 +1,13 @@
-import {EndGameConditions, IBoardToGame, INewGameProps, IGameMode, IGameState, IMoveOrder, IMoveProps, PieceColor} from "../app-interface";
+import {
+    EndGameConditions,
+    INewGameProps,
+    IGameMode,
+    IGameState,
+    IMoveOrder,
+    PieceColor,
+    TowersMap,
+    IMoveToMake
+} from "../models";
 // import { GameOptionActions } from "../gameOptions/types";
 
 export const GameActions = {
@@ -16,7 +25,6 @@ export const GameActions = {
     DECLINE_DRAW: 'DECLINE_DRAW',
     RIVAL_OFFER_DRAW: 'RIVAL_OFFER_DRAW',
     SURRENDER: 'SURRENDER',
-    SET_PORTRAIT: 'SET_PORTRAIT',
     SET_GAME_MODE: 'SET_GAME_MODE',
     CANCEL_GAME: 'CANCEL_GAME',
     NEW_GAME_VS_PC: 'NEW_GAME_VS_PC',
@@ -52,11 +60,6 @@ interface CancelGameAction {
 interface SetGameModeAction {
     type: typeof GameActions.SET_GAME_MODE,
     payload: IGameMode
-}
-
-interface SetPortraitAction {
-    type: typeof GameActions.SET_PORTRAIT,
-    payload: boolean
 }
 
 interface SetGameAction {
@@ -96,7 +99,7 @@ interface SetMoveOrderAction {
 
 interface UpdateGameStateAction {
     type: typeof GameActions.UPDATE_GAME_STATE,
-    payload: IBoardToGame
+    payload: TowersMap
 }
 
 interface SetGameStartedAction {
@@ -111,7 +114,7 @@ interface OfferDrawAction {
 
 interface MakeMoveAction {
     type: typeof GameActions.MAKE_MOVE,
-    payload: IMoveProps
+    payload: IMoveToMake
 }
 
 interface ConfirmStartGameAction {
@@ -130,7 +133,6 @@ export type GameActionTypes =
 | SetGameStartedAction
 | SetMoveOrderAction
 | UpdateGameStateAction
-| SetPortraitAction
 | SaveHistoryAction
 | SetPlayerMoveOrderAction
 | EndGameAction
@@ -144,5 +146,4 @@ export type GameActionTypes =
 | SetGameModeAction
 | NewGameVSPCAction
 | NewGameVSPlayerAction
-| CancelGameAction
 | ClearHistoryAction

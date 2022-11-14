@@ -29,7 +29,6 @@ $ratio: (7: .7, 6: .6, 8: .8);
     }
     
     @for $var from 6 to 9 {
-        
         &.ratio-#{$var} {
             $m: map-get($ratio, $var);
                 // @debug $m;
@@ -181,7 +180,7 @@ $ratio: (7: .7, 6: .6, 8: .8);
             z-index: 200 + $i * 2;
         }
         .black-piece.down#{$i}, .white-piece.down#{$i} {
-            top: +$i * $multy - $beforeTop / 2;
+            top: $i * $multy - $beforeTop / 2;
             z-index: 200 - $i * 2;
         }
     }

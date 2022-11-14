@@ -2,27 +2,39 @@
 
 .game-analyze-menu {
     align-self: flex-end;
-    @include menu-width();
+    @include menu-width(8, 63vw);
     height: 100%;
     @include flex(space-between, center, column);
     .game-analyze-menu_item {
         margin: 5px;
         @include flex(center, center);
-        @include item-size();
+        @include item-size(8, 63vw);
         .material-icons {
             font-size: 1.6rem;
+            &.black-move {
+                color: black;
+            }
         }
-        button {
+        button, div{
+            position: relative;
             width: 100%;
             height: 100%;
             background-color: rgb(55, 71, 18);
             color:white;
             border: unset;
             border-radius: 3px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             &:hover {
                 background-color: darken(rgb(142, 170, 78), 10%);
             }
-        }     
+        }
+        input {
+            opacity: 0;
+            position: absolute;
+            width: 10px;
+        }
     }
     .depth-range_container {
         position: relative;

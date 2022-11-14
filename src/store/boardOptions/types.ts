@@ -1,4 +1,4 @@
-import { BoardNotation, IBoardOptions } from "../app-interface";
+import { BoardNotation, IBoardOptions } from "../models";
 
 export const BoardOptionActions = {
     SET_GAME_BOARD_OPTIONS: 'SET_GAME_BOARD_OPTIONS',

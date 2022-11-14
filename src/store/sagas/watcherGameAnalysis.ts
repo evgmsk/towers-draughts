@@ -1,16 +1,22 @@
 import { put, takeLatest, select, delay } from 'redux-saga/effects';
 
-import { PieceColor, IMoveProps, IAnalysisState} from '../app-interface';
+import {IAnalysisState, IMoveToMake, PositionsTree} from '../models';
 
-import { copyMap, oppositColor, splitMove } from '../../game-engine/gameplay-helper-fuctions';
-// import { Axios, setAuthorizationHeader } from '../../common/axios';
+import { copyObj, oppositeColor, splitMove } from '../../game-engine/gameplay-helper-functions';
 import { GameAnalysisActions, GameAnalysisTypes } from '../gameAnalysis/types';
-import { createDefaultTowers, createEmptyBoard, createStartBoard} from '../../game-engine/prestart-help-function-constants';
-import { InitialGameAnalysisState } from '../gameAnalysis/reducers';
+import {
+    createDefaultTowers,
+    createOutBoardTowers,
+    removeOutBoardTowers
+} from '../../game-engine/prestart-help-function';
 import { IRootState } from '../rootState&Reducer';
-import { BoardActions } from '../board/types';
-import tur from '../../game-engine/update-towers-functions'
-import { AnimationDuration } from '../../constants/gameConstants';
+import mmr from '../../game-engine/moves-resolver'
+import tur from '../../game-engine/towers-updater'
+// import { AnimationDuration } from '../../constants/gameConstants';
+import bms from "../../game-engine/best-move-seeker-towers";
+import {TowersActions} from "../board-towers/types";
+import {BoardOptionActions} from "../boardOptions/types";
+
 
 // function* workerUploadGame(action: GameAnalysisTypes) {
 //     const token: string = yield select((state) => state.user.token)
@@ -23,51 +29,7 @@ import { AnimationDuration } from '../../constants/gameConstants';
 //     }
 // }
 
-function* workerUpdatePosition(action: GameAnalysisTypes) {
-    const {analyze, board: {positionsTree}} = yield select()
-    const {
-        movesCurrentLine,
-        movesMainLine,
-        lastMove,
-    } = analyze as IAnalysisState
-    const {moveToSave: {move, position}} = action.payload as IMoveProps
-    let nextLastMove, nextPositionKey;
-    if (movesMainLine![lastMove.index] === lastMove.move && movesMainLine!.length === lastMove.index + 1) {
-        nextLastMove = {move, index: lastMove.index + 1}
-        nextPositionKey = `${movesMainLine?.join('_')}_${move}`
-        positionsTree!.set(nextPositionKey, position!)
-        yield put({
-            type: GameAnalysisActions.UPDATE_ANALYSIS_STATE,
-            payload: {
-                ...analyze,
-                lastMove: nextLastMove,
-                positionsTree,
-                movesMainLine: movesMainLine?.push(move)
-            }
-        })
-    } else if (movesMainLine![lastMove.index] === lastMove.move && movesMainLine!.length > lastMove.index + 1) {
-        nextLastMove = {move, index: lastMove.index + 1}
-        nextPositionKey = `${movesMainLine?.join('_')}_${move}`
-        positionsTree!.set(nextPositionKey, position!)
-        const newCurrentLine = [...movesMainLine!.slice(0, lastMove.index + 1), lastMove.move]
-        yield put({
-            type: GameAnalysisActions.UPDATE_ANALYSIS_STATE, 
-            payload: {...analyze, lastMove: nextLastMove, movesCurrentLine: newCurrentLine}
-        })
-        yield put({type: BoardActions.UPDATE_BOARD_STATE, payload: {positionsTree}})
-    } else if (movesCurrentLine!.slice(-1)[0] === lastMove.move) {
-        nextLastMove = {move, index: lastMove.index + 1}
-        nextPositionKey = `${movesCurrentLine?.join('_')}_${move}`
-        positionsTree!.set(nextPositionKey, position!)
-        yield put({
-            type: GameAnalysisActions.UPDATE_ANALYSIS_STATE, 
-            payload: {...analyze, lastMove: nextLastMove, movesCurrentLine: movesCurrentLine?.push(move)}
-        })
-        yield put({type: BoardActions.UPDATE_BOARD_STATE, payload: {positionsTree}})
-    }
-}
-
-function* workerStepForward(action: GameAnalysisTypes) {
+function* workerStepForward() {
     const {analyze, board: {positionsTree}} = yield select()
     const {
         movesCurrentLine,
@@ -91,89 +53,49 @@ function* workerStepForward(action: GameAnalysisTypes) {
     }
     yield put({
         type: GameAnalysisActions.UPDATE_ANALYSIS_STATE, 
-        payload: {...analyze, lastMove: nextLastMove, pieceOrder: oppositColor(pieceOrder)}
+        payload: {...analyze, lastMove: nextLastMove, pieceOrder: oppositeColor(pieceOrder)}
     })
     yield put({
-        type: BoardActions.UPDATE_BOARD_STATE,
+        type: TowersActions.UPDATE_BOARD_STATE,
         payload: {currentPosition}
     })
 }
 
 function* workerGoToPosition(action: GameAnalysisTypes) {
-    // console.log(action)
-    const {analyze, boardOptions, board: {positionsTree, cellsMap, cellSize}} = yield select()
-    const {
-        movesCurrentLine,
-        movesMainLine,
-    } = analyze as IAnalysisState
-    const {index, move} = action.payload as {index: number, move: string}
-    let currentPosition, lastMove, pieceOrder
-    if (index < 0) {
-        currentPosition = createStartBoard(boardOptions.boardSize)
-    } else if (movesMainLine![index] === move) {
-        currentPosition = positionsTree!.get(movesMainLine!.slice(0, index + 1).join('_'))
-        console.log(positionsTree, movesMainLine!.slice(0, index + 1).join('_'), currentPosition)
-    } else if (movesCurrentLine![index] === move) {
-        currentPosition = positionsTree!.get(movesCurrentLine!.slice(0, index + 1).join('_'))
-    }
-    let towers  = tur.updateTowersToBoard(currentPosition)
-    towers = tur.updateTowersPosition(cellSize, towers, cellsMap, boardOptions.reversedBoard)
-    pieceOrder = index % 2 ? PieceColor.w : PieceColor.b
-    lastMove = action.payload
-    const payload = { lastMove, pieceOrder}
-    yield put({type: GameAnalysisActions.UPDATE_ANALYSIS_STATE, payload})
-    yield put({
-        type: BoardActions.UPDATE_BOARD_STATE,
-        payload: {currentPosition, towers}
-    })
+    console.log(action)
+    // const {analyze, boardOptions, board: {positionsTree, cellsMap, cellSize}} = yield select()
+    // const {
+    //     movesCurrentLine,
+    //     movesMainLine,
+    // } = analyze as IAnalysisState
+    // const {index, move} = action.payload as {index: number, move: string}
+    // let currentPosition, lastMove, pieceOrder
+    // if (index < 0) {
+    //     currentPosition = createStartBoard(boardOptions.boardSize)
+    // } else if (movesMainLine![index] === move) {
+    //     currentPosition = positionsTree!.get(movesMainLine!.slice(0, index + 1).join('_'))
+    //     console.log(positionsTree, movesMainLine!.slice(0, index + 1).join('_'), currentPosition)
+    // } else if (movesCurrentLine![index] === move) {
+    //     currentPosition = positionsTree!.get(movesCurrentLine!.slice(0, index + 1).join('_'))
+    // }
+    // let towers  = tur.updateTowersToBoard(currentPosition)
+    // towers = tur.updateTowersPosition(cellSize, towers, cellsMap, boardOptions.reversedBoard)
+    // pieceOrder = index % 2 ? PieceColor.w : PieceColor.b
+    // lastMove = action.payload
+    // const payload = { lastMove, pieceOrder}
+    // yield put({type: GameAnalysisActions.UPDATE_ANALYSIS_STATE, payload})
+    // yield put({
+    //     type: BoardActions.UPDATE_BOARD_STATE,
+    //     payload: {currentPosition, towers}
+    // })
+    yield
 }
 
-function* workerPlayMoves(action: GameAnalysisTypes) {
-    
-    const {analyze, board: {positionsTree, cellSize, cellsMap}, boardOptions: {reversedBoard}} = yield select()
-    const {
-        movesCurrentLine,
-        movesMainLine,
-        lastMove,
-        pieceOrder,
-    } = analyze as IAnalysisState
-    let nextLastMove, currentPosition;
-    const nextIndex = lastMove.index + 1
-    if (lastMove.index < 0) {
-        nextLastMove = {move: movesMainLine![0], index: 0}
-        currentPosition = positionsTree!.get(movesMainLine![0])
-    } else if (movesMainLine![lastMove.index] === lastMove.move) {
-        nextLastMove = {move: movesMainLine![lastMove.index + 1], index: lastMove.index + 1}
-        currentPosition = positionsTree!.get(movesMainLine!.slice(0, nextLastMove.index + 1).join('_'))
-    } else if (movesCurrentLine![lastMove.index] === lastMove.move) {
-        nextLastMove = {move: movesCurrentLine![lastMove.index + 1], index: lastMove.index + 1}
-        currentPosition = positionsTree!.get(movesCurrentLine!.slice(0, nextLastMove.index + 1).join('_'))
-    } else {
-        console.error(analyze, action)
-    }
-    
-    let towers = tur.updateTowersToBoard(currentPosition)
-    towers = tur.updateTowersPosition(cellSize, towers, cellsMap, reversedBoard)
-    const lastMoveSquares = splitMove((nextLastMove)!.move)
-    yield put({
-        type: BoardActions.UPDATE_BOARD_STATE,
-        payload: {currentPosition, towers, lastMoveSquares}
-    })
-    yield put({
-        type: GameAnalysisActions.UPDATE_ANALYSIS_STATE, 
-        payload: {
-            ...analyze,
-            lastMove: nextLastMove,
-            pieceOrder: oppositColor(pieceOrder),
-        }
-    })
-    if (nextIndex < movesMainLine!.length - 1 || nextIndex < movesCurrentLine!.length -1) {
-        yield delay(AnimationDuration)
-        yield put({type: GameAnalysisActions.PLAY_MOVES})
-    }
+function* workerPlayMoves() {
+
 }
 
-function* workerStepBack(action: GameAnalysisTypes) {
+function* workerStepBack() {
     const {analyze, board: {positionsTree}} = yield select()
     const {
         movesCurrentLine,
@@ -192,7 +114,7 @@ function* workerStepBack(action: GameAnalysisTypes) {
     }
     const lastMoveSquares = splitMove((nextLastMove)!.move)
     yield put({
-        type: BoardActions.UPDATE_BOARD_STATE,
+        type: TowersActions.UPDATE_BOARD_STATE,
         payload: {currentPosition, lastMoveSquares}
     })
     yield put({
@@ -200,20 +122,27 @@ function* workerStepBack(action: GameAnalysisTypes) {
         payload: {
             ...analyze,
             lastMove: nextLastMove,
-            pieceOrder: oppositColor(pieceOrder),
+            pieceOrder: oppositeColor(pieceOrder),
         }
     })
 }
 
 function* workerSettingBoard(action: GameAnalysisTypes) {
-    const {boardOptions:{boardSize}} = yield select(state => state)
+    const {
+        boardOptions,
+        boardAndTowers,
+        analyze: {pieceOrder}
+    } = (yield select(state => state)) as IRootState
+    let towers = copyObj(boardAndTowers.towers)
     if (action.payload) {
-        const board = createEmptyBoard(boardSize)
-        yield put({
-            type: GameAnalysisActions.UPDATE_ANALYSIS_STATE, 
-            payload: {...InitialGameAnalysisState, board, currentPosition: board }
-        })
+        towers = createOutBoardTowers(towers, boardOptions.boardSize)
+        towers = tur.updateCellsAndTowersPosition({...boardAndTowers, towers}, boardOptions).towers
+    } else {
+        towers = removeOutBoardTowers(towers)
+        const payload = mmr.getMovesResultFromTotalMoves(mmr.getPositionMoves(towers, pieceOrder))
+        yield put({type: TowersActions.UPDATE_MOVES, payload})
     }
+    yield put({type: TowersActions.UPDATE_TOWERS, payload: towers})
 }
 
 function* workerGameAnalysis(action: GameAnalysisTypes) {
@@ -233,31 +162,31 @@ function* workerCurrentLine(action: GameAnalysisTypes) {
             movesCurrentLine,
             pieceOrder,
         },
-        board: {positionsTree}      
+        boardAndTowers
     } = yield select()
-    const {moveToSave: {move, position}} = action.payload as IMoveProps
-    let payload: Partial<IAnalysisState> = {}
+    const {moveToSave: {move, position}} = action.payload as IMoveToMake
+    let payload: Partial<IAnalysisState>
     if (movesCurrentLine[index + 1] === move) {
         yield put({
-            type: BoardActions.UPDATE_BOARD_STATE,
+            type: TowersActions.UPDATE_BOARD_STATE,
             payload: {currentPosition: position}
         })
         payload = {
             lastMove: {move, index: index + 1},
-            pieceOrder: oppositColor(pieceOrder),
+            pieceOrder: oppositeColor(pieceOrder),
         }
     } else {
         const movesLine = [...movesCurrentLine.slice(0, index + 1), move]
-        const _positionsTree = copyMap(positionsTree!)
+        const positionsTree = copyObj(boardAndTowers.positionsTree!) as PositionsTree
         const newKey = movesLine.join('_')
-        _positionsTree.set(newKey, position)
+        positionsTree[newKey] = position
         yield put({
-            type: BoardActions.UPDATE_BOARD_STATE, 
-            payload: {positionsTree: _positionsTree, currentPositoin: position}
+            type: TowersActions.UPDATE_BOARD_STATE,
+            payload: {positionsTree: positionsTree, towers: position}
         })
         payload = { 
             lastMove: {move, index: index + 1},
-            pieceOrder: oppositColor(pieceOrder),
+            pieceOrder: oppositeColor(pieceOrder),
             movesCurrentLine: movesLine,
         }
     }
@@ -271,44 +200,45 @@ function* workerMainLine(action: GameAnalysisTypes) {
             movesMainLine,
             pieceOrder,
         },
-        board: {positionsTree}
+        boardAndTowers
     } = yield select()
-    const {moveToSave: {move, position}} = action.payload as IMoveProps
-    let payload: Partial<IAnalysisState> = {}
+    const {moveToSave: {move, position}} = action.payload as IMoveToMake
+    let payload: Partial<IAnalysisState>
     yield put({
-        type: BoardActions.UPDATE_BOARD_STATE,
-        payload: {currentPosition: position}
+        type: TowersActions.UPDATE_BOARD_STATE,
+        payload: {towers: position}
     })
+    const positionsTree = copyObj(boardAndTowers.positionsTree!) as PositionsTree
     if (!movesMainLine.length) {
         payload = {
             lastMove: {move, index: 0},
-            pieceOrder: oppositColor(pieceOrder),
+            pieceOrder: oppositeColor(pieceOrder),
             movesMainLine: [move]
         }
-        const _positionsTree = copyMap(positionsTree!)
-        _positionsTree.set(move, position)
+
+        positionsTree[move] = position
         yield put({
-            type: BoardActions.UPDATE_BOARD_STATE,
-            payload: {positionsTree: _positionsTree, history: [move], currentPosition: position}
+            type: TowersActions.UPDATE_BOARD_STATE,
+            payload: {positionsTree, history: [move], towers: position}
         })
     } else if (movesMainLine[index + 1] === move) {
         payload = { 
             lastMove: {move, index: index + 1},
-            pieceOrder: oppositColor(pieceOrder),
+            pieceOrder: oppositeColor(pieceOrder),
         }
     } else {
         const movesLine = movesMainLine.slice(0, index + 1).concat(move)
-        const _positionTree = copyMap(positionsTree!)
+        const positionTree = copyObj(positionsTree!)
         const newKey = movesLine.join('_')
-        _positionTree.set(newKey, position)
+        positionTree[newKey] = position
         payload = {
             lastMove: {move, index: index + 1},
-            pieceOrder: oppositColor(pieceOrder),
+            pieceOrder: oppositeColor(pieceOrder),
             movesMainLine: [...movesMainLine, move]
         }
         yield put({
-            type: BoardActions.UPDATE_BOARD_STATE,
-            payload: {positionsTree: _positionTree, currentPosition: position, history: movesLine}
+            type: TowersActions.UPDATE_BOARD_STATE,
+            payload: {positionsTree, towers: position, history: movesLine}
         })
     }
     return payload
@@ -319,7 +249,7 @@ function* workerNewMove(action: GameAnalysisTypes) {
         lastMove: {move, index},
         movesCurrentLine,
     } = yield select((state: IRootState) => state.analyze)
-    let payload: Partial<IAnalysisState> = {}
+    let payload: Partial<IAnalysisState>
     if (movesCurrentLine.length && movesCurrentLine[index] === move) {
         payload = yield workerCurrentLine(action)
     } else {
@@ -330,35 +260,63 @@ function* workerNewMove(action: GameAnalysisTypes) {
     }
 }
 
+function* workerAnalyzePosition(action: GameAnalysisTypes) {
+    if (!action.payload) {
+        return
+    }
+    const {
+        boardAndTowers: {towers},
+        analyze: {pieceOrder},
+    }: IRootState = yield select()
+    delay(200)
+    bms.setState({game: false})
+    bms.updateAfterRivalMove({history: [''], pieceOrder, cP: towers})
+}
+
+function* workerReverseBoard() {
+    const {
+        game: {gameMode},
+        boardAndTowers,
+        boardOptions
+    } = (yield select()) as IRootState
+    const rect = document.querySelector('.board__body')
+        ?.getBoundingClientRect() as DOMRect
+    if (gameMode !== 'isAnalyzing' || !rect) {
+        return
+    }
+    yield delay(10)
+    const payload = tur.updateCellsAndTowersPosition(boardAndTowers, boardOptions)
+    yield put ({
+        type: TowersActions.UPDATE_BOARD_STATE,
+        payload,
+    })
+}
+
 function* workerStartPosition(action: GameAnalysisTypes) {
     const {
         boardOptions: {boardSize},
-        board: {positionsTree}
-    } = yield select((state: IRootState) => state)
-    yield put({type: GameAnalysisActions.UPDATE_ANALYSIS_STATE, payload: {startPosition: false}})
-    const currentPosition = createStartBoard(boardSize)
-    positionsTree.clear()
-    positionsTree.set('sp', currentPosition)
-    const towers = createDefaultTowers(boardSize)
-    yield put ({type: BoardActions.UPDATE_BOARD_STATE, paylaod: {currentPosition, positionsTree, towers}})
-    const payload: Partial<IAnalysisState> = {
-        ...InitialGameAnalysisState,
-        startPosition: true,
-    }
-    yield delay(100)
-    yield put({type: GameAnalysisActions.UPDATE_ANALYSIS_STATE, payload})
+        boardAndTowers: {cellsMap, cellSize},
+    } = (yield select((state: IRootState) => state)) as IRootState
+    const towers = action.payload
+        ? createDefaultTowers(boardSize)
+        : createOutBoardTowers({}, boardSize)
+    const payload = tur.updateTowersPosition(cellSize, towers, cellsMap)
+    yield put ({
+        type: TowersActions.UPDATE_TOWERS,
+        payload,
+    })
 }
 
-export default function* watcherAnalysis() {    
+export default function* watcherAnalysis() {
     yield takeLatest(GameAnalysisActions.STEP_BACK, workerStepBack)
     yield takeLatest(GameAnalysisActions.STEP_FORWARD, workerStepForward)
     yield takeLatest(GameAnalysisActions.GO_TO_POSITION, workerGoToPosition)
-    yield takeLatest(GameAnalysisActions.UPDATE_POSITION, workerUpdatePosition)
-    // yield takeLatest(GameAnalysisActions.DOWNLOAD_GAME, workerUploadGame)
+    // yield takeLatest(GameAnalysisActions.UPDATE_POSITION, workerUpdatePosition)
+    yield takeLatest(BoardOptionActions.REVERSE_BOARD, workerReverseBoard)
+    yield takeLatest(GameAnalysisActions.EVALUATE_POSITION, workerAnalyzePosition)
     yield takeLatest(GameAnalysisActions.PLAY_MOVES, workerPlayMoves)
     yield takeLatest(GameAnalysisActions.SETTING_BOARD, workerSettingBoard)
     yield takeLatest(GameAnalysisActions.ANALYZE_LAST_GAME, workerGameAnalysis)
     yield takeLatest(GameAnalysisActions.MAKE_NEW_MOVE, workerNewMove)
     yield takeLatest(GameAnalysisActions.SET_START_POSITION, workerStartPosition)
 }
- 
