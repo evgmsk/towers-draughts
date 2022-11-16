@@ -28,7 +28,7 @@ class Footer extends React.Component<ConnectedProps<typeof connector>> {
     componentDidMount() {
         if (!window) return
         window.addEventListener("beforeunload", this.onClose)
-        window.addEventListener('resize', this.handleResize) 
+        window.addEventListener('resize', this.handleResize)
     }
 
     componentWillUnmount() {
@@ -65,10 +65,9 @@ class Footer extends React.Component<ConnectedProps<typeof connector>> {
     }
 
     onClose = (e: any) => {
-        e.preventDefault();
-        const token = this.props.token
-        if (token) this.props.close(token)
-        
+        e.preventDefault()
+        const {token, close} = this.props
+        token && close(token)
     }
 
     render() {

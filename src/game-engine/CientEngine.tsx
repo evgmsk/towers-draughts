@@ -46,7 +46,7 @@ class ClientEngine extends React.Component<BotProps, IBestMove> {
         const engineMove = moveOrder.pieceOrder === engineColor
         const props = {history: movesHistory, cP: towers, pieceOrder: moveOrder.pieceOrder}
         if (gameMode === 'isPlaying' && prev.gameMode !== 'isPlaying') {
-            console.log('new game', this.props)
+            // console.log('new game', this.props)
             bms.setState(this.getSeekerProps())
             bms.setBestMoveCB(this.moveCB)
             if (engineMove) {
@@ -55,10 +55,10 @@ class ClientEngine extends React.Component<BotProps, IBestMove> {
         }
         if (prev.movesHistory.length !== movesHistory.length) {
             if (this.props.gameMode === 'isPlaying' && engineMove) {
-                console.log('start engine', this.props)
+                // console.log('start engine', this.props)
                 bms.updateAfterRivalMove(props)
             } else {
-                console.log('stop engine', this.props)
+                // console.log('stop engine', this.props)
             }
         }
     }

@@ -1,14 +1,21 @@
-import {Branch, Children, DeepValue, MMRResult, Move, TowersMap} from "../store/models";
-import {copyObj, oppositeColor} from "./gameplay-helper-functions";
+import {Branch, Children, DeepValue, MMRResult, PieceColor, TowersMap, Value} from "../store/models";
+import {oppositeColor} from "./gameplay-helper-functions";
 import evaluator from "./towers-evaluator";
 import mmr from './moves-resolver'
-import {PieceColor} from "../store/models";
 import {createDefaultTowers} from "./prestart-help-function";
-import {BaseBoardSize} from "../constants/gameConstants";
+import {BaseBoardSize, DefaultMinDepth} from "../constants/gameConstants";
 
 export interface ITree {[key: string]: any | {children: {[key: string]: any}}}
 
 export interface IPositionsTree {[key: string]: Branch | {children: Children}}
+
+export interface IMoveOfLine {
+    pieceOrder: PieceColor,
+    value: Value,
+    childrenValues: {[key: string]: DeepValue}[],
+    move: string,
+    depth: number
+}
 
 export class Tree implements ITree {
     tree: ITree
@@ -31,6 +38,7 @@ export class PositionsTree extends Tree {
         this.tree = props
         if (!props.root) {
             this.createDefaultRootBranch()
+            this.getDepthData(this.getRoot(), DefaultMinDepth)
         }
     }
 
@@ -70,32 +78,60 @@ export class PositionsTree extends Tree {
         return this.tree.root as Branch
     }
 
-    filterBelowOfDepth = (branch = this.getRoot(), depth = 0) => {
-        const {moves, children} = branch
-        return moves.filter(m =>
-            !children[m.move] || children[m.move].deepValue!.depth < depth)
+    determineBestMovesLine() {
+        const movesLine = [] as IMoveOfLine[]
+        let branch = this.getRoot()
+        branch.pieceOrder === PieceColor.b && movesLine.push({move: '...'} as IMoveOfLine)
+        const {deepValue: {move, value, depth}, children, pieceOrder} = branch
+        const moveToLine: IMoveOfLine = {
+            depth,
+            move,
+            value,
+            pieceOrder,
+            childrenValues: Object.keys(children).map(k => ({[k]: children[k].deepValue}))
+        }
+        movesLine.push(moveToLine)
+        while(Object.keys(branch.children).length) {
+            branch = branch.children[branch.deepValue.move]
+            const {deepValue: {move, value, depth}, children, pieceOrder} = branch
+            const moveToLine: IMoveOfLine = {
+                depth,
+                move,
+                value,
+                pieceOrder,
+                childrenValues: Object.keys(children).map(k => ({[k]: children[k].deepValue}))
+            }
+            movesLine.push(moveToLine)
+        }
+        return movesLine
     }
 
-    filterEqualOrGreaterThanDepth = (depth = 1, branch = this.getRoot())  => {
-        const {moves, children, pieceOrder} = branch
-        let best: Move & {deepValue: DeepValue}
-        const filterMoves = moves.filter(m => {
-            const deepValue = children[m.move] && children[m.move].deepValue
-            if (!deepValue) return null
-            const included = deepValue.depth >= depth
-                && (deepValue.value[pieceOrder] > 0
-                    || deepValue.value > this.getRoot().deepValue.value)
-            if (included) {
-                const deepValue = children[m.move].deepValue
-                best = best || {...m, deepValue}
-                best = best.deepValue.value[pieceOrder] > deepValue.value[pieceOrder]
-                    ? best
-                    : {...m, deepValue}
-            }
-            return included
-        })
-        return filterMoves.length ? best! : null
-    }
+    // filterBelowOfDepth = (branch = this.getRoot(), depth = 0) => {
+    //     const {moves, children} = branch
+    //     return moves.filter(m =>
+    //         !children[m.move] || children[m.move].deepValue!.depth < depth)
+    // }
+
+    // filterEqualOrGreaterThanDepth = (depth = 1, branch = this.getRoot())  => {
+    //     const {moves, children, pieceOrder} = branch
+    //     let best: Move & {deepValue: DeepValue}
+    //     const filterMoves = moves.filter(m => {
+    //         const deepValue = children[m.move] && children[m.move].deepValue
+    //         if (!deepValue) return null
+    //         const included = deepValue.depth >= depth
+    //             && (deepValue.value[pieceOrder] > 0
+    //                 || deepValue.value > this.getRoot().deepValue.value)
+    //         if (included) {
+    //             const deepValue = children[m.move].deepValue
+    //             best = best || {...m, deepValue}
+    //             best = best.deepValue.value[pieceOrder] > deepValue.value[pieceOrder]
+    //                 ? best
+    //                 : {...m, deepValue}
+    //         }
+    //         return included
+    //     })
+    //     return filterMoves.length ? best! : null
+    // }
 
     updateRoot(move: string): Branch {
         const children = this.tree.root.children as unknown as Children
@@ -186,12 +222,8 @@ export class PositionsTree extends Tree {
 
     getDepthData(branch: Branch, depth = 1): Branch {
         let br = branch
-        console.warn(1, copyObj(branch.deepValue), branch)
         while (br.deepValue.depth < depth) {
             this.getNextDepthData(br)
-            // const child = br.children[br.deepValue.move]
-            // const cchild = (child.deepValue.move && child.children[child.deepValue.move]) as Branch
-            // console.warn(2, br.deepValue, (cchild?.moves || []).map(m => m?.move))
         }
 
         return br

@@ -71,7 +71,7 @@ const Moves:React.FC<ConnectedProps<typeof historyConnector>> = (props) => {
                 return stepForward()
             }
             case classList.contains('to-end'): {
-                return goToPosition({index: length - 1, move: mHistory.slice(-1)[0]})
+                return goToPosition({index: length - 1, move: mHistory[mHistory.length - 1]})
             }
             case classList.contains('play-moves'): {
                 return playMoves()

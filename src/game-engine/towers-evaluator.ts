@@ -35,6 +35,7 @@ export class Evaluator {
         let mandatory = [] as FullMRResult[]
         let free = [] as FreeMRResult[]
         // console.log('get data', Object.keys(towers).map(m => towers[m].shortData()))
+        // console.warn(parentBranchColor, pieceOrder, Object.keys(towers).map(m => towers[m].shortData()))
         for (let key of towerKeys) {
             this.savePieceData(towers[key])
             if (towers[key].currentColor !== pieceOrder) {

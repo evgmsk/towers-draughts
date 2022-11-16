@@ -163,7 +163,7 @@ function* workerMove(action: GMA) {
         gameOptions: {rivalType},
         boardAndTowers
     } = (yield select()) as IRootState
-    console.warn('game', action, boardAndTowers)
+    console.warn('game move', action, boardAndTowers, movesTree.getRoot())
     const payload: IMoveToMake = action.payload as IMoveToMake
     if (!gameStarted) return
     yield checkDraw(payload)

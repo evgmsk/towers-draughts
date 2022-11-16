@@ -16,6 +16,8 @@ import tur from '../../game-engine/towers-updater'
 import bms from "../../game-engine/best-move-seeker-towers";
 import {TowersActions} from "../board-towers/types";
 import {BoardOptionActions} from "../boardOptions/types";
+import movesTree from "../../game-engine/tower-tree";
+import {DefaultMinDepth} from "../../constants/gameConstants";
 
 
 // function* workerUploadGame(action: GameAnalysisTypes) {
@@ -268,7 +270,10 @@ function* workerAnalyzePosition(action: GameAnalysisTypes) {
         boardAndTowers: {towers},
         analyze: {pieceOrder},
     }: IRootState = yield select()
-    delay(200)
+    const startBranch = movesTree.createBranchWithTowers(towers, pieceOrder)
+    movesTree.addRoot(startBranch)
+    movesTree.getDepthData(movesTree.getRoot(), DefaultMinDepth)
+    delay(20)
     bms.setState({game: false})
     bms.updateAfterRivalMove({history: [''], pieceOrder, cP: towers})
 }

@@ -1,7 +1,8 @@
 import {BaseBoardSize} from "../constants/gameConstants";
 import {
     Board,
-    BoardCell, CellsMap,
+    BoardCell,
+    CellsMap,
     FreeMRResult,
     FullMRResult,
     GameVariants,
@@ -257,7 +258,7 @@ export class KingMandatoryMoveResolver extends MoveResolveCommons {
 
     lookForKingMandatoryMoves(props: FullMRResult[]): FullMRResult[] {
         let completed = [] as FullMRResult[]
-        const minLength = props.slice(-1)[0].move.length
+        const minLength = props[props.length - 1].move.length
         let extraMove = false
         for (let move of props) {
             if (move.completed) { continue }
@@ -320,7 +321,7 @@ export class KingMandatoryMoveResolver extends MoveResolveCommons {
     looKForNewBornKingMoves(props: FullMRResult) {
         let result = new KingDiagsRes(props)
         const {move, lastStepDirection} = props
-        const cellKey = move.slice(-1)[0]
+        const cellKey = move[move.length - 1]
         const neighbors = this.board[cellKey].neighbors
         const dir = Object.keys(neighbors).filter(k => k !== oppositeDirection(lastStepDirection))[0]
         const diag = this.getDiagonal(dir, cellKey)
@@ -447,7 +448,7 @@ export class KingMandatoryMoveResolver extends MoveResolveCommons {
     addKingStepWithoutTaken(sortedMoves: FullMRResult[], nextStep: string, direction: string): FullMRResult[] {
         const maxLMove = Object.assign({}, sortedMoves[0])
         const move = maxLMove.move.slice(0, -1).concat(nextStep)
-        const prevPos = maxLMove.move.slice(-1)[0]
+        const prevPos = maxLMove.move[maxLMove.move.length - 1]
         const endPosition = this.changeTowerPosition(prevPos, nextStep, maxLMove.endPosition!)
         sortedMoves.push(Object.assign(maxLMove ,{
             move,
@@ -684,7 +685,6 @@ export class MovesResolver extends KingMandatoryMoveResolver {
                 result.push(move)
                 continue
             }
-            // console.warn('pros2', move)
             const moves = this.separateCompleted(this.lookForManMandatoryDirections(move))
             result = result.concat(moves.completed)
             if (moves.toCheck.length) {

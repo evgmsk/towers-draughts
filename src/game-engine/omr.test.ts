@@ -1,77 +1,93 @@
 import {createBoardWithoutTowers, createCellsMap} from './prestart-help-function'
 import {PieceColor, TowerConstructor, TowersMap, TowerType} from '../store/models'
 import mmr from './moves-resolver'
-//
-// import mmr2 from './mandatory-move-resolver'
+import evaluator from './towers-evaluator'
 // import { getMiddlePieceKey, getMoveDirection, takeTower } from './common-fn-mandatory-moves-resolver'
-import movesTree from "./tower-tree";
+import {PositionsTree} from "./tower-tree";
 
 
-test('custom position', () => {
-    let towers = {} as TowersMap
-    towers.b4 = new TowerConstructor({onBoardPosition: 'b4', currentColor: PieceColor.w, wPiecesQuantity: 3, currentType: TowerType.k})
-    towers.e5 = new TowerConstructor({onBoardPosition: 'e5', currentColor: PieceColor.b, currentType: TowerType.k})
-    towers.a3 = new TowerConstructor({onBoardPosition: 'a3', currentColor: PieceColor.w, wPiecesQuantity: 3, currentType: TowerType.k})
-    const branch = movesTree.createBranchWithTowers(towers, PieceColor.w)
-    // movesTree.createDefaultRootBranch()
-    movesTree.addRoot(branch)
-    const root = movesTree.getRoot()
-    // movesTree.getNextDepthData(root)
-    // const child = root.children['d6-e5']
-    // const problemPos = child.moves.filter(m => m.move === 'e1-f2')[0]
-    // const nextM = mmr.lookForTotalMoves(problemPos.position, oppositeColor(child.pieceOrder))
-    movesTree.getDepthData(root, 3)
-    // movesTree.getNextDepthData(root)
-    // const childrenKeys = Object.keys(movesTree.getDepthData(root).children)
-    console.warn(root.deepValue, root.children[root.deepValue.move].deepValue)
-})
-// test('moves tree get first depth data', () => {
-//     const branch = movesTree.createDefaultRootBranch()
-//     movesTree.getDepthData(branch, 2)
-//     // const ccc = branch.children[branch.deepValue.move!]
-//     console.warn(branch.deepValue,
-//         (branch).moves.map(m => ({move: m.move, deepVal: branch.children[m.move].deepValue}))
-//     )
-//         // , branch.moves.map(m => ({1: branch.children[m.move].deepValue, 2: branch.children[m.move].pieceOrder})),
-//         // ccc.moves.map(m => ({3: ccc.children[m.move].deepValue, 4: ccc.children[m.move].pieceOrder})))
-//     expect(branch.deepValue.depth).toBe(2)
+// test('custom position', () => {
+//     const movesTree = new PositionsTree()
+//     const towers = {} as TowersMap
+//     towers.a5 = new TowerConstructor({onBoardPosition: 'a5', currentColor: PieceColor.b, bPiecesQuantity: 5, currentType: TowerType.m})
+//     towers.b4 = new TowerConstructor({onBoardPosition: 'b4', currentColor: PieceColor.w, wPiecesQuantity: 4, currentType: TowerType.m})
+//     // towers.c7 = new TowerConstructor({onBoardPosition: 'c7', currentColor: PieceColor.b, bPiecesQuantity: 3, currentType: TowerType.m})
+//     towers.a1 = new TowerConstructor({onBoardPosition: 'a1', currentColor: PieceColor.w, currentType: TowerType.k})
+//     // towers.c7 = new TowerConstructor({onBoardPosition: 'c7', currentColor: PieceColor.b, bPiecesQuantity: 3, currentType: TowerType.m})
+//     // towers.c7 = new TowerConstructor({onBoardPosition: 'c7', currentColor: PieceColor.b, bPiecesQuantity: 3, currentType: TowerType.m})
+//     const branch = movesTree.createBranchWithTowers(towers, PieceColor.b)
+//     const posData = evaluator.getPositionData(towers, PieceColor.w, 2)
+//     const moves = mmr.getMovesFromTotalMoves(mmr.getPositionMoves(towers, PieceColor.b))
+//     // movesTree.createDefaultRootBranch()
+//     // movesTree.addRoot(branch)
+//     const root = movesTree.getRoot()
+//     // movesTree.getNextDepthData(root)
+//     // const child = root.children['d6-e5']
+//     // const problemPos = child.moves.filter(m => m.move === 'e1-f2')[0]
+//     // const nextM = mmr.lookForTotalMoves(problemPos.position, oppositeColor(child.pieceOrder))
+//     movesTree.getDepthData(root, 5)
+//     // movesTree.getNextDepthData(root)
+//     // movesTree.getNextDepthData(root)
+//     // movesTree.getNextDepthData(root)
+//     // movesTree.getNextDepthData(root)
+//     // movesTree.getNextDepthData(root)
+//     // movesTree.getNextDepthData(root)
+//     // movesTree.getNextDepthData(root)
+//     // movesTree.getNextDepthData(root)
+//     // movesTree.getNextDepthData(root)
+//     // const childrenKeys = Object.keys(movesTree.getDepthData(root).children)
+//     console.warn( branch.deepValue, movesTree.determineBestMovesLine())
 // })
-
-test('digging custom position', () => {
-    const position = {} as TowersMap
-    // position['f6'] = new TowerConstructor({onBoardPosition: 'f6', currentColor: PieceColor.w, currentType: TowerType.k})
-    // position['f2'] = new TowerConstructor({onBoardPosition: 'f2', currentColor: PieceColor.b, currentType: TowerType.k})
-    // position['d2'] = new TowerConstructor({onBoardPosition: 'd2', currentColor: PieceColor.w, currentType: TowerType.m})
-    position['b4'] = new TowerConstructor({wPiecesQuantity: 4, onBoardPosition: 'b4', currentColor: PieceColor.w, currentType: TowerType.k})
-    position['a3'] = new TowerConstructor({onBoardPosition: 'a3', currentColor: PieceColor.w, currentType: TowerType.k})
-    position['f6'] = new TowerConstructor({onBoardPosition: 'f6', currentColor: PieceColor.b, currentType: TowerType.k})
-    const branch = movesTree.createBranchWithTowers(position, PieceColor.w)
-    // const moves = mmr.getMovesFromTotalMoves(mmr.lookForTotalMoves(position, PieceColor.b))
-    // movesTree.addRoot(branch)
-    // const branch: Branch = {
-    //     // moves,
-    //     position,
-    //     rivalMove: '',
-    //     children: {},
-    //     totalMovesNumber: moves.length,
-    //     deepValue: {value: {black: 0,  white: 0}, move: '', depth: 0},
-    //     pieceOrder: PieceColor.b
-    // }
-    // movesTree.addRoot(branch)
-    // movesTree.getFirstDepthData(branch)
-    // movesTree.getNextDepthData(branch)
-    // movesTree.getNextDepthData(branch)
-    const nB = movesTree.getDepthData(branch, 3)
+test('moves tree get first depth data', () => {
+    const movesTree = new PositionsTree()
+    const branch = movesTree.createDefaultRootBranch()
+    movesTree.getDepthData(branch, 2)
     // const ccc = branch.children[branch.deepValue.move!]
-    // const mov = mmr.lookForKingMoves('a3', position).mandatory
-    console.warn(branch.deepValue)
-    // console.warn(branch.deepValue, branch.pieceOrder,
-    //     (branch).moves.map(m => ({move: m.move, deepVal: JSON.stringify(branch.children[m.move].deepValue)}))
+    // console.warn(branch.deepValue,
+    //     (branch).moves.map(m => ({move: m.move, deepVal: branch.children[m.move].deepValue}))
     // )
-    // , branch.moves.map(m => ({1: branch.children[m.move].deepValue, 2: branch.children[m.move].pieceOrder})),
-    // ccc.moves.map(m => ({3: ccc.children[m.move].deepValue, 4: ccc.children[m.move].pieceOrder})))
-    // expect(branch.deepValue.depth).toBe(2)
+        // , branch.moves.map(m => ({1: branch.children[m.move].deepValue, 2: branch.children[m.move].pieceOrder})),
+        // ccc.moves.map(m => ({3: ccc.children[m.move].deepValue, 4: ccc.children[m.move].pieceOrder})))
+    expect(branch.deepValue.depth).toBe(2)
 })
+
+// test('digging custom position', () => {
+//     const position = {} as TowersMap
+//     const movesTree = new PositionsTree()
+//     // position['f6'] = new TowerConstructor({onBoardPosition: 'f6', currentColor: PieceColor.w, currentType: TowerType.k})
+//     // position['f2'] = new TowerConstructor({onBoardPosition: 'f2', currentColor: PieceColor.b, currentType: TowerType.k})
+//     // position['d2'] = new TowerConstructor({onBoardPosition: 'd2', currentColor: PieceColor.w, currentType: TowerType.m})
+//     position['f4'] = new TowerConstructor({wPiecesQuantity: 4, onBoardPosition: 'f4', currentColor: PieceColor.w, currentType: TowerType.k})
+//     position['f2'] = new TowerConstructor({onBoardPosition: 'f2', currentColor: PieceColor.w, currentType: TowerType.k})
+//     position['e5'] = new TowerConstructor({onBoardPosition: 'e5', currentColor: PieceColor.b, currentType: TowerType.k})
+//     const branch = movesTree.createBranchWithTowers(position, PieceColor.b)
+//     const moves = mmr.getMovesFromTotalMoves(mmr.lookForTotalMoves(position, PieceColor.b))
+//     const posData = evaluator.getPositionData(position, PieceColor.w, 2)
+//     // movesTree.addRoot(branch)
+//     // const branch: Branch = {
+//     //     // moves,
+//     //     position,
+//     //     rivalMove: '',
+//     //     children: {},
+//     //     totalMovesNumber: moves.length,
+//     //     deepValue: {value: {black: 0,  white: 0}, move: '', depth: 0},
+//     //     pieceOrder: PieceColor.b
+//     // }
+//     // movesTree.addRoot(branch)
+//     // movesTree.getFirstDepthData(branch)
+//     // movesTree.getNextDepthData(branch)
+//     // movesTree.getNextDepthData(branch)
+//     // const nB = movesTree.getDepthData(branch, 3)
+//     // const ccc = branch.children[branch.deepValue.move!]
+//     // const mov = mmr.lookForKingMoves('a3', position).mandatory
+//     // console.warn(branch.moves,branch.moves[0].position, moves.map(m => m.move))
+//     // console.warn(branch.deepValue, branch.pieceOrder,
+//     //     (branch).moves.map(m => ({move: m.move, deepVal: JSON.stringify(branch.children[m.move].deepValue)}))
+//     // )
+//     // , branch.moves.map(m => ({1: branch.children[m.move].deepValue, 2: branch.children[m.move].pieceOrder})),
+//     // ccc.moves.map(m => ({3: ccc.children[m.move].deepValue, 4: ccc.children[m.move].pieceOrder})))
+//     // expect(branch.deepValue.depth).toBe(2)
+// })
 
 // it('man mandatory moves', () => {
 //     mmr.setProps({GV: 'towers', size: 8})
@@ -107,16 +123,16 @@ test('digging custom position', () => {
 //     console.log(moves.free?.map(m => m.move.join('-')),
 //         moves.mandatory?.map(m => `${m.move.join(':')}/${m.minLength}/${m.completed}/${m.takenPieces.join('|')}`))
 // })
-test('check create board', () => {
-    const board  = createBoardWithoutTowers()
-    // console.warn([1,2,3,4].at(-1))
-    // console.log('board ', board)
-})
-
-test('check create cells', () => {
-    const cells = createCellsMap(8)
-    // console.warn(cells)
-})
+// test('check create board', () => {
+//     const board  = createBoardWithoutTowers()
+//     // console.warn([1,2,3,4].at(-1))
+//     // console.log('board ', board)
+// })
+//
+// test('check create cells', () => {
+//     const cells = createCellsMap(8)
+//     // console.warn(cells)
+// })
 
 // test('test checking diagonal for mandatory moves', () => {
 //     mmr.setProps({GV: 'towers', size: 8})
@@ -201,7 +217,7 @@ test('check create cells', () => {
 //     board['a3'].tower = newOnBoardTower(PieceColor.w, TowerType.k)
 //     board['b4'].tower = newOnBoardTower(PieceColor.b)
 //     board['d6'].tower = newOnBoardTower(PieceColor.b)
-    
+
 //     expect(getMiddlePieceKey('a3', 'e7', board)).toBe('b4')
 // })
 
@@ -256,26 +272,26 @@ test('check create cells', () => {
 //     board['e5'].tower = newOnBoardTower(PieceColor.b)
 //     board['e7'].tower = newOnBoardTower(PieceColor.b)
 //     board['g7'].tower = newOnBoardTower(PieceColor.b)
-   
+
 //     const resBoard = createEmptyBoard(8)
-    
+
 //     // resBoard['d6'].tower = newOnBoardTower(PieceColor.w)
 //     // resBoard['d6'].tower.bPiecesQuantity = 1
-    
+
 //     // expect(checkMandatoryMoveNextStep({moves: ['f4:d6'], board: resBoard})).toMatchObject([])
 //     resBoard['h6'].tower = newOnBoardTower(PieceColor.w, TowerType.k)
 //     resBoard['h6'].tower.bPiecesQuantity = 3
 //     expect(lookForMandatoryMoves(PieceColor.w, board, 'towers')).toMatchObject(['f4:d6:f8:h6'])
-//     expect(checkMove(PieceColor.w, board, 'f4:d6:f8:h6', 'towers')).toMatchObject(resBoard) 
+//     expect(checkMove(PieceColor.w, board, 'f4:d6:f8:h6', 'towers')).toMatchObject(resBoard)
 //     // console.log(checkMove(PieceColor.w, board, 'f4:d6:f8:h6', 'towers'))
 //     const board2 = createEmptyBoard(8)
 //     const res2 = createEmptyBoard(8)
 //     res2['e3'].tower = newOnBoardTower( PieceColor.w)
 //     board2['f2'].tower = newOnBoardTower( PieceColor.w)
-//     expect(checkMove(PieceColor.w, board2, 'f2-e3', 'towers')).toMatchObject({board: res2, availibleMoves: 2}) 
+//     expect(checkMove(PieceColor.w, board2, 'f2-e3', 'towers')).toMatchObject({board: res2, availibleMoves: 2})
 //     const board3 = createStartBoard(8)
 //     expect(lookForAllFreeMoves(PieceColor.w, board3)).toMatchObject([])
-// }) 
+// })
 
 // test('check possible rivalMove looking', () => {
 //     const board = createEmptyBoard(8)
@@ -322,22 +338,22 @@ test('check create cells', () => {
 //     expect(defineObligatedMoveNextSteps({color: PieceColor.b, board, rivalMove: expected})).toMatchObject(expected)
 //     expect(defineObligatedMoveNextSteps({color: PieceColor.w, board, rivalMove: ['f4:d6']})).toMatchObject(['f4:d6'])
 //     // const _board = createStartBoard(8)
-    
+
 // })
 
 
 
-test('make obligated rivalMove', () => {
-
-
-
-    // board['a5'].tower = newOnBoardTower(PieceColor.w, TowerType.k)
-    // board['c7'].tower = newOnBoardTower(PieceColor.b)
-    // board['e7'].tower = newOnBoardTower(PieceColor.b)
-    // board['a7'].tower = newOnBoardTower(PieceColor.b)
-    // board['e5'].tower = newOnBoardTower(PieceColor.b)
-    // // board['c5'].tower = newOnBoardTower(PieceColor.b)
-    // const expected = ["b6:d8:f6"]
-    // expect(mmr.lookForMandatoryMoves(PieceColor.b, board)).toMatchObject(expected)    
-}) 
+// test('make obligated rivalMove', () => {
+//
+//
+//
+//     // board['a5'].tower = newOnBoardTower(PieceColor.w, TowerType.k)
+//     // board['c7'].tower = newOnBoardTower(PieceColor.b)
+//     // board['e7'].tower = newOnBoardTower(PieceColor.b)
+//     // board['a7'].tower = newOnBoardTower(PieceColor.b)
+//     // board['e5'].tower = newOnBoardTower(PieceColor.b)
+//     // // board['c5'].tower = newOnBoardTower(PieceColor.b)
+//     // const expected = ["b6:d8:f6"]
+//     // expect(mmr.lookForMandatoryMoves(PieceColor.b, board)).toMatchObject(expected)
+// })
 

@@ -56,7 +56,7 @@ export class BestMoveSeeker implements SeekerProps {
         this.movesHistory = props.movesHistory || []
         this.pieceOrder = props.pieceOrder || PieceColor.w
         this.parentBranch = props.parentBranch || {deepValue: {value: {black: 0, white: 0}}} as Branch
-        console.warn('state', props, copyObj(this))
+        console.warn('engine state', props, copyObj(this))
     }
 
     setBestMoveCB = (cb: Function) => {
@@ -78,9 +78,10 @@ export class BestMoveSeeker implements SeekerProps {
         if (!this.movesHistory.length) {
             move = FirstMoves[mmr.GV][Math.floor(Math.random() * FirstMoves[mmr.GV].length)] as Move
         } else {
-            movesTree.updateRoot(this.movesHistory.slice(-1)[0])
+            movesTree.updateRoot(this.movesHistory[this.movesHistory.length  - 1])
             root = movesTree.getRoot()
             root = movesTree.getDepthData(root, this.startDepth)
+            console.warn('updated tree', movesTree.getRoot())
             const bestMove = {
                 move: root.deepValue.move,
                 position: root.children[root.deepValue.move!].position
@@ -153,7 +154,7 @@ export class BestMoveSeeker implements SeekerProps {
         if (this.movesHistory.length < DebutStage && this.game) {
             return this.debutResolver()
         }
-        const lastRivalMove = this.movesHistory.slice(-1)[0]
+        const lastRivalMove = this.movesHistory[this.movesHistory.length - 1]
         console.warn('old root', copyObj(movesTree.getRoot()), props)
         movesTree.updateRoot(lastRivalMove)
         const root = movesTree.getRoot()
@@ -170,31 +171,30 @@ export class BestMoveSeeker implements SeekerProps {
             return this.finalizeMove(moveToMake)
         }
         movesTree.getDepthData(movesTree.getRoot(), this.startDepth)
+        console.warn('updated tree', movesTree.getRoot(), root)
         if (root.deepValue.depth < this.maxDepth) {
             console.warn('digging')
             this.diggingToMaxDepth(this.maxDepth)
         } else {
             const move = this.getMoveFromRootMoves() as MoveWithRivalMoves
-            console.warn('move', move)
+            // console.warn('move', move)
             move.rivalMoves = movesTree.getRivalMoves(move.move)
-            this.finalizeMove(move)
+            this.game && this.finalizeMove(move)
+            !this.game && this.determineBestMovesLine()
         }
     }
 
-
-
-    // determineBestMovesLine(move?: Move) {
-    //
-    // }
-
+    determineBestMovesLine() {
+        this.bestLineCB(movesTree.determineBestMovesLine())
+    }
 
     finalizeMove = (move?: MoveWithRivalMoves) => {
         move = move || {move: '', position: {}, rivalMoves: []}
         this.evaluatingLine.length = 0
+        console.error('line before move', movesTree.determineBestMovesLine())
         !!move.move && movesTree.updateRoot(move.move) && movesTree.getNextDepthData(movesTree.getRoot())
-        return this.game
-            ? this.bestMoveCB(move) : null
-            // : this.determineBestMovesLine(move)
+        console.error('line after move', movesTree.determineBestMovesLine())
+        this.bestMoveCB(move)
     }
 }
 

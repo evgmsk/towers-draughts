@@ -67,11 +67,11 @@ export class GameClass extends React.Component<GameProps, IBoard> {
         } = this.props
         if (prevProps.game.history.length !== history.length
             && ((pieceOrder === playerColor && rivalType === "PC") || rivalType === 'player')) {
-            console.log('updated', this.props.board, this.props.game)
+            // console.log('updated', this.props.board, this.props.game)
             this.makePremoveAction()
         }
         if (prevProps.game.gameMode !== 'isPlaying' && gameMode === 'isPlaying') {
-            console.log('new game started', this.props)
+            // console.log('new game started', this.props)
             this.updateTowers()
         }
     }
@@ -117,7 +117,7 @@ export class GameClass extends React.Component<GameProps, IBoard> {
             return
         }
         const {boardProps, moveToSave} = tur.handleUpToMove(targetKey, board)
-        console.warn(moveToSave, boardProps)
+        // console.warn(moveToSave, boardProps)
         if (moveToSave) {
             const moveOrder = mmr.getNewOrder({moveOrder: oldOrder, white, black})
             turn({moveToSave, moveOrder})

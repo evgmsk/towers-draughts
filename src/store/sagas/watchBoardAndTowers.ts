@@ -89,24 +89,20 @@ function* startMandatoryStepAnimation(props: Partial<IMoveToMake>, step = 0) {
     yield put({type: TA.UPDATE_TOWERS, payload: towers})
 }
 
-function* animateMandatoryStep(props: Partial<IMoveToMake>, step = 0) {
+function* animateMandatoryStep(props: Partial<IMoveToMake>, step = 0, last = false) {
     yield startMandatoryStepAnimation(props, step)
-    const {moveToSave: {takenPieces, position, move}} = props as IMoveToMake
+    const {moveToSave: {takenPieces = [], position, move}} = props as IMoveToMake
     const {
         boardAndTowers,
         boardAndTowers: {cellsMap , cellSize},
         gameOptions: {gameVariant},
     } = (yield select()) as IRootState
     let towers = copyObj(boardAndTowers.towers)
-    const takenTowers = takenPieces!
     const isTowers = gameVariant === 'towers'
     yield delay(isTowers ? AnimationDuration / 2 : AnimationDuration)
-    if (!isTowers && takenTowers.length - 1 === step) {
-        towers = tur.takeDraughts(takenTowers, towers)
-    }
     if (isTowers) {
         const tower = towers[move.split( ':')[step]],
-            takenTowerKey = takenTowers[step],
+            takenTowerKey = takenPieces[step],
             takenWhite = towers[takenTowerKey].currentColor === PieceColor.w
         tower[takenWhite ? 'wPiecesQuantity' : 'bPiecesQuantity'] += 1
         const takenTower = position[takenTowerKey]
@@ -118,19 +114,20 @@ function* animateMandatoryStep(props: Partial<IMoveToMake>, step = 0) {
         yield delay( AnimationDuration / 2)
     }
     yield put({type: TA.UPDATE_TOWERS, payload: towers})
-    yield finalizeMandatoryStep(props, step)
+    yield finalizeMandatoryStep(props, step, last)
 }
 
-function* finalizeMandatoryStep(props: Partial<IMoveToMake>, step = 0) {
-    const {moveToSave: {move, position}} = props as IMoveToMake
-    const { boardAndTowers } = (yield select()) as IRootState
+function* finalizeMandatoryStep(props: Partial<IMoveToMake>, step = 0, last = false) {
+    const {moveToSave: {move, takenPieces = []}} = props as IMoveToMake
+    const { boardAndTowers, gameOptions: {gameVariant} } = (yield select()) as IRootState
     const [from, to] = move.split( ':').slice(step, step + 2)
     let towers = copyObj(boardAndTowers.towers)
     const tower = towers[from]
     tower.onBoardPosition = to
-    if (step === move.length - 1) {
-        tower.currentType = position[to].currentType
+    if (last && gameVariant !== 'towers') {
+        towers = tur.takeDraughts(takenPieces, towers)
     }
+    tower.currentType = tur.checkTowerTypeChanging(to, tower.currentColor, tower.currentType)
     towers[to] = tower
     delete towers[from]
     yield put({type: TA.UPDATE_TOWERS, payload: towers})
@@ -138,8 +135,9 @@ function* finalizeMandatoryStep(props: Partial<IMoveToMake>, step = 0) {
 
 function* animateMandatoryMove(props: Partial<IMoveToMake>, step = 0): any {
     const {moveToSave: {takenPieces}} = props as IMoveToMake
-    if (takenPieces?.length === 1 || takenPieces?.length === step + 1) {
-        yield animateMandatoryStep(props, step)
+    const last = takenPieces?.length === 1 || takenPieces?.length === step + 1
+    if (last) {
+        yield animateMandatoryStep(props, step, last)
     } else {
         yield animateMandatoryStep(props, step)
         yield animateMandatoryMove(props, step + 1)
@@ -196,7 +194,7 @@ function* workerUndo() {
         }
         const towers = boardAndTowers.positionsTree[gamePayload.history!.join('_')]
         boardPayload = {
-            lastMoveSquares: splitMove(gamePayload.history?.slice(-1)[0] || ''),
+            lastMoveSquares: splitMove(gamePayload.history![gamePayload.history!.length - 1] || ''),
             towers: tur.updateCellsAndTowersPosition({...boardAndTowers, towers}, boardOptions).towers,
         }
     }

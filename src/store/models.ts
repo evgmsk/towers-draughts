@@ -391,12 +391,6 @@ export interface IUser {
 
 // evaluation
 
-export interface IDeepValue {
-    depth: number,
-    value: number,
-    move?: string
-}
-
 export interface DeepValue {
     depth: number,
     value: Value,

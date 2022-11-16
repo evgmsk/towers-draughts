@@ -50,7 +50,6 @@ export const possibleOutOfMoves = (state: IBoard, key: string): CellsMap => {
         if (move.move[step] === key) {
             const cellKey = move.move[step + 1]
             acc[cellKey] = cellsMap[cellKey]
-            console.warn(move, key, acc, state)
         }
         return acc
     }, {} as CellsMap)
@@ -104,7 +103,7 @@ const fun = {
     copyObj,
     oppositeColor,
     oppositeDirection,
-    possibleOutOfMandatoryTowers: possibleOutOfMoves,
+    possibleOutOfMoves,
 }
 
 export default fun
