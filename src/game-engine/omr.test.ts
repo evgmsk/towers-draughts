@@ -1,3 +1,4 @@
+import {describe, expect, test} from '@jest/globals';
 import {createBoardWithoutTowers, createCellsMap} from './prestart-help-function'
 import {PieceColor, TowerConstructor, TowersMap, TowerType} from '../store/models'
 import mmr from './moves-resolver'
@@ -38,18 +39,21 @@ import {PositionsTree} from "./tower-tree";
 //     // const childrenKeys = Object.keys(movesTree.getDepthData(root).children)
 //     console.warn( branch.deepValue, movesTree.determineBestMovesLine())
 // })
-test('moves tree get first depth data', () => {
-    const movesTree = new PositionsTree()
-    const branch = movesTree.createDefaultRootBranch()
-    movesTree.getDepthData(branch, 2)
-    // const ccc = branch.children[branch.deepValue.move!]
-    // console.warn(branch.deepValue,
-    //     (branch).moves.map(m => ({move: m.move, deepVal: branch.children[m.move].deepValue}))
-    // )
+describe("test towers-tree methods", () => {
+    test('test getDepthData return valid deepValue depth', () => {
+        const movesTree = new PositionsTree()
+        const branch = movesTree.createDefaultRootBranch()
+        movesTree.getDepthData(branch, 2)
+        // const ccc = branch.children[branch.deepValue.move!]
+        // console.warn(branch.deepValue,
+        //     (branch).moves.map(m => ({move: m.move, deepVal: branch.children[m.move].deepValue}))
+        // )
         // , branch.moves.map(m => ({1: branch.children[m.move].deepValue, 2: branch.children[m.move].pieceOrder})),
         // ccc.moves.map(m => ({3: ccc.children[m.move].deepValue, 4: ccc.children[m.move].pieceOrder})))
-    expect(branch.deepValue.depth).toBe(2)
+        expect(branch.deepValue.depth).toBe(2)
+    })
 })
+
 
 // test('digging custom position', () => {
 //     const position = {} as TowersMap
