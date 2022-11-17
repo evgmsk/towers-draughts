@@ -110,8 +110,8 @@ export class TowersUpdateResolver extends BaseMoveResolver {
 
     calcPositionOutboardBoxes = (key: string) => {
         const boardRect = document.querySelector('.board__body')?.getBoundingClientRect()
-        const whiteBox = document.querySelector('.pieces-box.white-b')
-        const blackBox = document.querySelector('.pieces-box.black-b')
+        const whiteBox = document.querySelector('.pieces-box.white-black')
+        const blackBox = document.querySelector('.pieces-box.black-black')
         if (!whiteBox || !blackBox || !boardRect) {
             return {x: 0, y: 0}
         }
@@ -247,7 +247,7 @@ export class TowersUpdateResolver extends BaseMoveResolver {
         if (this.GV === 'towers' && (tower.wPiecesQuantity + tower.bPiecesQuantity) > 1) {
             return this.handleRemoveTower(tower, board)
         }
-        let outboardKey = tower.currentColor === PieceColor.w ? `oW w` : 'oB b'
+        let outboardKey = tower.currentColor === PieceColor.w ? `oW w` : 'oB black'
         const outboardPiecesNumber = Object.keys(towers)
             .filter(k => towers[k].onBoardPosition.includes(outboardKey)).length
         outboardKey = `${outboardKey}${outboardPiecesNumber}`

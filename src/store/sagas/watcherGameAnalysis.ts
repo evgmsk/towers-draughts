@@ -82,7 +82,7 @@ function* workerGoToPosition(action: GameAnalysisTypes) {
     // }
     // let towers  = tur.updateTowersToBoard(currentPosition)
     // towers = tur.updateTowersPosition(cellSize, towers, cellsMap, boardOptions.reversedBoard)
-    // pieceOrder = index % 2 ? PieceColor.w : PieceColor.b
+    // pieceOrder = index % 2 ? PieceColor.white : PieceColor.black
     // lastMove = action.payload
     // const payload = { lastMove, pieceOrder}
     // yield put({type: GameAnalysisActions.UPDATE_ANALYSIS_STATE, payload})

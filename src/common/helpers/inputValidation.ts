@@ -1,5 +1,5 @@
 export const validateEmail = (email: string) => {
-    const isError = /^\w+@\w+\.\w{1,3}$/.test(email);
+    const isError = /^\white+@\white+\.\white{1,3}$/.test(email);
     if (!isError) {
         return {message: 'invalid e-mail, please fix it'}
     }

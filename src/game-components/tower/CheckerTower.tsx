@@ -6,21 +6,21 @@ import { PieceColor, TowerConstructor, TowerType } from '../../store/models';
 
 import './checker-tower.scss';
 
-interface FaceProps {w: number, b: number, colorW: boolean, king: boolean, isTowers: boolean}
+interface FaceProps {white: number, black: number, colorW: boolean, king: boolean, isTowers: boolean}
 
 export const TowerFace: React.FC<FaceProps> = (props) => {
-  const {w, b, colorW, king, isTowers} = props
+  const {white, black, colorW, king, isTowers} = props
   if (!isTowers) {
     const className = `${colorW ? 'white-checker' : 'black-checker'}${king ? ' king' : ''}`
     return <div className={className}>{king && <span className="king-mark">K</span>}</div>
   }
-  const BlackPieces = new Array(b).fill(0)
-  const WhitePieces = new Array(w).fill(1)
+  const BlackPieces = new Array(black).fill(0)
+  const WhitePieces = new Array(white).fill(1)
   const towerPiecesArray = colorW? WhitePieces.concat(BlackPieces) : BlackPieces.concat(WhitePieces)
   const middle = Math.floor(towerPiecesArray.length / 2)
   const Numbers = colorW 
-    ? <p className="numbers-on-hover"><span className="white-top">{w}</span><span className="black-down">{b}</span></p>  
-    : <p className="numbers-on-hover"><span className="black-top">{b}</span><span className="white-down">{w}</span></p>
+    ? <p className="numbers-on-hover"><span className="white-top">{white}</span><span className="black-down">{black}</span></p>
+    : <p className="numbers-on-hover"><span className="black-top">{black}</span><span className="white-down">{white}</span></p>
   const Tower = towerPiecesArray.map((pn: number, i: number) => {
     const pos = Math.abs(i - middle)
     const BlackOrWhite = pn ? "white-piece" : "black-piece"
@@ -38,10 +38,9 @@ export const TowerFace: React.FC<FaceProps> = (props) => {
   )
 }
 
-export const NumsPresentation:React.FC<{w: number, b: number, colorW: boolean, king: boolean}> = (props) => {
-  const {w, b, colorW, king} = props
-  const firstNum = colorW ? w : b
-  const secondNum = colorW ? b : w
+export const NumsPresentation:React.FC<FaceProps> = (props) => {
+  const {white, black, colorW, king} = props
+  const [firstNum, secondNum] = colorW ? [white, black] : [black, white]
   const Class = `checker-tower__quantity${king ? ' with-crown' : ''}`
   return <div className={Class}>
             <span>{firstNum}</span>&nbsp;/&nbsp;<span>{secondNum}</span>
@@ -98,8 +97,8 @@ export class TowerComponent extends React.Component<TCProps> {
     const colorW = currentColor === PieceColor.w 
     const towerView = (wPiecesQuantity + bPiecesQuantity > 1) && view !== 'face'
     const props={
-      w: wPiecesQuantity, 
-      b: bPiecesQuantity, 
+      white: wPiecesQuantity,
+      black: bPiecesQuantity,
       colorW, 
       king: currentType === TowerType.k, 
       isTowers,

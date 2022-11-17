@@ -1,20 +1,19 @@
 import React from 'react'
 
-import {connect, ConnectedProps} from 'react-redux'
-import {endGame, surrender} from '../store/game/actions'
-import {
-    SeekerProps,
-    MoveWithRivalMoves
-} from "../store/models";
-import {oppositeColor} from './gameplay-helper-functions';
-import {IRootState} from '../store/rootState&Reducer';
-import mmr from './moves-resolver';
-import bms from './best-move-seeker-towers';
-import {turn} from '../store/board-towers/actions';
-import {AnimationDuration} from '../constants/gameConstants';
+import { connect, ConnectedProps } from 'react-redux'
+import { endGame, surrender } from '../store/game/actions'
+import { MoveWithRivalMoves, SeekerProps } from '../store/models'
+import { oppositeColor } from './gameplay-helper-functions'
+import { IRootState } from '../store/rootState&Reducer'
+import mmr from './moves-resolver'
+import bms from './best-move-seeker-towers'
+import { turn } from '../store/board-towers/actions'
+import { AnimationDuration } from '../constants/gameConstants'
 
-interface IBestMove {move: string, deep: number}
-
+interface IBestMove {
+    move: string
+    deep: number
+}
 
 const mapState = (state: IRootState) => ({
     towers: state.boardAndTowers.towers,
@@ -29,7 +28,9 @@ const mapState = (state: IRootState) => ({
 })
 
 const mapDispatch = {
-    turn, endGame, surrender
+    turn,
+    endGame,
+    surrender,
 }
 
 const botConnector = connect(mapState, mapDispatch)
@@ -42,9 +43,14 @@ class ClientEngine extends React.Component<BotProps, IBestMove> {
     }
 
     componentDidUpdate(prev: BotProps, prevState: IBestMove) {
-        const {moveOrder, movesHistory, towers, gameMode, engineColor} = this.props
+        const { moveOrder, movesHistory, towers, gameMode, engineColor } =
+            this.props
         const engineMove = moveOrder.pieceOrder === engineColor
-        const props = {history: movesHistory, cP: towers, pieceOrder: moveOrder.pieceOrder}
+        const props = {
+            history: movesHistory,
+            cP: towers,
+            pieceOrder: moveOrder.pieceOrder,
+        }
         if (gameMode === 'isPlaying' && prev.gameMode !== 'isPlaying') {
             // console.log('new game', this.props)
             bms.setState(this.getSeekerProps())
@@ -74,7 +80,7 @@ class ClientEngine extends React.Component<BotProps, IBestMove> {
     }
 
     moveCB = (move: MoveWithRivalMoves) => {
-        const {surrender, endGame, engineColor, gameMode} = this.props
+        const { surrender, endGame, engineColor, gameMode } = this.props
         if (move.move === 'surrender') {
             surrender(engineColor)
         } else if (!move.move) {
@@ -85,9 +91,9 @@ class ClientEngine extends React.Component<BotProps, IBestMove> {
     }
 
     completeMove(move: MoveWithRivalMoves) {
-        const {moveOrder: oldOrder, turn, white, black} = this.props
-        const moveOrder = mmr.getNewOrder({moveOrder: oldOrder, white, black})
-        turn({moveToSave: move, moveOrder: moveOrder})
+        const { moveOrder: oldOrder, turn, white, black } = this.props
+        const moveOrder = mmr.getNewOrder({ moveOrder: oldOrder, white, black })
+        turn({ moveToSave: move, moveOrder: moveOrder })
     }
 
     render() {

@@ -2,13 +2,13 @@
   <defs>
     <g id="d" transform="translate(0 -36)">
       <g id="c">
-        <g id="b">
+        <g id="black">
           <path id="a" fill="#fff" d="M0-5L-1.5-.2l2.8.9z"/>
           <use width="180" height="120" transform="scale(-1 1)" xlink:href="#a"/>
         </g>
-        <use width="180" height="120" transform="rotate(72)" xlink:href="#b"/>
+        <use width="180" height="120" transform="rotate(72)" xlink:href="#black"/>
       </g>
-      <use width="180" height="120" transform="rotate(-72)" xlink:href="#b"/>
+      <use width="180" height="120" transform="rotate(-72)" xlink:href="#black"/>
       <use width="180" height="120" transform="rotate(144)" xlink:href="#c"/>
     </g>
   </defs>
