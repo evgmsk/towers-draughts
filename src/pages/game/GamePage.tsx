@@ -21,7 +21,7 @@ import './game-page.scss'
 // player bar
 const PlayerGameBarMapState = (state: IRootState) => ({
     name:
-        state.game.playerColor === PieceColor.b
+        state.game.playerColor === PieceColor.black
             ? state.game.black.name
             : state.game.white.name,
 })
@@ -52,7 +52,7 @@ export const PlayerGameBarComponent = PlayerGameBarConnector(PlayerGameBar)
 // opponent bar
 const barMapState = (state: IRootState) => ({
     name:
-        state.game.playerColor !== PieceColor.b
+        state.game.playerColor !== PieceColor.black
             ? state.game.black.name
             : state.game.white.name,
 })

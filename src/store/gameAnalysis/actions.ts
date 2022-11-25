@@ -1,128 +1,146 @@
-import {IAnalysisState, IGameResult, IMoveToMake, PieceColor, TowersMap} from "../models";
-import { GameAnalysisActions, GameAnalysisTypes } from "./types";
-
+import {
+    IAnalysisState,
+    IGameResult,
+    IMoveToMake,
+    PieceColor,
+    TowersMap,
+} from '../models'
+import { GameAnalysisActions, GameAnalysisTypes } from './types'
 
 export function setStartPosition(payload = true) {
     return {
         type: GameAnalysisActions.SET_START_POSITION,
-        payload
+        payload,
     }
 }
 
 export function setMoveOrderAction(payload: PieceColor) {
     return {
         type: GameAnalysisActions.SET_MOVE_ORDER,
-        payload
+        payload,
     }
 }
 
-export function setBestMoveLine(payload: {move: string, value: number}[]) {
+export function setBestMoveLine(payload: { move: string; value: number }[]) {
     return {
         type: GameAnalysisActions.SET_BEST_MOVE_LINE,
-        payload
+        payload,
     }
 }
 
 export function makeNewMove(payload: Partial<IMoveToMake>) {
     return {
         type: GameAnalysisActions.MAKE_NEW_MOVE,
-        payload
+        payload,
     }
 }
 
-export function startNewLine(payload:Partial<IMoveToMake>) {
+export function startNewLine(payload: Partial<IMoveToMake>) {
     return {
         type: GameAnalysisActions.START_NEW_LINE,
-        payload
+        payload,
     }
 }
 
 export function updateAnalysisState(payload: Partial<IAnalysisState>) {
     return {
         type: GameAnalysisActions.UPDATE_ANALYSIS_STATE,
-        payload
+        payload,
     }
 }
 
 export function evaluatePosition(payload: boolean) {
     return {
         type: GameAnalysisActions.EVALUATE_POSITION,
-        payload
+        payload,
     }
 }
-export function setDepth(payload:number) {
+
+export function setDepth(payload: number) {
     return {
         type: GameAnalysisActions.SET_DEPTH,
-        payload
+        payload,
     }
 }
 
 export function stepForward(payload = 0): GameAnalysisTypes {
     return {
         type: GameAnalysisActions.STEP_FORWARD,
-        payload
+        payload,
     }
 }
 
 export function removePiece(payload: boolean): GameAnalysisTypes {
     return {
         type: GameAnalysisActions.REMOVE_PIECE,
-        payload
+        payload,
     }
 }
 
 export function stepBack(payload = 0): GameAnalysisTypes {
     return {
         type: GameAnalysisActions.STEP_BACK,
-        payload
+        payload,
     }
 }
 
 export function playMoves(payload = null): GameAnalysisTypes {
     return {
         type: GameAnalysisActions.PLAY_MOVES,
-        payload
+        payload,
     }
 }
 
-export function goToPosition(payload: {index: number, move: string}): GameAnalysisTypes {
+export function goToPosition(payload: {
+    index: number
+    move: string
+}): GameAnalysisTypes {
     return {
         type: GameAnalysisActions.GO_TO_POSITION,
-        payload
+        payload,
+    }
+}
+
+export function createAnalyzeBoard(payload = null): GameAnalysisTypes {
+    return {
+        type: GameAnalysisActions.CREATE_ANALYZE_BOARD,
+        payload,
     }
 }
 
 export function savePosition(payload: TowersMap): GameAnalysisTypes {
     return {
         type: GameAnalysisActions.SAVE_POSITION,
-        payload
+        payload,
     }
 }
 
-export function updatePosition(payload: Partial<IMoveToMake>): GameAnalysisTypes {
+export function updatePosition(
+    payload: Partial<IMoveToMake>
+): GameAnalysisTypes {
     return {
         type: GameAnalysisActions.UPDATE_POSITION,
-        payload
+        payload,
     }
 }
 
 export function uploadGame(payload: IGameResult): GameAnalysisTypes {
     return {
         type: GameAnalysisActions.UPLOAD_GAME,
-        payload
+        payload,
     }
 }
 
-export function analyzeLastGame(payload: boolean): GameAnalysisTypes {
+export function analyzePosition(payload: boolean): GameAnalysisTypes {
     return {
-        type: GameAnalysisActions.ANALYZE_LAST_GAME,
-        payload
+        type: GameAnalysisActions.ANALYZE_POSITION,
+        payload,
     }
 }
 
 export function settingBoard(payload: boolean): GameAnalysisTypes {
     return {
         type: GameAnalysisActions.SETTING_BOARD,
-        payload
+        payload,
     }
 }

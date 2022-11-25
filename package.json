@@ -44,6 +44,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "jest",
+    "test-w": "jest --watch",
     "eject": "react-scripts eject",
     "deploy": "gh-pages -d build",
     "prepare": "husky install"
