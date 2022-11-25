@@ -1,11 +1,4 @@
-import {
-    CellsMap,
-    IBoard,
-    ITowerPosition,
-    MMRResult,
-    PieceColor,
-    TowersMap,
-} from '../store/models'
+import {CellsMap, IBoard, ITowerPosition, MMRResult, PieceColor, TowersMap,} from '../store/models'
 
 //common functions
 
@@ -123,6 +116,15 @@ export const convertToMovesHistory = (
         result.push({ white: arr[i], black: arr[i + 1] || '' })
     }
     return result
+}
+
+export const compareArrays = (arr1: string[], arr2: string[]): boolean => {
+    let equal = true
+    for (let i = 0; i < arr1.length; i++) {
+        equal = arr1[i] === arr2[i]
+        if (!equal) break
+    }
+    return equal
 }
 
 const fun = {

@@ -20,6 +20,7 @@ import {
     TowerType,
 } from '../store/models'
 import {
+    compareArrays,
     copyObj,
     oppositeColor,
     oppositeDirection,
@@ -51,23 +52,18 @@ export class KingDiagsRes {
             return
         }
 
-        if (
-            this._result.length &&
-            this._result[0].move.length === this.minMoveLength &&
-            moves[0].move.length > this.minMoveLength
-        ) {
-            this._result.shift()
-        } else if (this._result.length) {
+        if (this._result.length) {
             const lastMove = this._result[this._result.length - 1].move
-            if (lastMove.length === moves[0].move.length) {
-                let equal = true
-                for (let i = 0; i < lastMove.length; i++) {
-                    equal = lastMove[i] === moves[0].move[i]
-                    if (!equal) break
-                }
-                if (equal) {
-                    moves.shift()
-                }
+            if (
+                lastMove.length === moves[0].move.length &&
+                compareArrays(lastMove, moves[0].move)
+            ) {
+                moves.shift()
+            } else if (
+                this._result[0].move.length === this.minMoveLength &&
+                moves[0].move.length > this.minMoveLength
+            ) {
+                this._result.shift()
             }
         }
         this._result = this._result.concat(moves)
@@ -323,7 +319,8 @@ export class KingMandatoryMoveResolver extends MoveResolveCommons {
     }
 
     lookForKingMandatoryMoves(props: FullMRResult[]): FullMRResult[] {
-        let completed = new KingDiagsRes()
+        let completed = new KingDiagsRes(),
+            invalidMoves = [] as FullMRResult[]
         for (let move of props) {
             if (move.completed) {
                 continue
@@ -331,9 +328,21 @@ export class KingMandatoryMoveResolver extends MoveResolveCommons {
             const moves = this.separateCompleted(
                 this.lookForKingMandatoryDiagonals(move)
             )
-            completed.add(moves.completed)
-            // console.warn(completed.map((m) => move))
+            moves.completed.forEach((cm) => {
+                if (
+                    !invalidMoves.filter((im) =>
+                        compareArrays(im.move, cm.move)
+                    ).length
+                ) {
+                    completed.add([cm])
+                }
+            })
             if (moves.toCheck.length) {
+                invalidMoves = invalidMoves.concat(
+                    props.filter(
+                        (m) => m.move.length < moves.toCheck[0].move.length
+                    )
+                )
                 completed.add(this.lookForKingMandatoryMoves(moves.toCheck))
             }
         }

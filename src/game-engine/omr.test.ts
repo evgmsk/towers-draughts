@@ -343,14 +343,14 @@ describe('test move resolver methods', () => {
             currentColor: PieceColor.black,
             onBoardPosition: 'g5',
         })
-        // towers.g3 = new TowerConstructor({
-        //     currentColor: PieceColor.black,
-        //     onBoardPosition: 'g3',
-        // })
-        // towers.e3 = new TowerConstructor({
-        //     currentColor: PieceColor.black,
-        //     onBoardPosition: 'e3',
-        // })
+        towers.g3 = new TowerConstructor({
+            currentColor: PieceColor.black,
+            onBoardPosition: 'g3',
+        })
+        towers.e3 = new TowerConstructor({
+            currentColor: PieceColor.black,
+            onBoardPosition: 'e3',
+        })
         const moves = mmr.lookForKingMoves('b2', towers)
         // // const move = moves.totalMoves.mandatory![0]
         // // const _towers = mmr.makeDraughtMandatoryMove(moves.totalMoves.mandatory![2])
