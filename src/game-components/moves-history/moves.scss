@@ -1,96 +1,116 @@
 @import '../../assets/scss/variables-mixins.scss';
 
 .moves-history-wrapper {
-    width: 100%;
-    height: 100%;
-    @include flex(flex-start, flex-start, column);
-    @media screen and (min-aspect-ratio: 13/10) {
-        height: 90%;
-    }
- 
-    @media (orientation: portrait) {
-        height: $side-bar-device-height;
-    }
+  width: 100%;
+  height: 100%;
+  @include flex(flex-start, flex-start, column);
+  @media screen and (min-aspect-ratio: 13/10) {
+    height: 90%;
+  }
+
+  @media (orientation: portrait) {
+    height: $side-bar-device-height;
+  }
 }
 
 .moves-history-menu {
-    background-color: darken($main-bg-color, 25%);
-    width: 100%;
+  background-color: darken($main-bg-color, 25%);
+  width: 100%;
+  color: white;
+  font-size: 1rem;
+  line-height: 36px;
+
+  p {
+    padding-left: 10px;
+  }
+
+  ul {
+    @include flex(space-around, center);
+
+    .material-icons {
+      display: block;
+    }
+  }
+
+  &__item {
+
     color: white;
-    font-size: 1rem;
-    line-height: 30px;
-    p {
-        padding-left: 10px;
+    cursor: pointer;
+    position: relative;
+    display: block;
+    line-height: 1;
+    @include before();
+
+
+    &.disabled {
+      cursor: default;
+
+      &::before {
+        background-color: rgba(100, 100, 100, .3);
+        cursor: default;
+      }
     }
-    ul {
-        @include flex(space-around, center);
-       
-    }
-    &__item {
-        color: white;
-        cursor: pointer;
-        position: relative;
-        display: block;
-        line-height: 1;
-        @include before();
-        &.disabled {
-            cursor: default;
-            &::before{
-                background-color: rgba(100, 100, 100, .3);
-                cursor: default;
-            }
-        }
-    }
+  }
 }
 
 .moves-container {
-    background-color: rgb(250, 250, 250);
-    flex: auto;
-    width: 100%;
-    @extend #side-bar-min-max-width;
-    overflow-y: scroll;
-    box-sizing: border-box;
-    box-shadow: 0 0 1px 1px rgba(200, 200, 200, .4);
-    @media (orientation: portrait) {
-        min-height: 50px;
-        min-width: unset;
+  background-color: rgb(250, 250, 250);
+  flex: auto;
+  width: 100%;
+  @extend #side-bar-min-max-width;
+  overflow-y: scroll;
+  box-sizing: border-box;
+  box-shadow: 0 0 1px 1px rgba(200, 200, 200, .4);
+  @media (orientation: portrait) {
+    min-height: 50px;
+    min-width: unset;
+  }
+
+  .move-wrapper {
+    &:first-of-type {
+      border-top: 1px solid lightgray;
     }
-    .move-wrapper {
-        &:first-of-type {
-            border-top: 1px solid lightgray;
-        }
-        @include flex(flex-start, center);
-        border-bottom: 1px solid lightgray;
-        // width: 95%;
+
+    @include flex(flex-start, center);
+    border-bottom: 1px solid lightgray;
+    // width: 95%;
+  }
+
+  .move-number {
+    width: 30px;
+    border-right: 1px solid lightgray;
+    height: 40px;
+    line-height: 40px;
+    text-align: center;
+    background-color: rgb(240, 240, 240);
+  }
+
+  .move {
+    flex-grow: .976;
+  }
+
+  .white-move, .black-move {
+    padding-left: 10px;
+    height: 20px;
+    line-height: 20px;
+    // width: 100%;
+    &.cursor-pointer {
+      cursor: pointer;
     }
-    .move-number {
-        width: 30px;
-        border-right: 1px solid lightgray;
-        height: 40px;
-        line-height: 40px;
-        text-align: center;
-        background-color: rgb(240, 240, 240);
+  }
+
+  .black-move {
+    background-color: rgb(110, 110, 110);
+    color: white;
+  }
+
+  .current-move {
+    &.white-move {
+      background-color: $last-move-highlight;
     }
-    .move {
-        flex-grow: .976;
-        cursor: pointer;
+
+    &.black-move {
+      background-color: $last-move-highlight;
     }
-    .white-move, .black-move {
-        padding-left: 10px;
-        height: 20px;
-        line-height: 20px;
-        // width: 100%;
-    }
-    .black-move {
-        background-color: rgb(110, 110, 110);
-        color: white;        
-    }
-    .current-move {
-        &.white-move {
-            background-color: $last-move-highlight;
-        }
-        &.black-move {
-            background-color: $last-move-highlight;
-        }
-    }
+  }
 }

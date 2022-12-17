@@ -1,14 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="flag-icon-css-gd" viewBox="0 0 640 480">
   <defs>
     <g id="c">
-      <g id="b">
+      <g id="black">
         <path id="a" fill="#fcd116" d="M0-1v1h.5" transform="rotate(18 0 -1)"/>
         <use transform="scale(-1 1)" xlink:href="#a"/>
       </g>
-      <use transform="rotate(72)" xlink:href="#b"/>
-      <use transform="rotate(144)" xlink:href="#b"/>
-      <use transform="rotate(216)" xlink:href="#b"/>
-      <use transform="rotate(288)" xlink:href="#b"/>
+      <use transform="rotate(72)" xlink:href="#black"/>
+      <use transform="rotate(144)" xlink:href="#black"/>
+      <use transform="rotate(216)" xlink:href="#black"/>
+      <use transform="rotate(288)" xlink:href="#black"/>
     </g>
   </defs>
   <path fill="#ce1126" d="M0 0h640v480H0z"/>

@@ -1,21 +1,21 @@
-import { ConnectedProps, connect} from "react-redux"
+import { connect, ConnectedProps } from 'react-redux'
 import React from 'react'
 
-import { Logo } from "../../common/LogoIcon"
-import { 
-    endGame,
-    declineDraw,
-    offerDraw,
+import { Logo } from '../../common/LogoIcon'
+import {
     cancelGame,
+    declineDraw,
+    endGame,
+    offerDraw,
     setGameMode,
-    surrender
-} from "../../store/game/actions"
-import {undoLastMove} from '../../store/board-towers/actions'
-import { findRival, finishGameSetup } from "../../store/gameOptions/actions"
-import { IRootState } from "../../store/rootState&Reducer"
-import { analyzeLastGame } from "../../store/gameAnalysis/actions"
-import { useHistory } from "react-router"
-import {PieceColor} from "../../store/models";
+    surrender,
+} from '../../store/game/actions'
+import { undoLastMove } from '../../store/board-towers/actions'
+import { findRival, finishGameSetup } from '../../store/gameOptions/actions'
+import { IRootState } from '../../store/rootState&Reducer'
+import { analyzePosition } from '../../store/gameAnalysis/actions'
+import { useHistory } from 'react-router'
+import { PieceColor } from '../../store/models'
 
 const gameMenuMapState = (state: IRootState) => ({
     drawOffered: state.game.rivalOfferedDraw,
@@ -23,7 +23,7 @@ const gameMenuMapState = (state: IRootState) => ({
     playerColor: state.game.playerColor,
     gameMode: state.game.gameMode,
     pcGame: state.gameOptions.rivalType === 'PC',
-    historyLength: state.game.history.length > 2
+    historyLength: state.game.history.length > 2,
 })
 
 const gameMenuMapDispatch = {
@@ -36,12 +36,14 @@ const gameMenuMapDispatch = {
     setGameMode,
     surrender,
     undoLastMove,
-    analyzeLastGame,
+    analyzeLastGame: analyzePosition,
 }
 
 const gameMenuConnector = connect(gameMenuMapState, gameMenuMapDispatch)
 
-const GameMenuComponent: React.FC<ConnectedProps<typeof gameMenuConnector>> = (props) => {
+const GameMenuComponent: React.FC<ConnectedProps<typeof gameMenuConnector>> = (
+    props
+) => {
     const history = useHistory()
     const {
         surrender,
@@ -53,22 +55,24 @@ const GameMenuComponent: React.FC<ConnectedProps<typeof gameMenuConnector>> = (p
         gameMode,
         findRival,
         finishGameSetup,
-        setGameMode,
         cancelGame,
         playerColor,
         pcGame,
         undoLastMove,
         historyLength,
-        analyzeLastGame
+        analyzeLastGame,
     } = props
 
-    const reason = playerColor === PieceColor.w ? `abandonedByWhite` : 'abandonedByBlack'
+    const reason =
+        playerColor === PieceColor.white
+            ? `abandonedByWhite`
+            : 'abandonedByBlack'
 
     const handleCancelGame = (e: React.MouseEvent) => {
         e.preventDefault()
         cancelGame()
     }
-   
+
     const handleDrawOffer = (e: React.MouseEvent) => {
         e.preventDefault()
         offerDraw()
@@ -78,14 +82,13 @@ const GameMenuComponent: React.FC<ConnectedProps<typeof gameMenuConnector>> = (p
         e.preventDefault()
         if (gameMode === 'isPlaying') {
             endGame(reason)
-            setGameMode('isAnalyzing')
         }
         analyzeLastGame(true)
         history.push('/analysis')
     }
 
     const handleUndo = () => {
-        if (historyLength ) {
+        if (historyLength) {
             undoLastMove()
         }
     }
@@ -96,7 +99,6 @@ const GameMenuComponent: React.FC<ConnectedProps<typeof gameMenuConnector>> = (p
         }
         finishGameSetup(false)
         analyzeLastGame(true)
-       
     }
 
     const handleNewGame = () => {
@@ -105,25 +107,43 @@ const GameMenuComponent: React.FC<ConnectedProps<typeof gameMenuConnector>> = (p
         }
         findRival()
     }
-   
-    const undoClass = !historyLength ? "game-menu__item hide-undo" : "game-menu__item"
+
+    const undoClass = !historyLength
+        ? 'game-menu__item hide-undo'
+        : 'game-menu__item'
     if (pcGame && gameConfirmed) {
         return (
             <ul className="game-menu">
-                <li title="undo rivalMove" className={undoClass} role="button" onClick={handleUndo}>
+                <li
+                    title="undo rivalMove"
+                    className={undoClass}
+                    role="button"
+                    onClick={handleUndo}
+                >
                     <i className="material-icons">history</i>
                 </li>
-                <li title="new game" role="button" className="game-menu__item" onClick={handleNewGame}>
+                <li
+                    title="new game"
+                    role="button"
+                    className="game-menu__item"
+                    onClick={handleNewGame}
+                >
                     <Logo size={13} />
                 </li>
-                <li 
-                    title="game options" 
-                    role="button" className="game-menu__item" 
+                <li
+                    title="game options"
+                    role="button"
+                    className="game-menu__item"
                     onClick={handleResetGameOption}
                 >
                     <i className="material-icons">settings_applications</i>
                 </li>
-                <li title="analyze game" role="button" className="game-menu__item" onClick={handleAnalyzeGame}>
+                <li
+                    title="analyze game"
+                    role="button"
+                    className="game-menu__item"
+                    onClick={handleAnalyzeGame}
+                >
                     <i className="material-icons">zoom_in</i>
                 </li>
             </ul>
@@ -133,7 +153,12 @@ const GameMenuComponent: React.FC<ConnectedProps<typeof gameMenuConnector>> = (p
     if (gameMode === 'isPlaying' && !gameConfirmed) {
         return (
             <ul className="game-menu">
-                <li title="cancel game" className="game-menu__item" role="button" onClick={handleCancelGame}>
+                <li
+                    title="cancel game"
+                    className="game-menu__item"
+                    role="button"
+                    onClick={handleCancelGame}
+                >
                     <i className="material-icons">close</i>
                 </li>
             </ul>
@@ -143,28 +168,39 @@ const GameMenuComponent: React.FC<ConnectedProps<typeof gameMenuConnector>> = (p
     if (gameMode !== 'isPlaying') {
         return (
             <ul className="game-menu">
-                <li title="new game" role="button" className="game-menu__item" onClick={findRival}>
+                <li
+                    title="new game"
+                    role="button"
+                    className="game-menu__item"
+                    onClick={findRival}
+                >
                     <Logo size={13} />
                 </li>
-                <li 
-                    title="game options" 
-                    role="button" className="game-menu__item" 
+                <li
+                    title="game options"
+                    role="button"
+                    className="game-menu__item"
                     onClick={() => finishGameSetup(false)}
                 >
                     <i className="material-icons">settings_applications</i>
                 </li>
-                <li title="analyze game" role="button" className="game-menu__item" onClick={handleAnalyzeGame}>
+                <li
+                    title="analyze game"
+                    role="button"
+                    className="game-menu__item"
+                    onClick={handleAnalyzeGame}
+                >
                     <i className="material-icons">zoom_in</i>
                 </li>
             </ul>
         )
     }
-    
-    return ( 
+
+    return (
         <ul className="game-menu">
-            {!drawOffered
-                ? <>
-                    <li 
+            {!drawOffered ? (
+                <>
+                    <li
                         title="resign"
                         role="button"
                         className="game-menu__item"
@@ -172,7 +208,7 @@ const GameMenuComponent: React.FC<ConnectedProps<typeof gameMenuConnector>> = (p
                     >
                         <i className="material-icons">flag</i>
                     </li>
-                    <li 
+                    <li
                         title="offer draw"
                         role="button"
                         className="game-menu__item"
@@ -181,16 +217,17 @@ const GameMenuComponent: React.FC<ConnectedProps<typeof gameMenuConnector>> = (p
                         <i className="offer_draw">1/2</i>
                     </li>
                 </>
-                : <>
-                    <li 
-                        role="button" 
+            ) : (
+                <>
+                    <li
+                        role="button"
                         title="accept draw"
                         className="game-menu__item"
                         onClick={() => endGame('drawByAgreement')}
                     >
                         <i className="material-icons">thumb_up</i>
                     </li>
-                    <li 
+                    <li
                         role="button"
                         title="decline draw"
                         className="game-menu__item"
@@ -199,7 +236,7 @@ const GameMenuComponent: React.FC<ConnectedProps<typeof gameMenuConnector>> = (p
                         <i className="material-icons">thumb_down</i>
                     </li>
                 </>
-            }
+            )}
         </ul>
     )
 }

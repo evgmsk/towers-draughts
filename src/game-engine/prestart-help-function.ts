@@ -2,46 +2,57 @@ import {
     Board,
     CellsMap,
     INeighborCells,
-    PartialTower,
     PieceColor,
     TowerConstructor,
     TowersMap,
-    TowerType,
-} from "../store/models"
+} from '../store/models'
 import {
     BaseCellSize,
+    DefaultMinDepth,
     getDefaultBlackTowersCells,
     getDefaultWhiteTowersCells,
     SideLegendValues,
-    TopLegendValues
+    TopLegendValues,
 } from '../constants/gameConstants'
 
 export const createBoardWithoutTowers = (size: number = 8): Board => {
     const GameBoard: Board = {}
-    for(let i = 0; i < size; i++) {
-        for(let j = 0; j < size; j++) {
+    for (let i = 0; i < size; i++) {
+        for (let j = 0; j < size; j++) {
             if ((i + j + 1) % 2) {
-                const key = `${TopLegendValues[i]}${SideLegendValues[j]}`;
-                GameBoard[key] = {boardKey: key, neighbors: defineNeighborCells(i ,j, size)}
+                const key = `${TopLegendValues[i]}${SideLegendValues[j]}`
+                GameBoard[key] = {
+                    boardKey: key,
+                    neighbors: defineNeighborCells(i, j, size),
+                }
             }
         }
     }
     return GameBoard
 }
 
-export function determineCellPosition(key: string, cellSize: number, reversed = false, boardSize = 8) {
+export function determineCellPosition(
+    key: string,
+    cellSize: number,
+    reversed = false,
+    boardSize = 8
+) {
     const topInd = reversed
         ? TopLegendValues.slice(0, boardSize).reverse()
         : TopLegendValues.slice(0, boardSize)
     const sideInd = reversed
         ? SideLegendValues.slice(0, boardSize)
         : SideLegendValues.slice(0, boardSize).reverse()
-    const y = sideInd.indexOf(parseInt(key.slice(1))) * cellSize 
+    const y = sideInd.indexOf(parseInt(key.slice(1))) * cellSize
     const x = topInd.indexOf(key[0]) * cellSize
-    return {x, y}
+    return { x, y }
 }
 
-export function createCellsMap(boardSize: number, cellSize = BaseCellSize, reversed = false) {
+export function createCellsMap(
+    boardSize: number,
+    cellSize = BaseCellSize,
+    reversed = false
+) {
     const map = {} as CellsMap
     Object.keys(createBoardWithoutTowers(boardSize)).forEach((key: string) => {
         map[key] = determineCellPosition(key, cellSize, reversed, boardSize)
@@ -49,13 +60,17 @@ export function createCellsMap(boardSize: number, cellSize = BaseCellSize, rever
     return map
 }
 
-export function defineNeighborCells(i: number, j: number, size: number): INeighborCells {
+export function defineNeighborCells(
+    i: number,
+    j: number,
+    size: number
+): INeighborCells {
     const topLegend = TopLegendValues.slice(0, size)
-    const sideLegend = SideLegendValues.slice(0, size) 
+    const sideLegend = SideLegendValues.slice(0, size)
     const neighbors: INeighborCells = {}
     if (i) {
         if (j < size - 1) {
-            neighbors.leftUp = `${topLegend[i - 1]}${sideLegend[j + 1]}` 
+            neighbors.leftUp = `${topLegend[i - 1]}${sideLegend[j + 1]}`
         }
         if (j) {
             neighbors.leftDown = `${topLegend[i - 1]}${sideLegend[j - 1]}`
@@ -63,8 +78,8 @@ export function defineNeighborCells(i: number, j: number, size: number): INeighb
     }
     if (i < size - 1) {
         if (j < size - 1) {
-                neighbors.rightUp = `${topLegend[i + 1]}${sideLegend[j + 1]}` 
-            }
+            neighbors.rightUp = `${topLegend[i + 1]}${sideLegend[j + 1]}`
+        }
         if (j) {
             neighbors.rightDown = `${topLegend[i + 1]}${sideLegend[j - 1]}`
         }
@@ -72,20 +87,19 @@ export function defineNeighborCells(i: number, j: number, size: number): INeighb
     return neighbors
 }
 
-export const newOnBoardTower = (currentColor: PieceColor, currentType = TowerType.m): PartialTower => {
-    const wPiecesQuantity = currentColor === PieceColor.w ? 1 : 0
-    const bPiecesQuantity = currentColor === PieceColor.b ? 1 : 0
-    return {currentColor, currentType, wPiecesQuantity, bPiecesQuantity}
-}
-
-
 export const createDefaultTowers = (boardSize: number): TowersMap => {
     const towers = {} as TowersMap
     getDefaultBlackTowersCells(boardSize).forEach((key: string) => {
-        towers[key] = new TowerConstructor({onBoardPosition: key, currentColor: PieceColor.b})
+        towers[key] = new TowerConstructor({
+            onBoardPosition: key,
+            currentColor: PieceColor.black,
+        })
     })
     getDefaultWhiteTowersCells(boardSize).forEach((key: string) => {
-        towers[key] = new TowerConstructor({onBoardPosition: key, currentColor: PieceColor.w})
+        towers[key] = new TowerConstructor({
+            onBoardPosition: key,
+            currentColor: PieceColor.white,
+        })
     })
     return towers
 }
@@ -99,23 +113,45 @@ export function removeOutBoardTowers(towers: TowersMap): TowersMap {
     }, {} as TowersMap)
 }
 
-export function createOutBoardTowers(towers = {} as TowersMap, bs = 8): TowersMap {
-    const {usedBlack, usedWhite} = Object.keys(towers)
-        .reduce((acc, key)=> {
-            const {wPiecesQuantity = 0, bPiecesQuantity = 0} = towers[key] || {} as TowerConstructor
+export function getDepthFromRivalLevel(level: number) {
+    const startDepth = Math.min(DefaultMinDepth, level + 2),
+        rivalLevel = Math.min(3, level),
+        maxDepth = Math.max(startDepth, rivalLevel * 2)
+    return { startDepth, maxDepth }
+}
+
+export function createOutBoardTowers(
+    towers = {} as TowersMap,
+    bs = 8
+): TowersMap {
+    const { usedBlack, usedWhite } = Object.keys(towers).reduce(
+        (acc, key) => {
+            const { wPiecesQuantity = 0, bPiecesQuantity = 0 } =
+                towers[key] || ({} as TowerConstructor)
             acc.usedWhite += wPiecesQuantity
             acc.usedBlack += bPiecesQuantity
             return acc
-        }, {usedBlack: 0, usedWhite: 0})
+        },
+        { usedBlack: 0, usedWhite: 0 }
+    )
     const totalPieces = bs === 10 ? 20 : 12
-    const [unusedBlack, unusedWhite] = [totalPieces - usedBlack, totalPieces - usedWhite ]
+    const [unusedBlack, unusedWhite] = [
+        totalPieces - usedBlack,
+        totalPieces - usedWhite,
+    ]
     for (let i = 0; i < unusedBlack; i++) {
         const oBKey = `oB b${i}`
-        towers[oBKey] = new TowerConstructor({onBoardPosition: oBKey, currentColor: PieceColor.b})
+        towers[oBKey] = new TowerConstructor({
+            onBoardPosition: oBKey,
+            currentColor: PieceColor.black,
+        })
     }
     for (let i = 0; i < unusedWhite; i++) {
         const oBKey = `oW w${i}`
-        towers[oBKey] = new TowerConstructor({onBoardPosition: oBKey, currentColor: PieceColor.w})
+        towers[oBKey] = new TowerConstructor({
+            onBoardPosition: oBKey,
+            currentColor: PieceColor.white,
+        })
     }
     return towers
 }
