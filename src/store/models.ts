@@ -151,12 +151,11 @@ export enum Directions {
 export interface IAnalysisState {
     gameResult: IGameResult
     pieceOrder: PieceColor
-    movesMainLine?: string[]
+    movesMainLine: string[]
     analyzingPosition: boolean
     movesCurrentLine: { move: string; indexInMainLine?: number }[]
     currentMove: { move: string; index: number }
     depth: number
-    evaluate: boolean
     removePiece: boolean
     startPosition: boolean
     bestMoveLine: { move: string; value: number }[]
@@ -410,11 +409,12 @@ export type RivalType = 'player' | 'PC'
 
 // user
 export interface IUser {
-    token: string | null
-    userId: string | null
-    name: string | null
-    rating: number | null
+    token: string
+    userId: string
+    name: string
+    rating: number
     language: string
+    gamesPlayed?: IGameResult
 }
 
 // evaluation

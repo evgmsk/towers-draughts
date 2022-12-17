@@ -1,11 +1,20 @@
-import {delay, put, select, takeLatest} from 'redux-saga/effects'
+import { delay, put, select, takeLatest } from 'redux-saga/effects'
 
-import {TowersActions as TA, TowersActionTypes} from '../board-towers/types'
-import {IBoard, IGameState, IMoveToMake, PieceColor, TowerTouched, TowerType,} from '../models'
-
+import { TowersActions as TA, TowersActionTypes } from '../board-towers/types'
+import {
+    IBoard,
+    IGameState,
+    IMoveToMake,
+    PieceColor,
+    TowersMap,
+    TowerTouched,
+    TowerType,
+} from '../models'
+import mmr from '../../game-engine/moves-resolver'
 import tur from '../../game-engine/towers-updater'
-import {GameActions as GM} from '../game/types'
-import {IRootState} from '../rootState&Reducer'
+import movesTree from '../../game-engine/tower-tree'
+import { GameActions as GM } from '../game/types'
+import { IRootState } from '../rootState&Reducer'
 import {
     checkIfNumberOfKingsChanged,
     copyObj,
@@ -13,19 +22,8 @@ import {
     possibleOutOfMoves,
     splitMove,
 } from '../../game-engine/gameplay-helper-functions'
-import {AnimationDuration} from '../../constants/gameConstants'
-
-// function* workerCreateBoardToGame() {
-//
-// }
-//
-// function* workerCreateEmptyAnalysisBoard() {
-//
-// }
-//
-// function* workerCreateBoardToAnalysis() {
-//
-// }
+import { AnimationDuration } from '../../constants/gameConstants'
+import { getDepthFromRivalLevel } from '../../game-engine/prestart-help-function'
 
 function* workerUpdateBoardSizeAndTowersPosition(action: TowersActionTypes) {
     const { boardOptions, boardAndTowers } = (yield select()) as IRootState
@@ -172,11 +170,12 @@ function* workerTurn(action: TowersActionTypes) {
     const payload = action.payload as IMoveToMake
     const {
         game: { history, playerColor, ineffectiveMoves },
+        gameOptions: { rivalType },
         boardAndTowers,
     } = (yield select()) as IRootState
     const {
         moveOrder,
-        moveToSave: { position, takenPieces, move, rivalMoves },
+        moveToSave: { position, takenPieces, move },
     } = payload
     if (
         takenPieces ||
@@ -202,6 +201,9 @@ function* workerTurn(action: TowersActionTypes) {
             ? animateMandatoryMove(payload)
             : animateFreeMove(payload)
     }
+    const rivalMoves = mmr.getMovesResultFromTotalMoves(
+        mmr.lookForTotalMoves(position, moveOrder.pieceOrder)
+    )
     const boardPayload = { positionsTree, lastMoveSquares, moves: rivalMoves }
     yield put({ type: TA.UPDATE_BOARD_STATE, payload: boardPayload })
     yield delay(AnimationDuration)
@@ -211,22 +213,24 @@ function* workerTurn(action: TowersActionTypes) {
 function* workerUndo() {
     const {
         boardAndTowers,
+        gameOptions: { rivalLevel },
         game: {
             history,
             moveOrder: { pieceOrder },
             playerColor,
         },
-        user: { name },
+        user: { name = 'name' },
         boardOptions,
-    } = yield select()
+    } = (yield select()) as IRootState
     if (!history.length) return
-    let gamePayload: Partial<IGameState>, boardPayload: Partial<IBoard>
+    let gamePayload: Partial<IGameState>,
+        boardPayload: Partial<IBoard>,
+        towers: TowersMap
     if (pieceOrder === playerColor) {
         gamePayload = {
             history: history.slice(0, -2),
         }
-        const towers =
-            boardAndTowers.positionsTree[gamePayload.history!.join('_')]
+        towers = boardAndTowers.positionsTree[gamePayload.history!.join('_')]
         boardPayload = {
             lastMoveSquares: splitMove(gamePayload.history?.slice(-1)[0] || ''),
             towers: tur.updateCellsAndTowersPosition(
@@ -239,11 +243,10 @@ function* workerUndo() {
             history: history.slice(0, -1),
             moveOrder: {
                 pieceOrder: oppositeColor(pieceOrder),
-                playerTurn: name,
+                playerTurn: name!,
             },
         }
-        const towers =
-            boardAndTowers.positionsTree[gamePayload.history!.join('_')]
+        towers = boardAndTowers.positionsTree[gamePayload.history!.join('_')]
         boardPayload = {
             lastMoveSquares: splitMove(
                 gamePayload.history![gamePayload.history!.length - 1] || ''
@@ -254,6 +257,14 @@ function* workerUndo() {
             ).towers,
         }
     }
+    movesTree.setRoot(movesTree.createBranchWithTowers(towers))
+    movesTree.getDepthData(
+        movesTree.getRoot(),
+        getDepthFromRivalLevel(rivalLevel).startDepth
+    )
+    boardPayload.moves = mmr.getMovesResultFromTotalMoves(
+        mmr.lookForTotalMoves(towers, pieceOrder)
+    )
     yield put({ type: GM.UPDATE_GAME_STATE, payload: gamePayload })
     yield put({ type: TA.UPDATE_BOARD_STATE, payload: boardPayload })
 }
@@ -292,7 +303,6 @@ function* workerSetTouchedTower(action: TowersActionTypes) {
 }
 
 export default function* watcherTowers() {
-    console.log('saga towers')
     yield takeLatest(
         TA.DOM_BOARD_NEED_UPDATE,
         workerUpdateBoardSizeAndTowersPosition

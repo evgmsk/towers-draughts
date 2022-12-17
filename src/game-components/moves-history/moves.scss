@@ -87,7 +87,6 @@
 
   .move {
     flex-grow: .976;
-    cursor: pointer;
   }
 
   .white-move, .black-move {
@@ -95,6 +94,9 @@
     height: 20px;
     line-height: 20px;
     // width: 100%;
+    &.cursor-pointer {
+      cursor: pointer;
+    }
   }
 
   .black-move {

@@ -4,7 +4,6 @@ import { connect, ConnectedProps } from 'react-redux'
 import { IRootState } from '../../store/rootState&Reducer'
 import {
     analyzePosition,
-    evaluatePosition,
     removePiece,
     setDepth,
     setMoveOrderAction,
@@ -32,7 +31,6 @@ const dispatchMap = {
     setGameVariant,
     setDepth,
     setMoveOrderAction,
-    evaluatePosition,
     analyzePosition,
     removePiece,
     setStartPosition,
@@ -46,14 +44,11 @@ export const AnalyzeGameMenu: React.FC<AnalysisMenuProps> = (
     props: AnalysisMenuProps
 ) => {
     const {
-        // downloadGame,
         setGameVariant,
         reverseBoard,
         reversedBoard,
-        evaluatePosition,
-        analysis: { pieceOrder, analyzingPosition, evaluate, removePiece },
+        analysis: { pieceOrder, analyzingPosition, removePiece },
         setMoveOrderAction,
-        history,
         analyzePosition,
         removePiece: remPiece,
         GV,
@@ -61,7 +56,6 @@ export const AnalyzeGameMenu: React.FC<AnalysisMenuProps> = (
         towerTouched,
     } = props
     const [startPos, setStartPos] = useState(true)
-    // const { analyzingPosition } = analysis
     const whiteMove = pieceOrder === PieceColor.white
     const handleGameVariantSelect = (e: any) => {
         const value = e.target.value
@@ -75,7 +69,7 @@ export const AnalyzeGameMenu: React.FC<AnalysisMenuProps> = (
             case 'remove': {
                 return remPiece(!removePiece)
             }
-            case 'setup': {
+            case 'analyze': {
                 return analyzePosition(!analyzingPosition)
             }
             case 'upload': {
@@ -87,9 +81,6 @@ export const AnalyzeGameMenu: React.FC<AnalysisMenuProps> = (
             }
             case 'reverse': {
                 return reverseBoard(!reversedBoard)
-            }
-            case 'eval': {
-                return evaluatePosition(!evaluate)
             }
             case 'move-order': {
                 return setMoveOrderAction(oppositeColor(pieceOrder))
@@ -103,11 +94,11 @@ export const AnalyzeGameMenu: React.FC<AnalysisMenuProps> = (
         <ul className="game-analyze-menu">
             <li
                 className="game-analyze-menu_item"
-                title={removePiece ? 'delete' : 'drag pieces'}
+                title={removePiece ? 'delete piece' : 'drag piece'}
             >
                 <button type="button" onClick={() => handleClick('remove')}>
                     <span className="material-icons">
-                        {removePiece ? 'pan_tool' : 'delete'}
+                        {!removePiece ? 'pan_tool' : 'delete'}
                     </span>
                 </button>
             </li>
@@ -143,25 +134,13 @@ export const AnalyzeGameMenu: React.FC<AnalysisMenuProps> = (
                 <button
                     type="button"
                     name="game"
-                    onClick={() => handleClick('setup')}
+                    onClick={() => handleClick('analyze')}
                 >
                     <span className="material-icons">
-                        {analyzingPosition ? 'grid_on' : 'construction'}
+                        {analyzingPosition ? 'grid_on' : 'calculate'}
                     </span>
                 </button>
             </li>
-            <li className="game-analyze-menu_item" title="evaluate endPosition">
-                <button
-                    type="button"
-                    name="evaluate"
-                    onClick={() => handleClick('eval')}
-                >
-                    <span className="material-icons">
-                        {!evaluate ? 'calculate' : 'stop'}
-                    </span>
-                </button>
-            </li>
-
             <li
                 className="game-analyze-menu_item gv"
                 title="Choose game variant. International: I Russian: R Towers: T"
@@ -180,7 +159,7 @@ export const AnalyzeGameMenu: React.FC<AnalysisMenuProps> = (
             </li>
             <li
                 className="game-analyze-menu_item"
-                title={whiteMove ? 'black move' : 'white move'}
+                title={!whiteMove ? 'black move' : 'white move'}
             >
                 <button
                     type="button"

@@ -19,6 +19,7 @@ import {
 import {
     checkMoveTargetCell,
     copyObj,
+    isDev,
 } from '../../game-engine/gameplay-helper-functions'
 
 import { TowerComponent } from '../../game-components/tower/CheckerTower'
@@ -73,7 +74,7 @@ export class GameBoard extends React.Component<GameAnalyzeProps> {
     componentDidMount() {
         if (!window) return
         const { createAnalyzeBoard } = this.props
-        console.warn('start analyze with props', this.props)
+        if (isDev()) console.warn('start analyze with props', this.props)
         createAnalyzeBoard()
         bms.setBestLineCB(this.bestLineCB)
     }
@@ -230,6 +231,7 @@ export class GameBoard extends React.Component<GameAnalyzeProps> {
             boardOptions,
             boardAndTowers: { towerTouched },
             boardAndTowers,
+            analysis: { removePiece },
         } = this.props
         const { towers, moves, mandatoryMoveStep, lastMoveSquares } =
             boardAndTowers
@@ -239,7 +241,8 @@ export class GameBoard extends React.Component<GameAnalyzeProps> {
             lastMove: lastMoveSquares,
         } as IBoardProps
         const { boardSize, boardTheme, reversedBoard } = boardOptions
-        const WrapperClass = `board__wrapper ${boardTheme} h${boardSize}v${boardSize}${
+        const deletePiece = `${removePiece ? ' remove_piece' : ''}`
+        const WrapperClass = `board__wrapper ${boardTheme}${deletePiece} h${boardSize}v${boardSize}${
             reversedBoard ? ' reversed' : ''
         }`
         const mandatoryTowers = (moves || [])

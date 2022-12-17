@@ -49,13 +49,6 @@ export function updateAnalysisState(payload: Partial<IAnalysisState>) {
     }
 }
 
-export function evaluatePosition(payload: boolean) {
-    return {
-        type: GameAnalysisActions.EVALUATE_POSITION,
-        payload,
-    }
-}
-
 export function setDepth(payload: number) {
     return {
         type: GameAnalysisActions.SET_DEPTH,

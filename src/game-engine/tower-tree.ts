@@ -8,7 +8,7 @@ import {
     TowersMap,
     Value,
 } from '../store/models'
-import { oppositeColor } from './gameplay-helper-functions'
+import { isDev, oppositeColor } from './gameplay-helper-functions'
 import evaluator from './towers-evaluator'
 import mmr from './moves-resolver'
 import { createDefaultTowers } from './prestart-help-function'
@@ -48,6 +48,7 @@ export class Tree implements ITree {
 
 export class PositionsTree extends Tree {
     tree: IPositionsTree
+    counter = 0
 
     constructor(props: IPositionsTree = {}) {
         super(props)
@@ -105,6 +106,14 @@ export class PositionsTree extends Tree {
         }
         this.setRoot(root)
         return root
+    }
+
+    resetCounter() {
+        this.counter = 0
+    }
+
+    getCounter() {
+        return this.counter
     }
 
     getRoot() {
@@ -209,7 +218,9 @@ export class PositionsTree extends Tree {
         if (!moves.length) {
             return Object.assign({}, branch)
         }
-        console.log('first depth')
+        if (isDev()) {
+            this.counter += 1
+        }
         const childDeepValue = moves.reduce(
             (acc, m) => {
                 const positionData = evaluator.getPositionData(
@@ -292,7 +303,6 @@ export class PositionsTree extends Tree {
     }
 
     getDepthData(branch: Branch, depth = 1): Branch {
-        console.log('ttt3')
         let br = branch
         while (br.deepValue.depth < depth) {
             this.getNextDepthData(br)

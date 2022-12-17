@@ -33,7 +33,6 @@ export class Evaluator {
         parentBranchColor: PieceColor,
         totalParentMoves: number
     ): IPositionData {
-        // console.log('ttt', parentBranchColor)
         this.resetPieces()
         const pieceOrder = oppositeColor(parentBranchColor)
         const towerKeys = Object.keys(towers)

@@ -19,7 +19,7 @@ $desktop: 80vh;
 $tablet: 900px;
 
 $board-wrapper-min-width: 340px;
-$board-wrapper-max-width: 800px; 
+$board-wrapper-max-width: 800px;
 $board-max-width: 800px;
 $board-min-width: 340px;
 $tower-max-size: 60px;
@@ -35,9 +35,8 @@ $max-board-size: 800px;
 $side-bar-device-height: 250px;
 
 
-
 $preset-game-height: 40px;
-$border_rad_menu: 5px; 
+$border_rad_menu: 5px;
 
 $border_menu: 1px solid darken($color_game_menu, 15%);
 
@@ -66,19 +65,19 @@ $beforeTop: -8px;
     position: absolute;
     z-index: $zIndex;
     width: 100%;
-    height: 100%; 
+    height: 100%;
     left: 0;
     right: 0;
-    cursor: pointer;
+    cursor: grab;
   }
 }
 
 @mixin menu-width($size: 8, $h1: $device, $h2: $quadro, $h3: $desktop, $h4: $ipad) {
-  @media screen and  (min-aspect-ratio: 2/10) {
+  @media screen and (min-aspect-ratio: 2/10) {
     width: $h1 / $size;
   }
-  @media screen and  (min-aspect-ratio: 1/1) {
-    width:  $h2 / $size;
+  @media screen and (min-aspect-ratio: 1/1) {
+    width: $h2 / $size;
   }
   @media screen and (min-aspect-ratio: 13/10) {
     width: $h4 / $size;
@@ -89,12 +88,12 @@ $beforeTop: -8px;
 }
 
 @mixin cell-width($size: 8, $h1: $device, $h2: $quadro, $h3: $desktop, $h4: $ipad) {
-  @media screen and  (min-aspect-ratio: 2/10) {
+  @media screen and (min-aspect-ratio: 2/10) {
     width: $h1 / $size;
-    height:  $h1 / $size;
+    height: $h1 / $size;
   }
-  @media screen and  (min-aspect-ratio: 1/1) {
-    width:  $h2 / $size;
+  @media screen and (min-aspect-ratio: 1/1) {
+    width: $h2 / $size;
     height: $h2 / $size;
   }
   @media screen and (min-aspect-ratio: 13/10) {
@@ -109,12 +108,12 @@ $beforeTop: -8px;
 
 
 @mixin item-size($size: 8, $h1: $device, $h2: $quadro, $h3: $desktop, $h4: $ipad) {
-  @media screen and  (min-aspect-ratio: 2/10) {
+  @media screen and (min-aspect-ratio: 2/10) {
     width: $h1 / $size / 2;
-    height:  $h1 / $size / 2;
+    height: $h1 / $size / 2;
   }
-  @media screen and  (min-aspect-ratio: 1/1) {
-    width:  $h2 / $size / 2;
+  @media screen and (min-aspect-ratio: 1/1) {
+    width: $h2 / $size / 2;
     height: $h2 / $size / 2;
   }
   @media screen and (min-aspect-ratio: 13/10) {
@@ -128,26 +127,26 @@ $beforeTop: -8px;
 }
 
 @mixin board-width($size: 8, $h1: $device, $h2: $quadro, $h3: $desktop, $h4: $ipad) {
-  @media screen and  (min-aspect-ratio: 2/10) {
-    width:  $h1 / $size;
+  @media screen and (min-aspect-ratio: 2/10) {
+    width: $h1 / $size;
   }
-  @media screen and  (min-aspect-ratio: 1/1) {
+  @media screen and (min-aspect-ratio: 1/1) {
     width: $h2 / $size;
   }
   @media screen and (min-aspect-ratio: 13/10) {
     width: $h4 / $size;
   }
-  @media screen and  (min-aspect-ratio: 15/10) {
+  @media screen and (min-aspect-ratio: 15/10) {
     width: $h3 / $size;
   }
 }
 
 @mixin board-size($h1: $device, $h2: $quadro, $h3: $desktop, $h4: $ipad) {
-  @media screen and  (min-aspect-ratio: 2/10) {
+  @media screen and (min-aspect-ratio: 2/10) {
     width: $h1;
     height: $h1;
   }
-  @media screen and  (min-aspect-ratio: 1/1) {
+  @media screen and (min-aspect-ratio: 1/1) {
     width: $h2;
     height: $h2;
   }
@@ -162,12 +161,12 @@ $beforeTop: -8px;
 }
 
 @mixin side-bar-size($h1: $device, $h2: $quadro, $h3: $desktop, $h4: $ipad) {
-  @media screen and  (min-aspect-ratio: 2/10) {
+  @media screen and (min-aspect-ratio: 2/10) {
     height: $side-bar-device-height;
     width: $h1 / 2.2;
     min-width: unset;
   }
-  @media screen and  (min-aspect-ratio: 1/1) {
+  @media screen and (min-aspect-ratio: 1/1) {
     height: $h2 / 2.2;
     width: 100%;
     min-width: 200px;
@@ -175,16 +174,16 @@ $beforeTop: -8px;
   @media screen and (min-aspect-ratio: 13/10) {
     height: $h4;
   }
-  @media screen and  (min-aspect-ratio: 15/10) {
+  @media screen and (min-aspect-ratio: 15/10) {
     height: 80vh;
   }
 }
 
 @mixin container-height($h1: $device, $h2: $quadro, $h3: $desktop, $h4: $ipad) {
-  @media screen and  (min-aspect-ratio: 2/10) {
+  @media screen and (min-aspect-ratio: 2/10) {
     height: $h1;
   }
-  @media screen and  (min-aspect-ratio: 1/1) {
+  @media screen and (min-aspect-ratio: 1/1) {
     height: $h2;
   }
   @media screen and (min-aspect-ratio: 13/10) {
@@ -196,11 +195,11 @@ $beforeTop: -8px;
 }
 
 @mixin transformWithScale($scale: 1, $bs: 8, $m: .35) {
-  @media screen and  (min-aspect-ratio: 2/10) {
+  @media screen and (min-aspect-ratio: 2/10) {
     $size: -$device / $bs * $m;
     transform: translate($size, $size) scaleY($scale)
   }
-  @media screen and  (min-aspect-ratio: 1/1) {
+  @media screen and (min-aspect-ratio: 1/1) {
     $size: -$quadro / $bs * $m;
     transform: translate($size, $size) scaleY($scale)
   }
@@ -208,19 +207,19 @@ $beforeTop: -8px;
     $size: -$ipad / $bs * $m;
     transform: translate($size, $size) scaleY($scale)
   }
-  @media screen and  (min-aspect-ratio: 15/10) {
+  @media screen and (min-aspect-ratio: 15/10) {
     $size: -$desktop / $bs * $m;
     transform: translate($size, $size) scaleY($scale)
   }
 }
 
 @mixin checkerSize($bs: 8, $m: .7, $p: $device) {
-  @media screen and  (min-aspect-ratio: 2/10) {
+  @media screen and (min-aspect-ratio: 2/10) {
     $size: $p / $bs * $m;
     width: $size;
     height: $size;
   }
-  @media screen and  (min-aspect-ratio: 1/1) {
+  @media screen and (min-aspect-ratio: 1/1) {
     $size: $quadro / $bs * $m;
     width: $size;
     height: $size;
@@ -230,7 +229,7 @@ $beforeTop: -8px;
     width: $size;
     height: $size;
   }
-  @media screen and  (min-aspect-ratio: 15/10) {
+  @media screen and (min-aspect-ratio: 15/10) {
     $size: $desktop / $bs * $m;
     width: $size;
     height: $size;

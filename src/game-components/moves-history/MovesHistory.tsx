@@ -55,7 +55,7 @@ const Moves: React.FC<ConnectedProps<typeof historyConnector>> = (props) => {
             elem.scroll(0, elem.scrollHeight)
         }
         scrollDown()
-    }, [movesHistory, ref])
+    }, [movesHistory, ref, movesMainLine])
     const History = useHistory()
     const mHistory = gameMode === 'isPlaying' ? movesHistory : movesMainLine!
     const length = mHistory?.length
@@ -63,9 +63,8 @@ const Moves: React.FC<ConnectedProps<typeof historyConnector>> = (props) => {
 
     const handleClickOnMenuItem = (e: React.MouseEvent) => {
         e.preventDefault()
-        console.warn('click', e.target)
         const { classList } = e.target as HTMLElement
-        if (classList.contains('disabled')) return
+        if (classList.contains('disabled') || gameMode === 'isPlaying') return
         if (History.location.pathname === '/game') {
             History.push('/analysis')
         }
@@ -97,7 +96,7 @@ const Moves: React.FC<ConnectedProps<typeof historyConnector>> = (props) => {
     }
     const handleClickOnMove = (e: React.MouseEvent, index: number) => {
         e.preventDefault()
-        if (gameMode === 'isPlaying') return
+        if (!analyzingPosition) return
         if (History.location.pathname === '/game') {
             History.push('/analysis')
         }
@@ -114,11 +113,43 @@ const Moves: React.FC<ConnectedProps<typeof historyConnector>> = (props) => {
         index >= length - 1 ? ' disabled' : ''
     }`
     const playClass = `${baseClass} play-moves`
+    const Moves = moves.map(
+        (move: { black: string; white: string }, i: number) => {
+            const white = index === i * 2
+            const black = index === i * 2 + 1
+            const pointer = analyzingPosition ? ' cursor-pointer' : ''
+            const whiteClass = `white-move${
+                white ? ' current-move' : ''
+            }${pointer}`
+            const blackClass = `black-move${
+                black ? ' current-move' : ''
+            }${pointer}`
+            return (
+                <div className="move-wrapper" key={i}>
+                    <div className="move-number">{i + 1}</div>
+                    <div className="move">
+                        <div
+                            className={whiteClass}
+                            onClick={(e) => handleClickOnMove(e, i * 2)}
+                        >
+                            {move.white}
+                        </div>
+                        <div
+                            className={blackClass}
+                            onClick={(e) => handleClickOnMove(e, i * 2 + 1)}
+                        >
+                            {move.black}
+                        </div>
+                    </div>
+                </div>
+            )
+        }
+    )
     return (
         <div className="moves-history-wrapper">
             <div className="moves-history-menu">
-                {gameMode === 'isPlaying' || !analyzingPosition ? (
-                    <p>nextMoves:</p>
+                {!analyzingPosition ? (
+                    <p>Moves:</p>
                 ) : (
                     <ul onClick={handleClickOnMenuItem}>
                         <li className={toStartClass}>
@@ -140,52 +171,7 @@ const Moves: React.FC<ConnectedProps<typeof historyConnector>> = (props) => {
                 )}
             </div>
             <div className="moves-container" ref={ref}>
-                {moves.map(
-                    (
-                        rivalMove: { black: string; white: string },
-                        i: number
-                    ) => {
-                        const white =
-                            (analyzingPosition
-                                ? index
-                                : mHistory.length - 1) ===
-                            i * 2
-                        const black =
-                            (analyzingPosition
-                                ? index
-                                : mHistory.length - 1) ===
-                            i * 2 + 1
-                        const whiteClass = `white-move${
-                            white ? ' current-move' : ''
-                        }`
-                        const blackClass = `black-move${
-                            black ? ' current-move' : ''
-                        }`
-                        return (
-                            <div className="move-wrapper" key={i}>
-                                <div className="move-number">{i + 1}</div>
-                                <div className="move">
-                                    <div
-                                        className={whiteClass}
-                                        onClick={(e) =>
-                                            handleClickOnMove(e, i * 2)
-                                        }
-                                    >
-                                        {rivalMove.white}
-                                    </div>
-                                    <div
-                                        className={blackClass}
-                                        onClick={(e) =>
-                                            handleClickOnMove(e, i * 2 + 1)
-                                        }
-                                    >
-                                        {rivalMove.black}
-                                    </div>
-                                </div>
-                            </div>
-                        )
-                    }
-                )}
+                {Moves}
             </div>
         </div>
     )

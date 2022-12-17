@@ -8,6 +8,7 @@ import {
 } from '../store/models'
 import {
     BaseCellSize,
+    DefaultMinDepth,
     getDefaultBlackTowersCells,
     getDefaultWhiteTowersCells,
     SideLegendValues,
@@ -110,6 +111,13 @@ export function removeOutBoardTowers(towers: TowersMap): TowersMap {
         }
         return acc
     }, {} as TowersMap)
+}
+
+export function getDepthFromRivalLevel(level: number) {
+    const startDepth = Math.min(DefaultMinDepth, level + 2),
+        rivalLevel = Math.min(3, level),
+        maxDepth = Math.max(startDepth, rivalLevel * 2)
+    return { startDepth, maxDepth }
 }
 
 export function createOutBoardTowers(

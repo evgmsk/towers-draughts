@@ -17,7 +17,10 @@ import {
 } from '../game/types'
 import { ClockActions } from '../clock/types'
 
-import { oppositeColor } from '../../game-engine/gameplay-helper-functions'
+import {
+    isDev,
+    oppositeColor,
+} from '../../game-engine/gameplay-helper-functions'
 // import { Axios, setAuthorizationHeader } from '../../common/axios';
 import { GameAnalysisActions } from '../gameAnalysis/types'
 import { InitialGameState } from '../game/reducers'
@@ -83,10 +86,8 @@ function* workerNewGameVsPC(action: GameActionTypes) {
         user: { name, rating },
         boardOptions,
     } = yield select()
-    console.log('ttt4')
     movesTree.createDefaultRootBranch(boardOptions.boardSize)
     movesTree.getDepthData(movesTree.getRoot(), DefaultMinDepth)
-    console.warn('tree', movesTree.getRoot())
     const moves = movesTree.getRivalMoves('')
     yield put({
         type: TowersActions.UPDATE_BOARD_STATE,
@@ -199,7 +200,8 @@ function* workerMove(action: GMA) {
         gameOptions: { rivalType },
         boardAndTowers,
     } = (yield select()) as IRootState
-    console.warn('game move', action, boardAndTowers, movesTree.getRoot())
+    if (isDev())
+        console.warn('game move', action, boardAndTowers, movesTree.getRoot())
     const payload: IMoveToMake = action.payload as IMoveToMake
     if (!gameStarted) return
     yield checkDraw(payload)

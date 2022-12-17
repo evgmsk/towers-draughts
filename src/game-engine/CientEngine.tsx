@@ -3,12 +3,13 @@ import React from 'react'
 import { connect, ConnectedProps } from 'react-redux'
 import { endGame, surrender } from '../store/game/actions'
 import { MoveWithRivalMoves, SeekerProps } from '../store/models'
-import { oppositeColor } from './gameplay-helper-functions'
+import { isDev, oppositeColor } from './gameplay-helper-functions'
 import { IRootState } from '../store/rootState&Reducer'
 import mmr from './moves-resolver'
 import bms from './best-move-seeker-towers'
 import { turn } from '../store/board-towers/actions'
 import { AnimationDuration } from '../constants/gameConstants'
+import { getDepthFromRivalLevel } from './prestart-help-function'
 
 interface IBestMove {
     move: string
@@ -39,7 +40,7 @@ type BotProps = ConnectedProps<typeof botConnector>
 
 class ClientEngine extends React.Component<BotProps, IBestMove> {
     componentDidMount() {
-        console.log('created', this.props)
+        if (isDev()) console.log('created', this.props)
     }
 
     componentDidUpdate(prev: BotProps, prevState: IBestMove) {
@@ -59,21 +60,26 @@ class ClientEngine extends React.Component<BotProps, IBestMove> {
                 setTimeout(bms.updateAfterRivalMove, AnimationDuration, props)
             }
         }
-        if (prev.movesHistory.length !== movesHistory.length) {
-            if (this.props.gameMode === 'isPlaying' && engineMove) {
-                // console.log('start engine', this.props)
-                bms.updateAfterRivalMove(props)
-            } else {
-                // console.log('stop engine', this.props)
-            }
+        if (
+            prev.movesHistory.length !== movesHistory.length &&
+            this.props.gameMode === 'isPlaying' &&
+            engineMove
+        ) {
+            if (isDev()) console.log('start engine', this.props)
+            bms.updateAfterRivalMove(props)
         }
     }
 
     getSeekerProps = (): SeekerProps => {
-        const maxDepth = Math.min(5, this.props.rivalLevel + 2)
+        const { startDepth, maxDepth } = getDepthFromRivalLevel(
+            this.props.rivalLevel
+        )
+        if (isDev()) {
+            console.warn('engine props', maxDepth)
+        }
         return {
-            maxDepth: maxDepth,
-            startDepth: maxDepth,
+            maxDepth,
+            startDepth,
             pieceOrder: this.props.moveOrder.pieceOrder,
             game: true,
         }

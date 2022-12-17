@@ -24,6 +24,12 @@
   .board__wrapper {
     @include flex(center, stretch);
 
+    &.remove_piece {
+      .checker-tower::before {
+        cursor: revert;
+      }
+    }
+
     .checker-tower {
       .white-piece, .black-piece {
         @include checker(8, .67, $quadro);
@@ -32,6 +38,8 @@
 
     .pieces-boxes-container {
       @include container-height();
+
+
     }
 
     .pieces-box {

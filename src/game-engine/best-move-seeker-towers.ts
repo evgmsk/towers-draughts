@@ -1,5 +1,6 @@
 import {
     Branch,
+    DeepValue,
     Move,
     MoveWithRivalMoves,
     PieceColor,
@@ -8,7 +9,7 @@ import {
 } from '../store/models'
 import mmr from './moves-resolver'
 import movesTree from './tower-tree'
-import { copyObj } from './gameplay-helper-functions'
+import { copyObj, isDev } from './gameplay-helper-functions'
 import { createDefaultTowers } from './prestart-help-function'
 import {
     DebutStage,
@@ -55,6 +56,10 @@ const FirstMoves: { [key: string]: Move[] } = {
     ),
 }
 
+interface IMove extends Move {
+    maxDeepValue?: DeepValue
+}
+
 export class BestMoveSeeker implements SeekerProps {
     maxDepth = DefaultMaxDepth
     startDepth = DefaultMinDepth
@@ -62,11 +67,7 @@ export class BestMoveSeeker implements SeekerProps {
     movesHistory = [] as string[]
     pieceOrder = PieceColor.white
     game = false
-    evaluatingLine: string[] = []
-    valueIncreased?: boolean
-    parentBranch = null as unknown as Branch
-    lastBranch?: Branch
-
+    sortedRootMoves = [] as IMove[]
     bestMoveCB: Function = () => {}
 
     bestLineCB: Function = () => {}
@@ -78,10 +79,7 @@ export class BestMoveSeeker implements SeekerProps {
         this.game = props.game
         this.movesHistory = props.movesHistory || []
         this.pieceOrder = props.pieceOrder || PieceColor.white
-        this.parentBranch =
-            props.parentBranch ||
-            ({ deepValue: { value: { black: 0, white: 0 } } } as Branch)
-        console.warn('engine state', props, copyObj(this))
+        if (isDev()) console.warn('engine state', props, copyObj(this))
     }
 
     setBestMoveCB = (cb: Function) => {
@@ -127,7 +125,6 @@ export class BestMoveSeeker implements SeekerProps {
         pieceOrder: PieceColor
     }) => {
         const { history, cP, pieceOrder } = props
-        this.evaluatingLine.length = 0
         this.pieceOrder = pieceOrder
         this.movesHistory = history
         this.towers = cP
@@ -143,36 +140,55 @@ export class BestMoveSeeker implements SeekerProps {
         return branch.moves
     }
 
-    diggingToMaxDepth(depth = this.maxDepth) {
+    diggingLineToMaxDepth(line: number, depth: number): DeepValue {
+        let branch = movesTree.getRoot(),
+            move = this.sortedRootMoves[line].move
+        while (depth--) {
+            branch = branch.children[move]
+            movesTree.getNextDepthData(branch)
+            move = branch.deepValue.move
+        }
+        return branch.deepValue
+    }
+
+    diggingToMaxDepth = (depth = 2) => {
         const root = movesTree.getRoot()
-        const { pieceOrder, children, deepValue } = root
-        const sortedRootMoves = this.sortMovesByValue(root)
-        if (sortedRootMoves[0].move !== root.deepValue.move) {
+        const { pieceOrder, deepValue } = root
+        if (isDev()) {
+            console.warn('root', root)
+        }
+        this.sortedRootMoves = this.sortMovesByValue(root)
+        const mLength = this.sortedRootMoves.length
+        const mDeepValue = this.diggingLineToMaxDepth(0, depth)
+        let maxDepthBest = { deppValue: mDeepValue, line: 0 }
+        if (this.sortedRootMoves[0].move !== root.deepValue.move) {
             console.error('invalid root deep value')
         }
-        let nextBestBranch = children[sortedRootMoves[0].move],
-            extraDepth = 0,
-            currentMove = 0
-        while (true) {
-            movesTree.getNextDepthData(nextBestBranch)
-            nextBestBranch =
-                nextBestBranch.children[nextBestBranch.deepValue.move]
-            movesTree.getNextDepthData(nextBestBranch)
-            nextBestBranch =
-                nextBestBranch.children[nextBestBranch.deepValue.move]
-            extraDepth += 2
-            if (extraDepth === depth - deepValue.depth) {
-                if (
-                    deepValue.value[pieceOrder] <
-                    nextBestBranch.deepValue.value[pieceOrder]
-                ) {
-                    break
-                } else if (currentMove < sortedRootMoves.length) {
-                    nextBestBranch = children[sortedRootMoves[currentMove].move]
-                    currentMove += 1
-                }
+        if (isDev()) console.warn(depth, root)
+        let lineToDigging = 0
+        while (++lineToDigging < mLength) {
+            const maxDepthValue = this.diggingLineToMaxDepth(
+                lineToDigging,
+                depth
+            )
+            maxDepthBest =
+                maxDepthBest.deppValue.value[pieceOrder] >
+                maxDepthValue.value[pieceOrder]
+                    ? maxDepthBest
+                    : { deppValue: maxDepthValue, line: lineToDigging }
+            if (
+                maxDepthValue.value[pieceOrder] >= deepValue.value[pieceOrder]
+            ) {
+                break
             }
         }
+        const { maxDeepValue, ...move } =
+            this.sortedRootMoves[maxDepthBest.line]
+        const moveToMake = Object.assign(Object.assign({}, move), {
+            rivalMoves: movesTree.getRivalMoves(move.move),
+        })
+        if (isDev()) console.warn(moveToMake)
+        return this.finalizeMove(moveToMake)
     }
 
     getMoveFromRootMoves(): Move {
@@ -221,7 +237,8 @@ export class BestMoveSeeker implements SeekerProps {
             return this.debutResolver()
         }
         const lastRivalMove = this.movesHistory[this.movesHistory.length - 1]
-        console.warn('old root', copyObj(movesTree.getRoot()), props)
+        if (isDev())
+            console.warn('old root', copyObj(movesTree.getRoot()), props)
         movesTree.updateRoot(lastRivalMove)
         const root = movesTree.getRoot()
         if (!root.moves.length) {
@@ -236,14 +253,16 @@ export class BestMoveSeeker implements SeekerProps {
             }
             return this.finalizeMove(moveToMake)
         }
-        console.warn('updated tree', movesTree.getRoot())
+        if (isDev()) console.warn('updated tree', movesTree.getRoot())
         if (root.deepValue.depth < this.maxDepth) {
             console.warn('digging')
-            this.diggingToMaxDepth(this.maxDepth)
+            setTimeout(
+                this.diggingToMaxDepth,
+                0,
+                this.maxDepth - root.deepValue.depth
+            )
         } else {
             const move = this.getMoveFromRootMoves() as MoveWithRivalMoves
-            // console.warn('move', move)
-            move.rivalMoves = movesTree.getRivalMoves(move.move)
             this.game && this.finalizeMove(move)
             !this.game && this.determineBestMovesLine()
         }
@@ -253,14 +272,21 @@ export class BestMoveSeeker implements SeekerProps {
         this.bestLineCB(movesTree.determineBestMovesLine())
     }
 
-    finalizeMove = (move?: MoveWithRivalMoves) => {
-        move = move || { move: '', position: {}, rivalMoves: [] }
-        this.evaluatingLine.length = 0
-        console.error('line before move', movesTree.determineBestMovesLine())
+    finalizeMove = (move?: Move): void => {
+        move = move || { move: '', position: {} }
+        if (isDev())
+            console.warn(
+                'evaluations for move: ',
+                movesTree.getCounter(),
+                'line: ',
+                movesTree.determineBestMovesLine()
+            )
+        movesTree.resetCounter()
         !!move.move &&
             movesTree.updateRoot(move.move) &&
             movesTree.getNextDepthData(movesTree.getRoot())
-        console.error('line after move', movesTree.determineBestMovesLine())
+        if (isDev())
+            console.warn('line after move', movesTree.determineBestMovesLine())
         this.bestMoveCB(move)
     }
 }

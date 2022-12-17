@@ -118,6 +118,9 @@ export const convertToMovesHistory = (
     return result
 }
 
+export const isDev = () =>
+    !process.env.NODE_ENV || process.env.NODE_ENV === 'development'
+
 export const compareArrays = (arr1: string[], arr2: string[]): boolean => {
     let equal = true
     for (let i = 0; i < arr1.length; i++) {

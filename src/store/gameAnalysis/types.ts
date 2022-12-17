@@ -18,7 +18,6 @@ export const GameAnalysisActions = {
     GO_TO_POSITION: 'GO_TO_POSITION',
     CREATE_ANALYZE_BOARD: 'CREATE_ANALYZE_BOARD',
     UPDATE_ANALYSIS_STATE: 'UPDATE_ANALYSIS_STATE',
-    EVALUATE_POSITION: 'EVALUATE_POSITION',
     SET_DEPTH: 'SET_DEPTH',
     PLAY_MOVES: 'PLAY_MOVES',
     SET_START_POSITION: 'SET_START_POSITION',
@@ -62,11 +61,6 @@ export interface PlayMovesAction {
 export interface SetDepthAction {
     type: typeof GameAnalysisActions.SET_DEPTH
     payload: number
-}
-
-export interface EvaluatePositionAction {
-    type: typeof GameAnalysisActions.EVALUATE_POSITION
-    payload: boolean
 }
 
 export interface UpdateAnalysisStateAction {
@@ -145,7 +139,6 @@ export type GameAnalysisTypes =
     | MakeNewMoveAction
     | SetStartPositionAction
     | SetBestMoveAction
-    | EvaluatePositionAction
     | PlayMovesAction
     | SetDepthAction
     | SetMoveOrder
