@@ -309,6 +309,7 @@ describe('test move resolver methods', () => {
             moves.mandatory?.map((m) => m.move.join(':')),
             moves.free?.map((m) => m.move.join('-'))
         )
+        expect(moves.mandatory?.length).toBe(5)
     })
     it('king mandatory moves', () => {
         // mmr.setProps({ GV: 'towers', size: 8 })
