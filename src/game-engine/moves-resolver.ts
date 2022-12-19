@@ -46,25 +46,17 @@ export class KingDiagsRes {
 
     add(moves: FullMRResult[]) {
         if (
-            !moves[0] ||
-            (this._result.length && moves[0].move.length === this.minMoveLength)
+            this._result.length &&
+            moves[0].move.length === this.minMoveLength
         ) {
             return
         }
-
-        if (this._result.length) {
-            const lastMove = this._result[this._result.length - 1].move
-            if (
-                lastMove.length === moves[0].move.length &&
-                compareArrays(lastMove, moves[0].move)
-            ) {
-                moves.shift()
-            } else if (
-                this._result[0].move.length === this.minMoveLength &&
-                moves[0].move.length > this.minMoveLength
-            ) {
-                this._result.shift()
-            }
+        if (
+            this._result.length &&
+            this._result[0].move.length === this.minMoveLength &&
+            moves[0].move.length > this.minMoveLength
+        ) {
+            this._result.shift()
         }
         this._result = this._result.concat(moves)
     }

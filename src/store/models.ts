@@ -437,6 +437,7 @@ export interface IPositionData {
     totalMovesNumber: number
     deepValue: DeepValue
     extraData?: { [key: string]: any }
+    leafsNumber: number
 }
 
 export interface Branch extends IPositionData {
