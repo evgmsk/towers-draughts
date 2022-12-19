@@ -51,8 +51,9 @@ export class Evaluator {
             free = free.concat(fm)
         }
         const totalMovesNumber = mandatory.length + free.length
+        const moves = mmr.getMovesFromTotalMoves({ mandatory, free })
         return {
-            moves: mmr.getMovesFromTotalMoves({ mandatory, free }),
+            moves,
             totalMovesNumber,
             pieceOrder,
             deepValue: {
@@ -66,6 +67,7 @@ export class Evaluator {
             },
             position: towers,
             extraData: this.piecesData,
+            leafsNumber: moves.length,
         }
     }
 

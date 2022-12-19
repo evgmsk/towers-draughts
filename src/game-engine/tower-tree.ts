@@ -79,6 +79,7 @@ export class PositionsTree extends Tree {
             pieceOrder,
             children: {},
             rivalMove: '',
+            leafsNumber: moves.length,
         }
     }
 
@@ -103,6 +104,7 @@ export class PositionsTree extends Tree {
             pieceOrder: PieceColor.white,
             children: {},
             rivalMove: '',
+            leafsNumber: moves.length,
         }
         this.setRoot(root)
         return root

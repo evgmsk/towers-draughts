@@ -327,10 +327,10 @@ describe('test move resolver methods', () => {
             onBoardPosition: 'c3',
             bPiecesQuantity: 3,
         })
-        towers.e1 = new TowerConstructor({
-            currentColor: PieceColor.white,
-            onBoardPosition: 'e1',
-        })
+        // towers.e1 = new TowerConstructor({
+        //     currentColor: PieceColor.white,
+        //     onBoardPosition: 'e1',
+        // })
         // towers.e5 = new TowerConstructor({currentColor: PieceColor.black, onBoardPosition: 'e5'})
         towers.c5 = new TowerConstructor({
             currentColor: PieceColor.black,
