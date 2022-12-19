@@ -79,6 +79,7 @@ export class PositionsTree extends Tree {
             pieceOrder,
             children: {},
             rivalMove: '',
+            leafsNumber: moves.length,
         }
     }
 
@@ -103,6 +104,7 @@ export class PositionsTree extends Tree {
             pieceOrder: PieceColor.white,
             children: {},
             rivalMove: '',
+            leafsNumber: moves.length,
         }
         this.setRoot(root)
         return root
@@ -161,33 +163,6 @@ export class PositionsTree extends Tree {
         return movesLine
     }
 
-    // filterBelowOfDepth = (branch = this.getRoot(), depth = 0) => {
-    //     const {moves, children} = branch
-    //     return moves.filter(m =>
-    //         !children[m.move] || children[m.move].deepValue!.depth < depth)
-    // }
-
-    // filterEqualOrGreaterThanDepth = (depth = 1, branch = this.getRoot())  => {
-    //     const {moves, children, pieceOrder} = branch
-    //     let best: Move & {deepValue: DeepValue}
-    //     const filterMoves = moves.filter(m => {
-    //         const deepValue = children[m.move] && children[m.move].deepValue
-    //         if (!deepValue) return null
-    //         const included = deepValue.depth >= depth
-    //             && (deepValue.value[pieceOrder] > 0
-    //                 || deepValue.value > this.getRoot().deepValue.value)
-    //         if (included) {
-    //             const deepValue = children[m.move].deepValue
-    //             best = best || {...m, deepValue}
-    //             best = best.deepValue.value[pieceOrder] > deepValue.value[pieceOrder]
-    //                 ? best
-    //                 : {...m, deepValue}
-    //         }
-    //         return included
-    //     })
-    //     return filterMoves.length ? best! : null
-    // }
-
     updateRoot(move: string): Branch {
         const children = this.tree.root.children as unknown as Children
         const newRoot = children[move]
@@ -241,10 +216,49 @@ export class PositionsTree extends Tree {
                     acc.value = positionData.deepValue.value
                     acc.move = m.move
                 }
+                acc.leafsNumber += positionData.moves.length
                 return acc
             },
-            { value: { white: -100, black: -100 }, move: '', depth: 1 }
+            {
+                value: { white: -100, black: -100 },
+                move: '',
+                depth: 1,
+                leafsNumber: 0,
+            }
         )
+        branch.leafsNumber = childDeepValue.leafsNumber
+        branch.deepValue = Object.assign({}, childDeepValue)
+        return branch
+    }
+
+    getNextDepthData(branch: Branch): Branch {
+        const currentDepth = branch.deepValue.depth
+        if (currentDepth < 1) {
+            return this.getFirstDepthData(branch)
+        }
+        const childDeepValue = branch.moves.reduce(
+            (acc, m) => {
+                let child = branch.children[m.move]
+                const color = oppositeColor(child.pieceOrder)
+                child = child.deepValue.depth
+                    ? this.getNextDepthData(child)
+                    : this.getFirstDepthData(child)
+
+                if (child.deepValue.value[color] > acc.value[color]) {
+                    acc.value = child.deepValue.value
+                    acc.move = this.determineMove(child, branch)
+                }
+                acc.leafsNumber += child.leafsNumber
+                return acc
+            },
+            {
+                value: { white: -100, black: -100 },
+                move: '',
+                depth: currentDepth + 1,
+                leafsNumber: 0,
+            }
+        )
+        branch.leafsNumber = childDeepValue.leafsNumber
         branch.deepValue = Object.assign({}, childDeepValue)
         return branch
     }
@@ -260,35 +274,6 @@ export class PositionsTree extends Tree {
             }
         }
         return path[0] || ''
-    }
-
-    getNextDepthData(branch: Branch): Branch {
-        const currentDepth = branch.deepValue.depth
-        if (currentDepth < 1) {
-            return this.getFirstDepthData(branch)
-        }
-        const childDeepValue = branch.moves.reduce(
-            (acc, m) => {
-                let child = branch.children[m.move]
-                const color = oppositeColor(child.pieceOrder)
-                child = !child.deepValue.depth
-                    ? this.getFirstDepthData(child)
-                    : this.getNextDepthData(child)
-
-                if (child.deepValue.value[color] > acc.value[color]) {
-                    acc.value = child.deepValue.value
-                    acc.move = this.determineMove(child, branch)
-                }
-                return acc
-            },
-            {
-                value: { white: -100, black: -100 },
-                move: '',
-                depth: currentDepth + 1,
-            }
-        )
-        branch.deepValue = Object.assign({}, childDeepValue)
-        return branch
     }
 
     getRivalMoves(move: string): MMRResult[] {

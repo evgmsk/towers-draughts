@@ -133,7 +133,6 @@ export const compareArrays = (arr1: string[], arr2: string[]): boolean => {
 const fun = {
     convertToMovesHistory,
     checkIfNumberOfKingsChanged,
-    checkMoveTargetCell,
     copyObj,
     oppositeColor,
     oppositeDirection,

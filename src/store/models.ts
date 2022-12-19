@@ -200,7 +200,7 @@ export class TowerConstructor implements ICheckerTower {
         this.bPiecesQuantity =
             props.bPiecesQuantity ||
             (props.currentColor === PieceColor.black ? 1 : 0)
-        this.positionInDOM = props.positionInDOM || { x: 0, y: 0 }
+        this.positionInDOM = props.positionInDOM || {x: 0, y: 0}
         this.onBoardPosition = props.onBoardPosition
         this.view = props.view || 'face'
         this.mandatory = props.mandatory || false
@@ -437,6 +437,7 @@ export interface IPositionData {
     totalMovesNumber: number
     deepValue: DeepValue
     extraData?: { [key: string]: any }
+    leafsNumber: number
 }
 
 export interface Branch extends IPositionData {
