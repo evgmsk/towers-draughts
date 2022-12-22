@@ -154,7 +154,7 @@ export interface IAnalysisState {
     movesMainLine: string[]
     analyzingPosition: boolean
     movesCurrentLine: { move: string; indexInMainLine?: number }[]
-    currentMove: { move: string; index: number }
+    lastMove: { move: string; index: number }
     depth: number
     removePiece: boolean
     startPosition: boolean
@@ -200,7 +200,7 @@ export class TowerConstructor implements ICheckerTower {
         this.bPiecesQuantity =
             props.bPiecesQuantity ||
             (props.currentColor === PieceColor.black ? 1 : 0)
-        this.positionInDOM = props.positionInDOM || { x: 0, y: 0 }
+        this.positionInDOM = props.positionInDOM || {x: 0, y: 0}
         this.onBoardPosition = props.onBoardPosition
         this.view = props.view || 'face'
         this.mandatory = props.mandatory || false

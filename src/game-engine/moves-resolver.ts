@@ -6,7 +6,6 @@ import {
     FreeMRResult,
     FullMRResult,
     GameVariants,
-    IBoard,
     IGameState,
     IMoveOrder,
     ISortedMoves,
@@ -20,8 +19,10 @@ import {
     TowerType,
 } from '../store/models'
 import {
-    compareArrays,
     copyObj,
+    equalArrays,
+    includesArray,
+    isDev,
     oppositeColor,
     oppositeDirection,
 } from './gameplay-helper-functions'
@@ -31,13 +32,14 @@ import {
 } from './prestart-help-function'
 
 export class KingDiagsRes {
-    preMove: FullMRResult
     minMoveLength: number
     _result = [] as FullMRResult[]
 
-    constructor(move?: FullMRResult) {
-        this.minMoveLength = move?.move?.length || 2
-        this.preMove = move || (null as unknown as FullMRResult)
+    constructor(moves?: FullMRResult[]) {
+        this.minMoveLength = moves?.length
+            ? moves[moves?.length - 1]?.move?.length
+            : 2
+        this.add(moves || [])
     }
 
     size() {
@@ -45,28 +47,32 @@ export class KingDiagsRes {
     }
 
     add(moves: FullMRResult[]) {
-        if (
-            !moves[0] ||
-            (this._result.length && moves[0].move.length === this.minMoveLength)
-        ) {
+        if (!moves[0]) {
             return
         }
-
-        if (this._result.length) {
-            const lastMove = this._result[this._result.length - 1].move
-            if (
-                lastMove.length === moves[0].move.length &&
-                compareArrays(lastMove, moves[0].move)
-            ) {
-                moves.shift()
-            } else if (
-                this._result[0].move.length === this.minMoveLength &&
-                moves[0].move.length > this.minMoveLength
-            ) {
-                this._result.shift()
-            }
+        const movesToConcat = this._result.length ? [] : moves
+        if (!this._result.length) {
+            this._result = this._result.concat(movesToConcat)
+        } else if (
+            this._result[0].move.length === this.minMoveLength &&
+            moves[0].move.length > this.minMoveLength
+        ) {
+            this.minMoveLength = moves[0].move.length
+            this._result = this._result.filter(
+                (m) => m.move.length >= this.minMoveLength
+            )
+        } else {
+            moves.forEach((move) => {
+                if (
+                    !includesArray(
+                        this._result.map((m) => m.move),
+                        move.move
+                    )
+                ) {
+                    this._result.push(move)
+                }
+            })
         }
-        this._result = this._result.concat(moves)
     }
 
     get(): FullMRResult[] {
@@ -192,14 +198,6 @@ export class MoveResolveCommons extends BaseMoveResolver {
         return towers
     }
 
-    checkLastLine(to: string, whiteMove: boolean): boolean {
-        const currentLine = parseInt(to.slice(1))
-        return (
-            (whiteMove && currentLine === this.size) ||
-            (!whiteMove && currentLine === 0)
-        )
-    }
-
     makeDraughtMandatoryMove = (move: StepMProps): TowersMap => {
         if (move.move.length === 2) {
             return this.makeDraughtMandatoryMoveStep(move, true)
@@ -305,6 +303,12 @@ export class KingMandatoryMoveResolver extends MoveResolveCommons {
                 continue
             }
             const moves = this.checkFirstKingDiagonal(dir, diagonal, towers)
+            if (isDev()) {
+                console.warn(
+                    'first diagonal',
+                    moves.mandatory?.map((m) => m.move.join(':'))
+                )
+            }
             if (moves.free?.length) {
                 free = free.concat(moves.free)
             }
@@ -330,9 +334,8 @@ export class KingMandatoryMoveResolver extends MoveResolveCommons {
             )
             moves.completed.forEach((cm) => {
                 if (
-                    !invalidMoves.filter((im) =>
-                        compareArrays(im.move, cm.move)
-                    ).length
+                    !invalidMoves.filter((im) => equalArrays(im.move, cm.move))
+                        .length
                 ) {
                     completed.add([cm])
                 }
@@ -420,7 +423,7 @@ export class KingMandatoryMoveResolver extends MoveResolveCommons {
     }
 
     looKForNewBornKingMoves(props: FullMRResult) {
-        let result = new KingDiagsRes(props)
+        let result = new KingDiagsRes()
         const { move, lastStepDirection } = props
         const cellKey = move[move.length - 1]
         const neighbors = this.board[cellKey].neighbors
@@ -474,11 +477,7 @@ export class KingMandatoryMoveResolver extends MoveResolveCommons {
             : result.get().filter((m) => m.move.length >= minLength + 1)
     }
 
-    changeTowerPosition(
-        from: string,
-        to: string,
-        towers: TowersMap
-    ): TowersMap {
+    replaceTower(from: string, to: string, towers: TowersMap): TowersMap {
         const _towers = copyObj(towers)
         const tower = _towers[from]
         tower.onBoardPosition = to
@@ -632,22 +631,34 @@ export class KingMandatoryMoveResolver extends MoveResolveCommons {
         nextStep: string,
         direction: string
     ): FullMRResult[] {
-        const maxLMove = Object.assign({}, sortedMoves[0])
-        const move = maxLMove.move.slice(0, -1).concat(nextStep)
-        const prevPos = maxLMove.move[maxLMove.move.length - 1]
-        const endPosition = this.changeTowerPosition(
-            prevPos,
-            nextStep,
-            maxLMove.endPosition!
-        )
-        sortedMoves.push(
-            Object.assign(maxLMove, {
-                move,
-                endPosition,
-                lastStepDirection: direction,
-            })
-        )
-        return sortedMoves
+        const maxLength = sortedMoves[0].move.length
+        const result = new KingDiagsRes(sortedMoves)
+        let index = 0
+        while (true) {
+            const maxLMove = Object.assign({}, sortedMoves[index])
+            const move = maxLMove.move.slice(0, -1).concat(nextStep)
+            const prevPos = maxLMove.move[maxLMove.move.length - 1]
+            const endPosition = this.replaceTower(
+                prevPos,
+                nextStep,
+                maxLMove.endPosition!
+            )
+            result.add([
+                Object.assign(maxLMove, {
+                    move,
+                    endPosition,
+                    lastStepDirection: direction,
+                }),
+            ])
+            index++
+            if (
+                !sortedMoves[index] ||
+                sortedMoves[index].move.length < maxLength
+            ) {
+                break
+            }
+        }
+        return result.get()
     }
 
     addKingStepWithTaken(
@@ -757,18 +768,6 @@ export class MovesResolver extends KingMandatoryMoveResolver {
             free = free.concat(fm)
         }
         return { free, mandatory }
-    }
-
-    getPositionDataWithoutValue(
-        towers: TowersMap,
-        pieceOrder: PieceColor
-    ): Partial<IBoard> {
-        return {
-            moves: this.getMovesResultFromTotalMoves(
-                this.getPositionMoves(towers, pieceOrder)
-            ),
-            towers,
-        }
     }
 
     getMovesFromTotalMoves(props: ITotalMoves): Move[] {

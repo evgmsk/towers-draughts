@@ -8,7 +8,7 @@ export const InitialGameAnalysisState: IAnalysisState = {
     pieceOrder: PieceColor.white,
     movesCurrentLine: [],
     depth: 5,
-    currentMove: { move: '', index: -1 },
+    lastMove: { move: '', index: -1 },
     removePiece: false,
     startPosition: false,
     bestMoveLine: [] as { move: string; value: number }[],
@@ -19,6 +19,12 @@ export function analyzeReducer(
     action: GameAnalysisTypes
 ): IAnalysisState {
     switch (action.type) {
+        case GameAnalysisActions.SET_LAST_MOVE: {
+            return {
+                ...state,
+                lastMove: action.payload as { move: string; index: number },
+            }
+        }
         case GameAnalysisActions.REMOVE_PIECE: {
             return { ...state, removePiece: action.payload as boolean }
         }

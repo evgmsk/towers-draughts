@@ -118,26 +118,38 @@ export const convertToMovesHistory = (
     return result
 }
 
-export const isDev = () =>
-    !process.env.NODE_ENV || process.env.NODE_ENV === 'development'
+export const isDev = () => {
+    return (
+        !process.env.NODE_ENV ||
+        process.env.NODE_ENV === 'development' ||
+        process.env.NODE_ENV === 'test'
+    )
+}
 
-export const compareArrays = (arr1: string[], arr2: string[]): boolean => {
-    let equal = true
+export const equalArrays = (arr1: string[], arr2: string[]): boolean => {
+    if (arr1.length !== arr2.length) return false
     for (let i = 0; i < arr1.length; i++) {
-        equal = arr1[i] === arr2[i]
-        if (!equal) break
+        if (arr1[i] !== arr2[i]) return false
     }
-    return equal
+    return true
+}
+
+export const includesArray = (arr1: string[][], arr2: string[]): boolean => {
+    for (let arr of arr1) {
+        if (equalArrays(arr, arr2)) return true
+    }
+    return false
 }
 
 const fun = {
     convertToMovesHistory,
     checkIfNumberOfKingsChanged,
-    checkMoveTargetCell,
     copyObj,
     oppositeColor,
     oppositeDirection,
     possibleOutOfMoves,
+    includesArray,
+    equalArrays,
 }
 
 export default fun

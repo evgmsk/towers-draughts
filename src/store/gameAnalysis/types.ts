@@ -10,7 +10,6 @@ export const GameAnalysisActions = {
     ANALYZE_POSITION: 'ANALYZE_POSITION',
     UPLOAD_GAME: 'UPLOAD_GAME',
     SAVE_GAME_RESULT: 'SAVE_GAME_RESULT',
-    SETTING_BOARD: 'SETTING_BOARD',
     UPDATE_POSITION: 'UPDATE_POSITION',
     STEP_FORWARD: 'STEP_FORWARD',
     STEP_BACK: 'STEP_BACK',
@@ -26,6 +25,12 @@ export const GameAnalysisActions = {
     MAKE_NEW_MOVE: 'MAKE_NEW_MOVE',
     SET_MOVE_ORDER: 'SET_MOVE_ORDER',
     SET_BEST_MOVE_LINE: 'SET_BEST_MOVE_LINE',
+    SET_LAST_MOVE: 'SET_LAST_MOVE',
+}
+
+export interface SetLastMoveAction {
+    type: typeof GameAnalysisActions.SET_LAST_MOVE
+    payload: { move: string; index: number }
 }
 
 export interface MakeNewMoveAction {
@@ -98,11 +103,6 @@ export interface UpdatePositionActions {
     payload: Partial<IMoveToMake>
 }
 
-export interface SettingBoardAction {
-    type: typeof GameAnalysisActions.SETTING_BOARD
-    payload: boolean
-}
-
 export interface AnalyzeLastGame {
     type: typeof GameAnalysisActions.ANALYZE_POSITION
     payload: boolean
@@ -142,3 +142,4 @@ export type GameAnalysisTypes =
     | PlayMovesAction
     | SetDepthAction
     | SetMoveOrder
+    | SetLastMoveAction

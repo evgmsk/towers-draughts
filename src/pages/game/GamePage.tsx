@@ -9,7 +9,7 @@ import { PresetGame } from './presetGameForm/PresetGameForm'
 import { PlayerTimer } from '../../game-components/PlayerTimer'
 import WaitingRival from '../../page-components/spinners/WatingRival'
 import GameEndPopup from './gameEndPopup/GameEndPopup'
-import { declineDraw, endGame } from '../../store/game/actions'
+import { declineDraw, endGame, setGameMode } from '../../store/game/actions'
 import { oppositeColor } from '../../game-engine/gameplay-helper-functions'
 import { PieceColor } from '../../store/models'
 import { MovesHistory } from '../../game-components/moves-history/MovesHistory'
@@ -77,17 +77,21 @@ const RivalGameBar: React.FC<RivalBarProps> = ({ children, ...props }) => {
 
 const RivalGameBarComponent = RivalBarConnector(RivalGameBar)
 
-const GPmapState = (state: IRootState) => ({
+const GPMapState = (state: IRootState) => ({
     playerColor: state.game.playerColor,
     gameSetupFinished: state.gameOptions.gameSetupFinished,
     portrait: state.app.portrait,
 })
 
-const GPConnector = connect(GPmapState, {})
+const GPConnector = connect(GPMapState, { setGameMode })
 
 type GPProps = ConnectedProps<typeof GPConnector>
 
 class GamePage extends React.Component<GPProps, {}> {
+    componentDidMount() {
+        this.props.setGameMode('isPreparing')
+    }
+
     shouldComponentUpdate(prevProps: GPProps) {
         return JSON.stringify(prevProps) !== JSON.stringify(this.props)
     }

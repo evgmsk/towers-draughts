@@ -20,7 +20,7 @@ const historyMapState = (state: IRootState) => ({
     gameMode: state.game.gameMode,
     movesMainLine: state.analyze.movesMainLine,
     analyzingPosition: state.analyze.analyzingPosition,
-    currentMove: state.analyze.currentMove,
+    currentMove: state.analyze.lastMove,
 })
 
 const historyMapDispatch = {

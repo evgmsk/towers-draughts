@@ -4,22 +4,17 @@ import {IAnalysisState, IMoveToMake, PositionsTree} from '../models'
 
 import {copyObj, oppositeColor,} from '../../game-engine/gameplay-helper-functions'
 import {GameAnalysisActions as GAA, GameAnalysisTypes,} from '../gameAnalysis/types'
-import {
-    createDefaultTowers,
-    createOutBoardTowers,
-    removeOutBoardTowers,
-} from '../../game-engine/prestart-help-function'
+import {createDefaultTowers, createOutBoardTowers,} from '../../game-engine/prestart-help-function'
 import {IRootState} from '../rootState&Reducer'
-import mmr from '../../game-engine/moves-resolver'
 import tur from '../../game-engine/towers-updater'
 // import { AnimationDuration } from '../../constants/gameConstants';
 import bms from '../../game-engine/best-move-seeker-towers'
 import {TowersActions} from '../board-towers/types'
-import {BoardOptionActions} from '../boardOptions/types'
 import movesTree from '../../game-engine/tower-tree'
 import {DefaultMinDepth} from '../../constants/gameConstants'
 import {GameOptionActions} from '../gameOptions/types'
 import {setBestMoveLine} from '../gameAnalysis/actions'
+import {GameActions} from '../game/types'
 
 // function* workerUploadGame(action: GameAnalysisTypes) {
 //     const token: string = yield select((state) => state.user.token)
@@ -101,14 +96,11 @@ function* workerSettingBoard(action: GameAnalysisTypes) {
             { ...boardAndTowers, towers },
             boardOptions
         ).towers
-    } else {
-        towers = removeOutBoardTowers(towers)
-        const payload = mmr.getMovesResultFromTotalMoves(
-            mmr.getPositionMoves(towers, pieceOrder)
-        )
-        yield put({ type: TowersActions.UPDATE_MOVES, payload })
     }
-    yield put({ type: TowersActions.UPDATE_TOWERS, payload: towers })
+    yield put({
+        type: TowersActions.UPDATE_BOARD_STATE,
+        payload: { towers, moves: [] },
+    })
 }
 
 function* workerCreateAnalyzeBoard(action: GameAnalysisTypes) {
@@ -121,7 +113,7 @@ function* workerCreateAnalyzeBoard(action: GameAnalysisTypes) {
     bms.setBestLineCB(setBestMoveLine)
     const rect = document.querySelector('.board__body')?.getBoundingClientRect()
     if (!rect) return
-    if ((analyzingPosition && gameResult.movesHistory, gameMode === 'isOver')) {
+    if (analyzingPosition && gameResult.movesHistory && gameMode === 'isOver') {
         yield put({ type: GameOptionActions.FINISH_GAME_SETUP, payload: false })
         yield put({
             type: TowersActions.UPDATE_BOARD_STATE,
@@ -133,6 +125,7 @@ function* workerCreateAnalyzeBoard(action: GameAnalysisTypes) {
         })
         bms.startEvaluation()
     } else if (!analyzingPosition || !gameResult.movesHistory) {
+        yield put({ type: GameActions.SET_GAME_MODE, payload: 'isOver' })
         const towers = createOutBoardTowers({}, boardOptions.boardSize)
         yield put({
             type: TowersActions.UPDATE_BOARD_STATE,
@@ -145,7 +138,7 @@ function* workerCreateAnalyzeBoard(action: GameAnalysisTypes) {
     }
 }
 
-function* workerCurrentLine(action: GameAnalysisTypes) {
+function* workerNewLine(action: GameAnalysisTypes) {
     const {
         analyze: {
             lastMove: { index },
@@ -194,14 +187,16 @@ function* workerMainLine(action: GameAnalysisTypes) {
 
 function* workerNewMove(action: GameAnalysisTypes) {
     const {
-        lastMove: { move, index },
-        movesCurrentLine,
-    } = yield select((state: IRootState) => state.analyze)
-    let payload: Partial<IAnalysisState>
-    if (movesCurrentLine.length && movesCurrentLine[index] === move) {
-        payload = yield workerCurrentLine(action)
+        analyze: {
+            lastMove: { move, index },
+            movesCurrentLine,
+            movesMainLine,
+        },
+    } = (yield select()) as IRootState
+    if (!movesMainLine.length || movesMainLine.length === index - 1) {
+        yield workerMainLine(action)
     } else {
-        payload = yield workerMainLine(action)
+        yield workerNewLine(action)
     }
 }
 
@@ -210,7 +205,10 @@ function* workerAnalyzePosition(action: GameAnalysisTypes) {
         boardAndTowers,
         analyze: { pieceOrder },
     }: IRootState = yield select()
-    if (!action.payload) return
+    if (!action.payload) {
+        yield workerSettingBoard(action)
+        return
+    }
     const towers = tur.getOnboardTowers(boardAndTowers.towers)
     const startBranch = movesTree.createBranchWithTowers(towers, pieceOrder)
     movesTree.setRoot(startBranch)
@@ -218,25 +216,6 @@ function* workerAnalyzePosition(action: GameAnalysisTypes) {
     delay(20)
     bms.setState({ game: false })
     bms.startEvaluation()
-}
-
-function* workerReverseBoard() {
-    const { boardAndTowers, boardOptions } = (yield select()) as IRootState
-    const rect = document
-        .querySelector('.board__body')
-        ?.getBoundingClientRect() as DOMRect
-    if (!rect) {
-        return
-    }
-    yield delay(10)
-    const payload = tur.updateCellsAndTowersPosition(
-        boardAndTowers,
-        boardOptions
-    )
-    yield put({
-        type: TowersActions.UPDATE_BOARD_STATE,
-        payload,
-    })
 }
 
 function* workerStartPosition(action: GameAnalysisTypes) {
@@ -268,10 +247,8 @@ export default function* watcherAnalysis() {
     yield takeLatest(GAA.STEP_FORWARD, workerStepForward)
     yield takeLatest(GAA.GO_TO_POSITION, workerGoToPosition)
     // yield takeLatest(GAA.UPDATE_POSITION, workerUpdatePosition)
-    yield takeLatest(BoardOptionActions.REVERSE_BOARD, workerReverseBoard)
     yield takeLatest(GAA.ANALYZE_POSITION, workerAnalyzePosition)
     yield takeLatest(GAA.PLAY_MOVES, workerPlayMoves)
-    yield takeLatest(GAA.SETTING_BOARD, workerSettingBoard)
     yield takeLatest(GAA.CREATE_ANALYZE_BOARD, workerCreateAnalyzeBoard)
     yield takeLatest(GAA.MAKE_NEW_MOVE, workerNewMove)
     yield takeLatest(GAA.SET_START_POSITION, workerStartPosition)
