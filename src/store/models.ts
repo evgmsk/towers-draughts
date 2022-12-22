@@ -154,7 +154,7 @@ export interface IAnalysisState {
     movesMainLine: string[]
     analyzingPosition: boolean
     movesCurrentLine: { move: string; indexInMainLine?: number }[]
-    currentMove: { move: string; index: number }
+    lastMove: { move: string; index: number }
     depth: number
     removePiece: boolean
     startPosition: boolean

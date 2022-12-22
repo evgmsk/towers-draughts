@@ -7,6 +7,13 @@ import {
 } from '../models'
 import { GameAnalysisActions, GameAnalysisTypes } from './types'
 
+export function setLastMove(payload = { move: '', index: -1 }) {
+    return {
+        type: GameAnalysisActions.SET_LAST_MOVE,
+        payload,
+    }
+}
+
 export function setStartPosition(payload = true) {
     return {
         type: GameAnalysisActions.SET_START_POSITION,
@@ -127,13 +134,6 @@ export function uploadGame(payload: IGameResult): GameAnalysisTypes {
 export function analyzePosition(payload: boolean): GameAnalysisTypes {
     return {
         type: GameAnalysisActions.ANALYZE_POSITION,
-        payload,
-    }
-}
-
-export function settingBoard(payload: boolean): GameAnalysisTypes {
-    return {
-        type: GameAnalysisActions.SETTING_BOARD,
         payload,
     }
 }

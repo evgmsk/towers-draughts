@@ -1,6 +1,10 @@
 import { delay, put, select, takeLatest } from 'redux-saga/effects'
 
-import { TowersActions as TA, TowersActionTypes } from '../board-towers/types'
+import {
+    TowersActions,
+    TowersActions as TA,
+    TowersActionTypes,
+} from '../board-towers/types'
 import {
     IBoard,
     IGameState,
@@ -18,12 +22,14 @@ import { IRootState } from '../rootState&Reducer'
 import {
     checkIfNumberOfKingsChanged,
     copyObj,
+    isDev,
     oppositeColor,
     possibleOutOfMoves,
     splitMove,
 } from '../../game-engine/gameplay-helper-functions'
 import { AnimationDuration } from '../../constants/gameConstants'
 import { getDepthFromRivalLevel } from '../../game-engine/prestart-help-function'
+import { BoardOptionActions } from '../boardOptions/types'
 
 function* workerUpdateBoardSizeAndTowersPosition(action: TowersActionTypes) {
     const { boardOptions, boardAndTowers } = (yield select()) as IRootState
@@ -286,6 +292,9 @@ function* workerSetTouchedTower(action: TowersActionTypes) {
     const possibleMoves = setPos
         ? cellsMap
         : possibleOutOfMoves(boardAndTowers, key)
+    if (isDev()) {
+        console.warn('pos moves', possibleMoves)
+    }
     if (!Object.keys(possibleMoves).length) {
         // todo sound
         return
@@ -302,11 +311,31 @@ function* workerSetTouchedTower(action: TowersActionTypes) {
     yield put({ type: TA.UPDATE_TOUCHED_TOWER, payload })
 }
 
+function* workerReverseBoard() {
+    const { boardAndTowers, boardOptions } = (yield select()) as IRootState
+    const rect = document
+        .querySelector('.board__body')
+        ?.getBoundingClientRect() as DOMRect
+    if (!rect) {
+        return
+    }
+    yield delay(10)
+    const payload = tur.updateCellsAndTowersPosition(
+        boardAndTowers,
+        boardOptions
+    )
+    yield put({
+        type: TowersActions.UPDATE_BOARD_STATE,
+        payload,
+    })
+}
+
 export default function* watcherTowers() {
     yield takeLatest(
         TA.DOM_BOARD_NEED_UPDATE,
         workerUpdateBoardSizeAndTowersPosition
     )
+    yield takeLatest(BoardOptionActions.REVERSE_BOARD, workerReverseBoard)
     yield takeLatest(TA.CANCEL_TOWER_TRANSITION, workerCancelTowerTransition)
     yield takeLatest(TA.SET_TOUCHED_TOWER, workerSetTouchedTower)
     yield takeLatest(TA.TURN, workerTurn)

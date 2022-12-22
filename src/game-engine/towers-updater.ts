@@ -173,18 +173,26 @@ export class TowersUpdateResolver extends BaseMoveResolver {
         cellSize: number
     ): ITowerPosition => {
         const outboardTower = key.includes('oB') || key.includes('oW')
-        const cellPosition = !outboardTower
+        const { x, y } = !outboardTower
             ? map[key] || { x: 0, y: 0 }
             : this.calcPositionOutboardBoxes(key)
-        const { x, y } = cellPosition
         const towerElem = document.querySelector('.checker-tower')
         if (!towerElem) {
             console.error(towerElem)
         }
         const { width } = towerElem!.getBoundingClientRect()
+        const outBoardBoxWidth =
+            document
+                .querySelector('.pieces-box.white-box')
+                ?.getBoundingClientRect().width || cellSize
+        const adds =
+            outboardTower && this.GV === 'international'
+                ? outBoardBoxWidth
+                : cellSize
+
         return {
-            x: Math.round(x - width / 2 + cellSize / 2),
-            y: Math.round(y - width / 2 + cellSize / 2),
+            x: Math.round(x - width / 2 + adds / 2),
+            y: Math.round(y - width / 2 + adds / 2),
         }
     }
 
@@ -342,7 +350,7 @@ export class TowersUpdateResolver extends BaseMoveResolver {
             return this.handleRemoveTower(tower, board)
         }
         let outboardKey =
-            tower.currentColor === PieceColor.white ? `oW w` : 'oB black'
+            tower.currentColor === PieceColor.white ? `oW w` : 'oB b'
         const outboardPiecesNumber = Object.keys(towers).filter((k) =>
             towers[k].onBoardPosition.includes(outboardKey)
         ).length
@@ -367,10 +375,18 @@ export class TowersUpdateResolver extends BaseMoveResolver {
             cellsMap,
             cellSize
         )
+
         let towers = copyObj(board.towers),
             tower = towers[cellKey]
+        console.warn('gv', this.GV, towers[cellKey], cellKey)
         if (tower && this.GV === 'towers') {
             return this.handleSettingTowers(tower, board)
+        }
+        if (towers[cellKey]) {
+            return {
+                towers: this.cancelTowerTransition(board),
+                towerTouched: null as unknown as TowerTouched,
+            }
         }
         if (key.length > 3) {
             const lastUnusedTower = parseInt(key.slice(4))
@@ -430,9 +446,10 @@ export class TowersUpdateResolver extends BaseMoveResolver {
         boardRect?: DOMRect
     ) {
         const { cellsMap, cellSize, towers } = board
-        const { reversedBoard, boardSize } = BO
+        const { reversedBoard } = BO
+        console.warn(this.size, this.GV)
         const newCellSize = boardRect
-            ? this.getCellSize(boardRect, boardSize)
+            ? this.getCellSize(boardRect, this.size)
             : cellSize
         const newCellMap = this.updateCellsMap(
             cellsMap,
@@ -444,6 +461,7 @@ export class TowersUpdateResolver extends BaseMoveResolver {
             towers,
             newCellMap
         )
+        console.warn(this.size, newTowers, board.towers)
         return {
             towers: newTowers,
             cellsMap: newCellMap,
