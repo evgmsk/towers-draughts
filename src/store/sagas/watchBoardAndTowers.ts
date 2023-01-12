@@ -28,7 +28,7 @@ import {
     splitMove,
 } from '../../game-engine/gameplay-helper-functions'
 import { AnimationDuration } from '../../constants/gameConstants'
-import { getDepthFromRivalLevel } from '../../game-engine/prestart-help-function'
+import { calcDepth } from '../../game-engine/prestart-help-function'
 import { BoardOptionActions } from '../boardOptions/types'
 
 function* workerUpdateBoardSizeAndTowersPosition(action: TowersActionTypes) {
@@ -266,7 +266,7 @@ function* workerUndo() {
     movesTree.setRoot(movesTree.createBranchWithTowers(towers))
     movesTree.getDepthData(
         movesTree.getRoot(),
-        getDepthFromRivalLevel(rivalLevel).startDepth
+        calcDepth(rivalLevel).startDepth
     )
     boardPayload.moves = mmr.getMovesResultFromTotalMoves(
         mmr.lookForTotalMoves(towers, pieceOrder)

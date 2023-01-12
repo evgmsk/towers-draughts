@@ -447,7 +447,6 @@ export class TowersUpdateResolver extends BaseMoveResolver {
     ) {
         const { cellsMap, cellSize, towers } = board
         const { reversedBoard } = BO
-        console.warn(this.size, this.GV)
         const newCellSize = boardRect
             ? this.getCellSize(boardRect, this.size)
             : cellSize
@@ -461,7 +460,6 @@ export class TowersUpdateResolver extends BaseMoveResolver {
             towers,
             newCellMap
         )
-        console.warn(this.size, newTowers, board.towers)
         return {
             towers: newTowers,
             cellsMap: newCellMap,

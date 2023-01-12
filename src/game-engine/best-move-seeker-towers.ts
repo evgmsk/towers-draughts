@@ -187,7 +187,7 @@ export class BestMoveSeeker implements SeekerProps {
         const moveToMake = Object.assign(Object.assign({}, move), {
             rivalMoves: movesTree.getRivalMoves(move.move),
         })
-        if (isDev()) console.warn(moveToMake)
+        if (isDev()) console.warn('move to make', moveToMake)
         return this.finalizeMove(moveToMake)
     }
 

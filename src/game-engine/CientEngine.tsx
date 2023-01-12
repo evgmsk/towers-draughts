@@ -9,7 +9,7 @@ import mmr from './moves-resolver'
 import bms from './best-move-seeker-towers'
 import { turn } from '../store/board-towers/actions'
 import { AnimationDuration } from '../constants/gameConstants'
-import { getDepthFromRivalLevel } from './prestart-help-function'
+import { calcDepth } from './prestart-help-function'
 
 interface IBestMove {
     move: string
@@ -71,12 +71,7 @@ class ClientEngine extends React.Component<BotProps, IBestMove> {
     }
 
     getSeekerProps = (): SeekerProps => {
-        const { startDepth, maxDepth } = getDepthFromRivalLevel(
-            this.props.rivalLevel
-        )
-        if (isDev()) {
-            console.warn('engine props', maxDepth)
-        }
+        const { startDepth, maxDepth } = calcDepth(this.props.rivalLevel)
         return {
             maxDepth,
             startDepth,

@@ -113,10 +113,10 @@ export function removeOutBoardTowers(towers: TowersMap): TowersMap {
     }, {} as TowersMap)
 }
 
-export function getDepthFromRivalLevel(level: number) {
-    const startDepth = Math.min(DefaultMinDepth, level + 2),
-        rivalLevel = Math.min(3, level),
-        maxDepth = Math.max(startDepth, rivalLevel * 2)
+export function calcDepth(level: number) {
+    const startDepth = DefaultMinDepth,
+        depthLimit = 8,
+        maxDepth = Math.min(Math.max(startDepth, level * 2), depthLimit)
     return { startDepth, maxDepth }
 }
 

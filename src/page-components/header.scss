@@ -2,161 +2,173 @@
 
 
 .header {
-    position: fixed;
-    top: 0;
-    left: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  background: rgb(68, 45, 23);
+  background: linear-gradient(90deg, rgba(68, 45, 23, 1) 25%, rgba(91, 59, 43, 0.6222864145658263) 50%, rgba(55, 31, 17, 1) 75%);
+  height: $header-height;
+  width: 100vw;
+  z-index: 5000;
+  display: flex;
+  justify-content: center;
+
+  .change-lang-button {
+    border: none;
+    display: flex;
+    padding: 0;
+    margin: 0;
+    position: relative;
+    height: $lang-flag-size;
+    width: $lang-flag-size;
+    border-radius: $lang-flag-size;
     box-sizing: border-box;
-    background: rgb(68,45,23);
-    background: linear-gradient(90deg, rgba(68,45,23,1) 25%, rgba(91,59,43,0.6222864145658263) 50%, rgba(55,31,17,1) 75%);
-    height: $header-height;
-    width: 100%;
-    z-index: 5000;
-    .change-lang-button {
-        border: none;
-        display: flex;
-        padding: 0;
-        margin: 0;
-        position: relative;
-        height: $lang-flag-size;
-        width:$lang-flag-size;
-        border-radius: $lang-flag-size;
-        box-sizing: border-box;
-        transition: all .2s;
-        justify-self: end;
-        margin: 0 15px;
-        span {
-            width: $lang-flag-size;
-            height: $lang-flag-size;
-            display: block;
-            border-radius: 50%;
-        }
-        &:focus,
-        &:hover {
-            transform: scale(1.1);
-        }
-        @media (max-width: $tablet) and (orientation: landscape) {
-            span {
-                height: $lang-flag-size * .7;
-                width:$lang-flag-size  * .7;
-            }
-            height: $lang-flag-size * .7;
-            width:$lang-flag-size  * .7;
-        }
+    transition: all .2s;
+    justify-self: end;
+    margin: 0 15px;
+
+    span {
+      width: $lang-flag-size;
+      height: $lang-flag-size;
+      display: block;
+      border-radius: 50%;
     }
-    
+
+    &:focus,
+    &:hover {
+      transform: scale(1.1);
+    }
+
+    @media (max-width: $tablet) and (orientation: landscape) {
+      span {
+        height: $lang-flag-size * .7;
+        width: $lang-flag-size  * .7;
+      }
+      height: $lang-flag-size * .7;
+      width: $lang-flag-size  * .7;
+    }
+  }
+
 }
 
 // nav 
-.nav-wrapper {
-    position: relative;
-    font-family: $font-main;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 1px 0 20px;
-    height: $header-height;
+.nav {
+  padding: 0 30px;
+  width: 100%;
+  max-width: 1200px;
+  position: relative;
+  font-family: $font-main;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: $header-height;
+  color: $nav-bar-color;
+  z-index: 1500;
+
+  .materialize-icons {
+    line-height: 1;
+    display: block;
+  }
+
+  .navlink {
+    @include flex(center, center);
+    font-size: 1rem;
     color: $nav-bar-color;
-    z-index: 1500;
-    .materialize-icons {
-        line-height: 1;
-        display: block;
+    padding: 0 15px;
+    cursor: pointer;
+    transition: all .3s;
+    height: $header-height;
+    font-size: 1.4rem;
+
+    &:active, &:focus, &:hover, &.active {
+      background-color: rgba(0, 0, 0, 0.1);;
     }
-    .navlink {
-        @include flex(center, center);
-        font-size: 1rem;
-        color: $nav-bar-color;
-        padding: 0 15px;
-        cursor: pointer;
-        transition: all .3s;
-        height: $header-height;
-        &:active, &:focus, &:hover, &.active {
-            background-color: rgba(0, 0, 0, 0.1);;
-        }
-        &.mobile {
-            height: 3rem;
-            .materialize-icons {
-                line-height: 3rem;
-            }
-        }
-    }
-    .desktop-nav {
-        display: none;
-        li {
-            line-height: $header-height - 2;
-        }
-    }
-    li {
-        display: block;
-        box-sizing: border-box;
-    }
-    .mobile-nav {
-        position: absolute;
-        flex-direction: column;
-        transition: all .3s;
-        width: 90px;
-        top: $header-height;
-        right: 0;
-        background-color: darken($header-back-color, 4% );
-        &.display {
-            display: flex;
-            transform: translateY(-300px);
-            z-index: -10;
-            &.visible {
-                transform: translateY(0);   
-            }
-            &.hidden {
-                transform: translateY(-300px);
-            }
-        }
-        &.display-none {
-            display: none;
-        }
-        &-dropdown-btn {
-            display: none;
-            background: transparent;
-            border: unset;
-            padding: 0;
-            margin: 0 10px 0;
-            color: $nav-bar-color;
-            transition: all .3s;
-            &:hover, &:focus {
-                box-shadow: 2px 2px 2px 2px rgba(0, 0, 0, 0.1);
-            }
-            @media (max-width: $tablet) {
-                display: flex;
-            }
-        }
-    }
-    .right-nav {
-        display: flex;
-        align-items: center;
-        justify-content: space-around;
-        height: $header-height;
-    }
-    .brand-logo {
-        font-size: 1.6rem;
-        position: relative;
-        display: block;
-        color: $nav-bar-color;
-        font-weight: 700;
-        line-height: $header-height;
-        @include before();
-        &:active, &:focus, &:hover {
-            transition: all .3s;
-            background-color: rgba(0, 0, 0, 0.1);;
-        }
-        @media (max-width: $tablet) and (orientation: landscape) {
-            font-size: 1.2rem;
-        }
+  }
+
+  .desktop-nav {
+    display: flex;
+  }
+
+  li {
+    display: block;
+    box-sizing: border-box;
+  }
+
+  .mobile-nav {
+    position: absolute;
+    flex-direction: column;
+    transition: all .3s;
+    width: 90px;
+    top: $header-height;
+    right: 0;
+    background-color: darken($header-back-color, 4%);
+
+    &.display {
+      display: flex;
+      visibility: visible;
+      transform: translateY(0);
+
     }
 
-    @media (min-width: $tablet) {
-        .mobile-nav-trigger, .mobile-nav {
-            display: none;
-            opacity: 0;
-        }
-        .desktop-nav {
-            display: flex;
-        }
+    &.display-none {
+      visibility: hidden;
+      transform: translateY(-300px);
+      z-index: -10;
     }
+
+    &-dropdown-btn {
+      display: none;
+      background: transparent;
+      border: unset;
+      padding: 0;
+      margin: 0 10px 0;
+      color: $nav-bar-color;
+      transition: all .3s;
+
+      &:hover, &:focus {
+        box-shadow: 2px 2px 2px 2px rgba(0, 0, 0, 0.1);
+      }
+
+      @media (max-width: $tablet) {
+        display: flex;
+      }
+    }
+  }
+
+  .right-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    height: $header-height;
+  }
+
+  .brand-logo {
+    font-size: 1.6rem;
+    position: relative;
+    display: block;
+    color: $nav-bar-color;
+    font-weight: 700;
+    line-height: $header-height;
+    @include before();
+
+    &:active, &:focus, &:hover {
+      transition: all .3s;
+      background-color: rgba(0, 0, 0, 0.1);;
+    }
+
+    @media (max-width: $tablet) and (orientation: landscape) {
+      font-size: 1.2rem;
+    }
+  }
+
+  @media (min-width: $tablet) {
+    .mobile-nav-trigger, .mobile-nav {
+      display: none;
+      opacity: 0;
+    }
+    .desktop-nav {
+      display: flex;
+    }
+  }
 }

@@ -22,7 +22,6 @@ import {
     copyObj,
     equalArrays,
     includesArray,
-    isDev,
     oppositeColor,
     oppositeDirection,
 } from './gameplay-helper-functions'
@@ -303,12 +302,6 @@ export class KingMandatoryMoveResolver extends MoveResolveCommons {
                 continue
             }
             const moves = this.checkFirstKingDiagonal(dir, diagonal, towers)
-            if (isDev()) {
-                console.warn(
-                    'first diagonal',
-                    moves.mandatory?.map((m) => m.move.join(':'))
-                )
-            }
             if (moves.free?.length) {
                 free = free.concat(moves.free)
             }
