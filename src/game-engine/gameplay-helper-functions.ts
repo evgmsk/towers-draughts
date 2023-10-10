@@ -25,22 +25,33 @@ export const oppositeDirection = (dir: string): string => {
     }
 }
 
-export const copyObj = (board: {
+export const copyObj1 = (board: {
     [key: string]: any
 }): { [key: string]: any } => {
-    return Object.keys(board).reduce(
-        (acc: { [key: string]: any }, k: string) => {
-            const v = board[k]
-            if (typeof v === 'object') {
-                const target = Array.isArray(v) ? [] : {}
-                acc[k] = Object.assign(target, v)
+    const copy = {} as { [key: string]: any }
+    for (const key in board) {
+        const v = board[key]
+        if (typeof v === 'object') {
+            if (Array.isArray(v)) {
+                copy[key] = [...v]
             } else {
-                acc[k] = v
+                copy[key] = Object.assign({}, v)
             }
-            return acc
-        },
-        {}
-    )
+        }
+    }
+    return copy
+}
+
+export function copyObj(obj: any): any {
+    if (typeof obj !== 'object') return obj
+    let copy = Array.isArray(obj) ? [] : {}
+    for (const prop in obj) {
+        if (typeof obj[prop] !== 'object') {
+            return Array.isArray(obj) ? [...obj] : Object.assign({}, obj)
+        }
+        ;(copy as any)[prop] = copyObj(obj[prop])
+    }
+    return copy
 }
 
 export const possibleOutOfMoves = (state: IBoard, key: string): CellsMap => {

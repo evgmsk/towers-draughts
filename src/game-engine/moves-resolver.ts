@@ -95,14 +95,14 @@ export class BaseMoveResolver {
         reversed = false
     ) => {
         const newMap = {} as CellsMap
-        Object.keys(cellsMap).forEach((key: string) => {
+        for (const key in cellsMap) {
             newMap[key] = determineCellPosition(
                 key,
                 cellSize,
                 reversed,
                 this.size
             )
-        })
+        }
         return newMap
     }
 

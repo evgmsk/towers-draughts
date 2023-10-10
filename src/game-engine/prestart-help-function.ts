@@ -54,9 +54,10 @@ export function createCellsMap(
     reversed = false
 ) {
     const map = {} as CellsMap
-    Object.keys(createBoardWithoutTowers(boardSize)).forEach((key: string) => {
+    const boardWithoutTowers = createBoardWithoutTowers(boardSize)
+    for (const key in boardWithoutTowers) {
         map[key] = determineCellPosition(key, cellSize, reversed, boardSize)
-    })
+    }
     return map
 }
 

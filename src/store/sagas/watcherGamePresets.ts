@@ -78,16 +78,17 @@ function* workerGameVariant(action: SetGameVariantAction) {
         ? createOutBoardTowers({}, size)
         : createDefaultTowers(size)
     const rect = document.querySelector('.board__body')?.getBoundingClientRect()
-    const boardStateProps = tur.updateCellsAndTowersPosition(
-        { ...boardAndTowers, towers, cellsMap },
-        { ...boardOptions, boardSize: size },
-        rect
-    )
-
-    yield put({
-        type: TowersActions.UPDATE_BOARD_STATE,
-        payload: { ...boardStateProps, moves: [] },
-    })
+    if (rect) {
+        const boardStateProps = tur.updateCellsAndTowersPosition(
+            { ...boardAndTowers, towers, cellsMap },
+            { ...boardOptions, boardSize: size },
+            rect
+        )
+        yield put({
+            type: TowersActions.UPDATE_BOARD_STATE,
+            payload: { ...boardStateProps, moves: [] },
+        })
+    }
 }
 
 export default function* watcherPreGame() {

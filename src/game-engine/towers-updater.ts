@@ -445,6 +445,7 @@ export class TowersUpdateResolver extends BaseMoveResolver {
         BO: IBoardOptions,
         boardRect?: DOMRect
     ) {
+        console.log('towers', board, BO, boardRect)
         const { cellsMap, cellSize, towers } = board
         const { reversedBoard } = BO
         const newCellSize = boardRect

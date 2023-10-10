@@ -66,11 +66,11 @@ export class PositionsTree extends Tree {
         const moves = mmr.getMovesFromTotalMoves(
             mmr.getPositionMoves(towers, pieceOrder)
         )
-        const position = Object.keys(towers).reduce((acc, key) => {
+        const position = {} as TowersMap
+        for (const key in towers) {
             const { positionInDOM, ...tower } = towers[key]
-            acc[key] = tower as TowerConstructor
-            return acc
-        }, {} as TowersMap)
+            position[key] = tower as TowerConstructor
+        }
         return {
             moves,
             position,
@@ -85,11 +85,11 @@ export class PositionsTree extends Tree {
 
     createDefaultRootBranch(gameBoardSize = BaseBoardSize): Branch {
         const towers = createDefaultTowers(gameBoardSize)
-        const position = Object.keys(towers).reduce((acc, key) => {
+        const position = {} as TowersMap
+        for (const key in towers) {
             const { positionInDOM, ...tower } = towers[key]
-            acc[key] = tower as TowerConstructor
-            return acc
-        }, {} as TowersMap)
+            position[key] = tower as TowerConstructor
+        }
         const moves = mmr
             .lookForTotalMoves(position, PieceColor.white)
             .free!.map((m) => ({

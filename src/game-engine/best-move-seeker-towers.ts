@@ -233,12 +233,16 @@ export class BestMoveSeeker implements SeekerProps {
         this.movesHistory = history
         this.towers = cP
         this.pieceOrder = pieceOrder
+        console.log(
+            'props',
+            props,
+            this.movesHistory.length < DebutStage && this.game
+        )
         if (this.movesHistory.length < DebutStage && this.game) {
             return this.debutResolver()
         }
         const lastRivalMove = this.movesHistory[this.movesHistory.length - 1]
-        if (isDev())
-            console.warn('old root', copyObj(movesTree.getRoot()), props)
+        if (isDev()) console.warn('old root', movesTree.getRoot(), props)
         movesTree.updateRoot(lastRivalMove)
         const root = movesTree.getRoot()
         if (!root.moves.length) {
